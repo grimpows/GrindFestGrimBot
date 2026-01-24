@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="netstandard" />
+    <Reference Include="GrindFest">
+      <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\GrindFest.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AIModule">
+      <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\UnityEngine.AIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIElementsModule">
+      <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Addressables">
+      <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\Unity.Addressables.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
