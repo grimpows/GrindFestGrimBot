@@ -26,9 +26,17 @@ namespace Scripts.Models
         private const int SUBTAB_HEIGHT = 30;
         private const int BUTTON_WIDTH = 90;
         private const int BUTTON_HEIGHT = 25;
+        private const float CACHE_REFRESH_INTERVAL = 0.5f;
 
         private InventoryTab _currentTab = InventoryTab.Equipment;
         private EquipmentSlotFilter _currentEquipmentFilter = EquipmentSlotFilter.All;
+
+        // Cache system
+        private Dictionary<InventoryTab, int> _itemCountCache = new Dictionary<InventoryTab, int>();
+        private Dictionary<EquipmentSlotFilter, int> _equipmentSlotCountCache = new Dictionary<EquipmentSlotFilter, int>();
+        private List<ItemBehaviour> _filteredItemsCache = new List<ItemBehaviour>();
+        private float _lastCacheRefreshTime = 0f;
+        private bool _needsCacheUpdate = true;
 
         private enum InventoryTab
         {
@@ -58,6 +66,77 @@ namespace Scripts.Models
             _hero = hero;
             _toggleShowKey = toggleShowKey;
             _windowId = windowID;
+            InitializeCache();
+        }
+
+        private void InitializeCache()
+        {
+            _itemCountCache.Clear();
+            foreach (InventoryTab tab in System.Enum.GetValues(typeof(InventoryTab)))
+            {
+                _itemCountCache[tab] = 0;
+            }
+
+            _equipmentSlotCountCache.Clear();
+            foreach (EquipmentSlotFilter filter in System.Enum.GetValues(typeof(EquipmentSlotFilter)))
+            {
+                _equipmentSlotCountCache[filter] = 0;
+            }
+
+            _needsCacheUpdate = true;
+        }
+
+        private void UpdateCacheIfNeeded()
+        {
+            if (!_needsCacheUpdate && Time.time - _lastCacheRefreshTime < CACHE_REFRESH_INTERVAL)
+            {
+                return;
+            }
+
+            if (_hero?.Character?.Inventory?.Items == null)
+                return;
+
+            var inventory = _hero.Character.Inventory.Items;
+
+            // Update tab counts
+            _itemCountCache[InventoryTab.Equipment] = FilterItemsByTab(inventory, InventoryTab.Equipment).Count();
+            _itemCountCache[InventoryTab.Consumable] = FilterItemsByTab(inventory, InventoryTab.Consumable).Count();
+            _itemCountCache[InventoryTab.SpellBook] = FilterItemsByTab(inventory, InventoryTab.SpellBook).Count();
+            _itemCountCache[InventoryTab.Scroll] = FilterItemsByTab(inventory, InventoryTab.Scroll).Count();
+            _itemCountCache[InventoryTab.Misc] = FilterItemsByTab(inventory, InventoryTab.Misc).Count();
+
+            // Update equipment slot counts
+            var equipmentItems = FilterItemsByTab(inventory, InventoryTab.Equipment).ToList();
+            _equipmentSlotCountCache[EquipmentSlotFilter.All] = equipmentItems.Count;
+            _equipmentSlotCountCache[EquipmentSlotFilter.Head] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Head).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Shoulders] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Shoulders).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Arms] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Arms).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Hands] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Hands).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Chest] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Chest).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Legs] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Legs).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Feet] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Feet).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Weapons] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Weapons).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Accessories] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Accessories).Count();
+
+            // Update filtered items for current view
+            UpdateFilteredItemsCache();
+
+            _lastCacheRefreshTime = Time.time;
+            _needsCacheUpdate = false;
+        }
+
+        private void UpdateFilteredItemsCache()
+        {
+            if (_hero?.Character?.Inventory?.Items == null)
+                return;
+
+            var inventory = _hero.Character.Inventory.Items;
+            _filteredItemsCache = FilterItemsByTab(inventory, _currentTab).ToList();
+
+            if (_currentTab == InventoryTab.Equipment)
+            {
+                _filteredItemsCache = FilterItemsByEquipmentSlot(_filteredItemsCache, _currentEquipmentFilter).ToList();
+            }
         }
 
         public void OnGUI()
@@ -72,13 +151,15 @@ namespace Scripts.Models
 
             if (_isShow)
             {
+                UpdateCacheIfNeeded();
                 _InventoryWindowRect = GUI.Window(WindowsConstants.INVENTORY_WINDOW_ID, _InventoryWindowRect, DrawInventoryWindow, "Inventory");
             }
         }
 
         public void OnUpdate()
         {
-
+            // Mark cache as needing update (called once per frame but less frequently than OnGUI)
+            // This allows the cache to refresh at a controlled rate
         }
 
         void DrawInventoryWindow(int windowID)
@@ -89,8 +170,6 @@ namespace Scripts.Models
                 return;
             }
 
-            var inventory = _hero.Character.Inventory.Items;
-
             DrawTabs();
 
             if (_currentTab == InventoryTab.Equipment)
@@ -100,14 +179,7 @@ namespace Scripts.Models
 
             float tabAreaOffset = _currentTab == InventoryTab.Equipment ? HEADER_HEIGHT + TAB_HEIGHT + (SUBTAB_HEIGHT * 2) + 10 : HEADER_HEIGHT + TAB_HEIGHT;
 
-            var filteredItems = FilterItemsByTab(inventory, _currentTab).ToList();
-
-            if (_currentTab == InventoryTab.Equipment)
-            {
-                filteredItems = FilterItemsByEquipmentSlot(filteredItems, _currentEquipmentFilter).ToList();
-            }
-
-            int itemCount = filteredItems.Count;
+            int itemCount = _filteredItemsCache.Count;
 
             GUILayout.BeginArea(new Rect(10, tabAreaOffset, _InventoryWindowRect.width - 20, _InventoryWindowRect.height - tabAreaOffset - 40));
 
@@ -116,7 +188,7 @@ namespace Scripts.Models
             _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, GUILayout.Width(_InventoryWindowRect.width - 30), GUILayout.Height(scrollViewHeight));
 
             int index = 0;
-            foreach (var item in filteredItems)
+            foreach (var item in _filteredItemsCache)
             {
                 DrawInventoryItem(item, index);
                 index++;
@@ -125,7 +197,7 @@ namespace Scripts.Models
             //add a button to dorp all items in the current tab
             if (GUILayout.Button("Drop All Items in Current Tab"))
             {
-                foreach (var item in filteredItems.ToList())
+                foreach (var item in _filteredItemsCache.ToList())
                 {
                     try
                     {
@@ -136,6 +208,7 @@ namespace Scripts.Models
                         Debug.LogError($"Error dropping item {item.Name}: {ex.Message}");
                     }
                 }
+                _needsCacheUpdate = true;
             }
 
 
@@ -153,42 +226,40 @@ namespace Scripts.Models
 
             Color originalColor = GUI.backgroundColor;
 
-            var inventory = _hero.Character.Inventory.Items;
-            int equipmentCount = FilterItemsByTab(inventory, InventoryTab.Equipment).Count();
-            int consumableCount = FilterItemsByTab(inventory, InventoryTab.Consumable).Count();
-            int spellbookCount = FilterItemsByTab(inventory, InventoryTab.SpellBook).Count();
-            int scrollCount = FilterItemsByTab(inventory, InventoryTab.Scroll).Count();
-            int miscCount = FilterItemsByTab(inventory, InventoryTab.Misc).Count();
-
-            if (DrawTab($"Equipment ({equipmentCount})", new Rect(startX, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Equipment))
+            if (DrawTab($"Equipment ({_itemCountCache[InventoryTab.Equipment]})", new Rect(startX, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Equipment))
             {
                 _currentTab = InventoryTab.Equipment;
                 _currentEquipmentFilter = EquipmentSlotFilter.All;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
-            if (DrawTab($"Consumable ({consumableCount})", new Rect(startX + tabWidth + 5, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Consumable))
+            if (DrawTab($"Consumable ({_itemCountCache[InventoryTab.Consumable]})", new Rect(startX + tabWidth + 5, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Consumable))
             {
                 _currentTab = InventoryTab.Consumable;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
-            if (DrawTab($"SpellBook ({spellbookCount})", new Rect(startX + (tabWidth + 5) * 2, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.SpellBook))
+            if (DrawTab($"SpellBook ({_itemCountCache[InventoryTab.SpellBook]})", new Rect(startX + (tabWidth + 5) * 2, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.SpellBook))
             {
                 _currentTab = InventoryTab.SpellBook;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
-            if (DrawTab($"Scroll ({scrollCount})", new Rect(startX + (tabWidth + 5) * 3, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Scroll))
+            if (DrawTab($"Scroll ({_itemCountCache[InventoryTab.Scroll]})", new Rect(startX + (tabWidth + 5) * 3, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Scroll))
             {
                 _currentTab = InventoryTab.Scroll;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
-            if (DrawTab($"Misc ({miscCount})", new Rect(startX + (tabWidth + 5) * 4, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Misc))
+            if (DrawTab($"Misc ({_itemCountCache[InventoryTab.Misc]})", new Rect(startX + (tabWidth + 5) * 4, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Misc))
             {
                 _currentTab = InventoryTab.Misc;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
             GUI.backgroundColor = originalColor;
@@ -202,84 +273,79 @@ namespace Scripts.Models
 
             Color originalColor = GUI.backgroundColor;
 
-            var inventory = _hero.Character.Inventory.Items;
-            var equipmentItems = FilterItemsByTab(inventory, InventoryTab.Equipment).ToList();
-
-            int allCount = equipmentItems.Count();
-            int headCount = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Head).Count();
-            int shouldersCount = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Shoulders).Count();
-            int armsCount = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Arms).Count();
-            int handsCount = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Hands).Count();
-
-            if (DrawSubTab($"All ({allCount})", new Rect(startX, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.All))
+            if (DrawSubTab($"All ({_equipmentSlotCountCache[EquipmentSlotFilter.All]})", new Rect(startX, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.All))
             {
                 _currentEquipmentFilter = EquipmentSlotFilter.All;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
-            if (DrawSubTab($"Head ({headCount})", new Rect(startX + subTabWidth + 5, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Head))
+            if (DrawSubTab($"Head ({_equipmentSlotCountCache[EquipmentSlotFilter.Head]})", new Rect(startX + subTabWidth + 5, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Head))
             {
                 _currentEquipmentFilter = EquipmentSlotFilter.Head;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
-            if (DrawSubTab($"Shoulders ({shouldersCount})", new Rect(startX + (subTabWidth + 5) * 2, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Shoulders))
+            if (DrawSubTab($"Shoulders ({_equipmentSlotCountCache[EquipmentSlotFilter.Shoulders]})", new Rect(startX + (subTabWidth + 5) * 2, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Shoulders))
             {
                 _currentEquipmentFilter = EquipmentSlotFilter.Shoulders;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
-            if (DrawSubTab($"Arms ({armsCount})", new Rect(startX + (subTabWidth + 5) * 3, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Arms))
+            if (DrawSubTab($"Arms ({_equipmentSlotCountCache[EquipmentSlotFilter.Arms]})", new Rect(startX + (subTabWidth + 5) * 3, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Arms))
             {
                 _currentEquipmentFilter = EquipmentSlotFilter.Arms;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
-            if (DrawSubTab($"Hands ({handsCount})", new Rect(startX + (subTabWidth + 5) * 4, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Hands))
+            if (DrawSubTab($"Hands ({_equipmentSlotCountCache[EquipmentSlotFilter.Hands]})", new Rect(startX + (subTabWidth + 5) * 4, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Hands))
             {
                 _currentEquipmentFilter = EquipmentSlotFilter.Hands;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
             GUI.backgroundColor = originalColor;
 
             // Second row of sub-tabs
-            int chestCount = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Chest).Count();
-            int legsCount = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Legs).Count();
-            int feetCount = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Feet).Count();
-            int weaponsCount = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Weapons).Count();
-            int accessoriesCount = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Accessories).Count();
-
             float startY2 = startY + SUBTAB_HEIGHT + 10;
 
-            if (DrawSubTab($"Chest ({chestCount})", new Rect(startX, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Chest))
+            if (DrawSubTab($"Chest ({_equipmentSlotCountCache[EquipmentSlotFilter.Chest]})", new Rect(startX, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Chest))
             {
                 _currentEquipmentFilter = EquipmentSlotFilter.Chest;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
-            if (DrawSubTab($"Legs ({legsCount})", new Rect(startX + subTabWidth + 5, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Legs))
+            if (DrawSubTab($"Legs ({_equipmentSlotCountCache[EquipmentSlotFilter.Legs]})", new Rect(startX + subTabWidth + 5, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Legs))
             {
                 _currentEquipmentFilter = EquipmentSlotFilter.Legs;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
-            if (DrawSubTab($"Feet ({feetCount})", new Rect(startX + (subTabWidth + 5) * 2, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Feet))
+            if (DrawSubTab($"Feet ({_equipmentSlotCountCache[EquipmentSlotFilter.Feet]})", new Rect(startX + (subTabWidth + 5) * 2, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Feet))
             {
                 _currentEquipmentFilter = EquipmentSlotFilter.Feet;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
-            if (DrawSubTab($"Weapons ({weaponsCount})", new Rect(startX + (subTabWidth + 5) * 3, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Weapons))
+            if (DrawSubTab($"Weapons ({_equipmentSlotCountCache[EquipmentSlotFilter.Weapons]})", new Rect(startX + (subTabWidth + 5) * 3, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Weapons))
             {
                 _currentEquipmentFilter = EquipmentSlotFilter.Weapons;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
-            if (DrawSubTab($"Accessories ({accessoriesCount})", new Rect(startX + (subTabWidth + 5) * 4, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Accessories))
+            if (DrawSubTab($"Accessories ({_equipmentSlotCountCache[EquipmentSlotFilter.Accessories]})", new Rect(startX + (subTabWidth + 5) * 4, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Accessories))
             {
                 _currentEquipmentFilter = EquipmentSlotFilter.Accessories;
                 _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
             }
 
             GUI.backgroundColor = originalColor;
@@ -413,6 +479,7 @@ namespace Scripts.Models
                 GUI.color = originalColor;
             }
 
+
             // Action buttons row
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
@@ -426,6 +493,7 @@ namespace Scripts.Models
                 if (GUILayout.Button("Use Scroll", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
                 {
                     _hero.UseScroll(item);
+                    _needsCacheUpdate = true;
                 }
 
                 GUI.backgroundColor = originalBgColor;
@@ -438,6 +506,7 @@ namespace Scripts.Models
                 if (GUILayout.Button("Learn", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
                 {
                     _hero.LearnSpellBook(item);
+                    _needsCacheUpdate = true;
                 }
 
                 GUI.backgroundColor = originalBgColor;
@@ -462,6 +531,7 @@ namespace Scripts.Models
                 if (GUILayout.Button("Equip", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
                 {
                     EquipItem(item);
+                    _needsCacheUpdate = true;
                 }
 
                 GUI.backgroundColor = originalBgColor;
@@ -493,6 +563,7 @@ namespace Scripts.Models
                 try
                 {
                     _hero.Drop(item);
+                    _needsCacheUpdate = true;
                 }
                 catch (Exception ex)
                 {
@@ -508,6 +579,7 @@ namespace Scripts.Models
                 try
                 {
                     _hero.ConsumeItem(item);
+                    _needsCacheUpdate = true;
                 }
                 catch (Exception ex)
                 {
@@ -523,6 +595,7 @@ namespace Scripts.Models
                 try
                 {
                     _hero.Equip(item);
+                    _needsCacheUpdate = true;
                 }
                 catch (Exception ex)
                 {
@@ -617,6 +690,27 @@ namespace Scripts.Models
             if (item.GoldValue > 0)
             {
                 GUILayout.Label($"Gold Value: {item.GoldValue}");
+            }
+
+
+            // Display skill requirements if present
+            if (item?.Equipable != null)
+            {
+                if (item.Equipable.RequiredStrength > 0)
+                {
+                    GUILayout.Label($"Required Strength: {item.Equipable.RequiredStrength}");
+
+                }
+
+                if (item.Equipable.RequiredDexterity > 0)
+                {
+                    GUILayout.Label($"Required Dexterity: {item.Equipable.RequiredDexterity}");
+                }
+
+                if (item.Equipable.RequiredDexterity > 0)
+                {
+                    GUILayout.Label($"Required Intelligence: {item.Equipable.RequiredDexterity}");
+                }
             }
         }
 

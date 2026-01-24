@@ -45,6 +45,8 @@ namespace Scripts.Models
 
             RemoveUsedHealthPotFromInventory();
 
+            RemoveUnusedWeapo();
+
             ScanForItems();
 
             ChooseItemToTarget();
@@ -56,7 +58,7 @@ namespace Scripts.Models
                 //_hero.Character.Inventory.DropItemInInventory(TargetedItem);
                 //OnPickedUp();
                 _hero.PickUp(TargetedItem, OnPickedUp);
-                
+
 
 
                 return true;
@@ -92,7 +94,7 @@ namespace Scripts.Models
                 .Select(item => item.Item)
                 .ToList() ?? new List<ItemBehaviour>();
 
-        
+
             foreach (var item in equippedItemsOnDeadEnemies)
             {
                 //_hero.Say("Found item on dead enemy: " + item.name);
@@ -122,17 +124,30 @@ namespace Scripts.Models
 
             var itemsOnGround = _hero.FindItemsOnGround(LootFilter, maxDistance: 500).ToList();
 
-            
-            
+
 
             ScannedItems = itemsOnGround.Where(item => LootFilter(item)).ToList();
-            //ScannedItems.AddRange(DeadEnemiesItems.Where(item => LootFilter(item)).ToList());
 
 
 
 
             //remove ignored items
             ScannedItems = ScannedItems.Except(IgnoredItems).ToList();
+
+            //exept weapon that is not best that 5 best in inventory
+            float averageDPS = CalculateAverageDPSFor5BestWeaponsInInventory();
+
+            ScannedItems = ScannedItems.Where(item =>
+            {
+                if (item.Weapon != null)
+                {
+                    if (item.Weapon.DamagePerSecond < averageDPS)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }).ToList();
 
             ForceRescan = false;
 
@@ -175,6 +190,37 @@ namespace Scripts.Models
                 ScannedItems.Remove(item);
                 TargetedItem = null;
             }
+        }
+
+        float CalculateAverageDPSFor5BestWeaponsInInventory()
+        {
+            if (_hero.Character.Inventory.Items.Count(i => i.Weapon != null) == 0)
+                return 0f;
+
+            var weaponDPS = _hero.Character.Inventory.Items
+                .Where(i => i.Weapon != null)
+                .OrderByDescending(i => i.Weapon.DamagePerSecond)
+                .Take(5)
+                .Average(i => i.Weapon.DamagePerSecond);
+
+            return weaponDPS;
+        }
+
+        public void RemoveUnusedWeapo()
+        {
+            var itemsToRemove = _hero.Character.Inventory.Items
+                .Where(item => item.Weapon != null)
+                .OrderByDescending(item => item.Weapon.DamagePerSecond)
+                .ToList();
+
+            if (itemsToRemove.Count <= 5)
+                return;
+
+            for (int i = 5; i < itemsToRemove.Count; i++)
+            {
+                _hero.Drop(itemsToRemove[i]);
+            }
+
         }
 
     }

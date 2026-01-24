@@ -66,11 +66,6 @@ namespace Scripts.Models
             if (_hero == null)
                 return;
 
-            
-
-
-            
-
             if (!_hero.IsBotting)
             {
                 return;
@@ -107,6 +102,8 @@ namespace Scripts.Models
 
             _hero.RunAroundInArea();
         }
+
+        
 
 
 

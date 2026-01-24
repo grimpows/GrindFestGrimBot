@@ -10,15 +10,34 @@ namespace Scripts.Models
 {
     public static partial class HeroExtensions
     {
-        public static Predicate<ItemBehaviour> Default_LootFilter(this AutomaticHero hero)
+        public static Predicate<ItemBehaviour> Default_LootFilter(this AutomaticHero hero, bool ignoreRangedWeapon = true)
         {
            Predicate<ItemBehaviour> lootFilter = delegate (ItemBehaviour item)
             {
-                // Always pick up the item  if we don't have it yet
-                //if (!hero.Inventory.Where(i => i.name == item.name).Any())
-                //{
-                //    return true;
-                //}
+                
+                if (ignoreRangedWeapon && item?.Weapon != null && (item.Weapon.WeaponType == WeaponType.Bow || item.Weapon.WeaponType == WeaponType.Crossbow || item.Weapon.WeaponType == WeaponType.Gun || item.Weapon.WeaponType == WeaponType.Rifle))
+                {
+                    return false;
+                }
+
+                if (item?.Equipable != null)
+                {
+                    if (item.Equipable.RequiredStrength > 0 && hero.Strength  < item.Equipable.RequiredStrength)
+                    {
+                        return false;
+                    }
+
+                    if (item.Equipable.RequiredDexterity > 0 && hero.Dexterity  < item.Equipable.RequiredDexterity)
+                    {
+                        return false;
+                    }
+
+                    if (item.Equipable.RequiredIntelligence > 0 && hero.Intelligence  < item.Equipable.RequiredIntelligence)
+                    {
+                        return false;
+                    }
+                }
+
 
                 if (item.Gold != null)
                 {
