@@ -68,7 +68,8 @@ namespace Scripts.Models
             All,
             EPotion,
             MPotion,
-            OPotion,
+            MiscPot,
+            JunkPot,
             Food,
             Misc
         }
@@ -140,7 +141,8 @@ namespace Scripts.Models
             _consumableCountCache[ConsumableFilter.All] = FilterItemsByTab(inventory, InventoryTab.Consumable).Count();
             _consumableCountCache[ConsumableFilter.EPotion] = FilterItemsByConsumableType(inventory, "e_potion").Count();
             _consumableCountCache[ConsumableFilter.MPotion] = FilterItemsByConsumableType(inventory, "m_potion").Count();
-            _consumableCountCache[ConsumableFilter.OPotion] = FilterItemsByConsumableType(inventory, "o_potion").Count();
+            _consumableCountCache[ConsumableFilter.MiscPot] = FilterItemsByConsumableType(inventory, "misc_pot").Count();
+            _consumableCountCache[ConsumableFilter.JunkPot] = FilterItemsByConsumableType(inventory, "junk_pot").Count();
             _consumableCountCache[ConsumableFilter.Food] = FilterItemsByConsumableType(inventory, "food").Count();
             _consumableCountCache[ConsumableFilter.Misc] = FilterItemsByConsumableType(inventory, "misc").Count();
 
@@ -390,7 +392,7 @@ namespace Scripts.Models
 
         void DrawConsumableSubTabs()
         {
-            float subTabWidth = (_InventoryWindowRect.width - 50) / 5f;
+            float subTabWidth = (_InventoryWindowRect.width - 50) / 6f;
             float startX = 10;
             float startY = HEADER_HEIGHT + TAB_HEIGHT;
 
@@ -417,14 +419,21 @@ namespace Scripts.Models
                 UpdateFilteredItemsCache();
             }
 
-            if (DrawSubTab($"O-Potions ({_consumableCountCache[ConsumableFilter.OPotion]})", new Rect(startX + (subTabWidth + 5) * 3, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.OPotion))
+            if (DrawSubTab($"Misc-Pot ({_consumableCountCache[ConsumableFilter.MiscPot]})", new Rect(startX + (subTabWidth + 5) * 3, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.MiscPot))
             {
-                _currentConsumableFilter = ConsumableFilter.OPotion;
+                _currentConsumableFilter = ConsumableFilter.MiscPot;
                 _scrollPosition = Vector2.zero;
                 UpdateFilteredItemsCache();
             }
 
-            if (DrawSubTab($"Food ({_consumableCountCache[ConsumableFilter.Food]})", new Rect(startX + (subTabWidth + 5) * 4, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.Food))
+            if (DrawSubTab($"Junk-Pot ({_consumableCountCache[ConsumableFilter.JunkPot]})", new Rect(startX + (subTabWidth + 5) * 4, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.JunkPot))
+            {
+                _currentConsumableFilter = ConsumableFilter.JunkPot;
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+
+            if (DrawSubTab($"Food ({_consumableCountCache[ConsumableFilter.Food]})", new Rect(startX + (subTabWidth + 5) * 5, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.Food))
             {
                 _currentConsumableFilter = ConsumableFilter.Food;
                 _scrollPosition = Vector2.zero;
@@ -512,7 +521,8 @@ namespace Scripts.Models
                 ConsumableFilter.All => items.Where(item => item.Consumable != null),
                 ConsumableFilter.EPotion => items.Where(item => HasHealthPotion(item)),
                 ConsumableFilter.MPotion => items.Where(item => HasManaPotion(item)),
-                ConsumableFilter.OPotion => items.Where(item => HasOtherPotion(item)),
+                ConsumableFilter.MiscPot => items.Where(item => IsMiscPotion(item)),
+                ConsumableFilter.JunkPot => items.Where(item => IsJunkPotion(item)),
                 ConsumableFilter.Food => items.Where(item => IsFood(item)),
                 ConsumableFilter.Misc => items.Where(item => IsMiscConsumable(item)),
                 _ => items
@@ -525,7 +535,8 @@ namespace Scripts.Models
             {
                 "e_potion" => items.Where(item => HasHealthPotion(item)),
                 "m_potion" => items.Where(item => HasManaPotion(item)),
-                "o_potion" => items.Where(item => HasOtherPotion(item)),
+                "misc_pot" => items.Where(item => IsMiscPotion(item)),
+                "junk_pot" => items.Where(item => IsJunkPotion(item)),
                 "food" => items.Where(item => IsFood(item)),
                 "misc" => items.Where(item => IsMiscConsumable(item)),
                 _ => items.Where(item => item.Consumable != null)
@@ -552,23 +563,32 @@ namespace Scripts.Models
             return false;
         }
 
-        private bool HasOtherPotion(ItemBehaviour item)
+        private bool IsMiscPotion(ItemBehaviour item)
         {
-            //ignore food
-            if (item?.Consumable != null && item.Consumable.Food != null)
-            {
+            if (item?.Consumable == null || item.Consumable.Food != null)
                 return false;
-            }
 
-            if (item?.Consumable != null && item.LiquidContainer == null)
-            {
-                return true;
-            }
             if (item?.LiquidContainer != null)
             {
                 int healthAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Health);
                 int manaAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Mana);
-                return healthAmount == 0 && manaAmount == 0;
+                int totalLiquid = healthAmount + manaAmount;
+                return totalLiquid > 0;
+            }
+            return false;
+        }
+
+        private bool IsJunkPotion(ItemBehaviour item)
+        {
+            if (item?.Consumable == null || item.Consumable.Food != null)
+                return false;
+
+            if (item?.LiquidContainer != null)
+            {
+                int healthAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Health);
+                int manaAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Mana);
+                int totalLiquid = healthAmount + manaAmount;
+                return totalLiquid == 0;
             }
             return false;
         }
@@ -583,7 +603,7 @@ namespace Scripts.Models
             if (item?.Consumable == null)
                 return false;
 
-            return !IsFood(item) && !HasHealthPotion(item) && !HasManaPotion(item) && !HasOtherPotion(item);
+            return !IsFood(item) && !HasHealthPotion(item) && !HasManaPotion(item) && !IsMiscPotion(item) && !IsJunkPotion(item);
         }
 
         bool MatchesEquipmentSlot(ItemBehaviour item, EquipmentSlot slot)
