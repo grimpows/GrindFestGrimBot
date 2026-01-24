@@ -403,14 +403,14 @@ namespace Scripts.Models
                 UpdateFilteredItemsCache();
             }
 
-            if (DrawSubTab($"E-Potions ({_consumableCountCache[ConsumableFilter.EPotion]})", new Rect(startX + subTabWidth + 5, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.EPotion))
+            if (DrawSubTab($"HP-Pot ({_consumableCountCache[ConsumableFilter.EPotion]})", new Rect(startX + subTabWidth + 5, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.EPotion))
             {
                 _currentConsumableFilter = ConsumableFilter.EPotion;
                 _scrollPosition = Vector2.zero;
                 UpdateFilteredItemsCache();
             }
 
-            if (DrawSubTab($"M-Potions ({_consumableCountCache[ConsumableFilter.MPotion]})", new Rect(startX + (subTabWidth + 5) * 2, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.MPotion))
+            if (DrawSubTab($"MP-Pot ({_consumableCountCache[ConsumableFilter.MPotion]})", new Rect(startX + (subTabWidth + 5) * 2, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.MPotion))
             {
                 _currentConsumableFilter = ConsumableFilter.MPotion;
                 _scrollPosition = Vector2.zero;
