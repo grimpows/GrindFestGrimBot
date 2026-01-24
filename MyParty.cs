@@ -22,11 +22,26 @@ class MyParty : Party_Base
     public void OnGUI()
     {
         _worldUI?.OnGUI(SelectedHero);
+
+
     }
 
     public void Update()
     {
         _worldUI?.OnUpdate();
+
+
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            AutomaticParty.ClearFlags();
+        }
+
+        if (Input.GetKeyDown(KeyCode.F3))
+        {
+            // This is a static method, that means you don't need to have an instance of the class to call it
+            AutomaticParty.PlaceFlag();
+            
+        }
 
         if (Input.GetKeyDown(KeyCode.F4))
         {

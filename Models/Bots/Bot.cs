@@ -13,6 +13,7 @@ namespace Scripts.Models
     {
         public Bot_Agent_Looter PickUpAgent = null;
         public Bot_Agent_Fighter FightingAgent = null;
+        public Bot_Agent_Consumer ConsumerAgent = null;
 
 
 
@@ -32,6 +33,11 @@ namespace Scripts.Models
             if (FightingAgent == null)
             {
                 FightingAgent = new Bot_Agent_Fighter(_hero);
+            }
+
+            if (ConsumerAgent == null)
+            {
+                ConsumerAgent = new Bot_Agent_Consumer(_hero);
             }
 
             if (_botUI == null)
@@ -63,39 +69,37 @@ namespace Scripts.Models
             
 
 
-            if (_hero.TryUsePotions())
-            {
-                return;
-            }
+            
 
             if (!_hero.IsBotting)
             {
                 return;
             }
 
-            if (PickUpAgent.IsActing())
-                return;
-
-            
-
-
-            _hero.UpgradeStats();
-
-            //if (_hero.AutoLootGoldAndArrow())
+            //if (_hero.TryUsePotions())
             //{
             //    return;
             //}
 
-            
+            if (ConsumerAgent.IsActing())
+                return;
+
+
+
+            _hero.UpgradeStats();
+
+
+            if (FightingAgent.TargetedMonster == null && PickUpAgent.IsActing())
+                return;
+
             if (FightingAgent.TargetedMonster == null &&  _hero.TryInteractWithObjects())
                 return;
 
-            
 
             _hero.Equip_BestInSlot();
 
-            //if (FightingAgent.TargetedMonster == null && _hero.TryMoveToBestFarmArea(IsAllowedToChangeArea))
-            //    return;
+            if (FightingAgent.TargetedMonster == null && _hero.TryMoveToBestFarmArea(IsAllowedToChangeArea))
+                return;
 
             if (FightingAgent.IsActing(20))
                 return;

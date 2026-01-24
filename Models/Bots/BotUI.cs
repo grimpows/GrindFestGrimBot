@@ -19,6 +19,7 @@ namespace Scripts.Model
 
         private Bot_Agent_FigherUI _fightingAgentUI;
         private Bot_Agent_LooterUI _pickUpAgentUI;
+        private Bot_Agent_ConsumerUI _consumerAgentUI;
 
         //rects
         private Rect _botWindowRect = new Rect(100, 100, 800, 800);
@@ -32,7 +33,8 @@ namespace Scripts.Model
         {
             Global,
             FightingAgent,
-            PickUpAgent
+            PickUpAgent,
+            ConsumerAgent
         }
 
         public BotUI(Bot bot, AutomaticHero hero, KeyCode toggleShowKey, int windowID)
@@ -44,6 +46,7 @@ namespace Scripts.Model
 
             _fightingAgentUI = new Bot_Agent_FigherUI(bot.FightingAgent);
             _pickUpAgentUI = new Bot_Agent_LooterUI(bot.PickUpAgent);
+            _consumerAgentUI = new Bot_Agent_ConsumerUI(bot.ConsumerAgent);
         }
 
         public void OnGUI()
@@ -78,6 +81,9 @@ namespace Scripts.Model
                 case BotTab.PickUpAgent:
                     _pickUpAgentUI.DrawPickUpAgentPanel(contentArea);
                     break;
+                case BotTab.ConsumerAgent:
+                    _consumerAgentUI.DrawConsumerAgentPanel(contentArea);
+                    break;
             }
 
             GUI.DragWindow(new Rect(0, 0, _botWindowRect.width, 30));
@@ -85,7 +91,7 @@ namespace Scripts.Model
 
         void DrawTabs()
         {
-            float tabWidth = (_botWindowRect.width - 50) / 3f;
+            float tabWidth = (_botWindowRect.width - 60) / 4f;
             float startX = 10;
             float startY = HEADER_HEIGHT;
 
@@ -102,6 +108,11 @@ namespace Scripts.Model
             if (DrawTab("PickUp Agent", new Rect(startX + (tabWidth + 5) * 2, startY, tabWidth, TAB_HEIGHT), _currentTab == BotTab.PickUpAgent))
             {
                 _currentTab = BotTab.PickUpAgent;
+            }
+
+            if (DrawTab("Consumer Agent", new Rect(startX + (tabWidth + 5) * 3, startY, tabWidth, TAB_HEIGHT), _currentTab == BotTab.ConsumerAgent))
+            {
+                _currentTab = BotTab.ConsumerAgent;
             }
         }
 
@@ -163,6 +174,14 @@ namespace Scripts.Model
             GUI.color = _hero.IsBotting ? Color.green : Color.red;
             GUILayout.Label(_hero.IsBotting ? "ACTIVE" : "INACTIVE", GUILayout.Width(100));
             GUI.color = Color.white;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            // Currently Using Skill
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Using Skill:", GUILayout.Width(150));
+            string currentSkillName = _hero.Character.SkillUser.IsUsingSkill ? _hero.Character.SkillUser.CurrentlyUsedSkill.name : "None";
+            GUILayout.Label(currentSkillName, GUILayout.Width(200));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 

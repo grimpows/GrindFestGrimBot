@@ -30,7 +30,7 @@ namespace Scripts.Models
                 GUI.Box(rect, item.Name);
             }
 
-            var deadBodies = hero.FindNearestDeadEnnemies(maxDistance: distance);
+            var deadBodies = hero.FindDeadNearbyEnemies(maxDistance: distance);
 
             foreach (var body in deadBodies)
             {
@@ -63,11 +63,12 @@ namespace Scripts.Models
                     Vector2 itemScreen = Camera.main.WorldToScreenPoint(itemPos);
                     itemScreen.y = Screen.height - itemScreen.y;
                     GUI.backgroundColor = Color.clear;
-                    Int32 itemWidth2 = $"(equiped){item.Name}".Length * 8;
+                    string itemLabel = $"(equiped on {item.GetComponentInParent(typeof(MonsterBehaviour))?.name}) {item.Name}";
+                    Int32 itemWidth2 = itemLabel.Length * 8;
                     float itemX2 = itemScreen.x - itemWidth2 / 2f;
                     float itemY2 = itemScreen.y - 50f;
                     var rect2 = new Rect(itemX2, itemY2, itemWidth2, 30);
-                    GUI.Box(rect2, $"(equiped){item.Name}");
+                    GUI.Box(rect2, itemLabel);
 
                 }
 

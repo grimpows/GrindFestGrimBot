@@ -134,6 +134,7 @@ namespace Scripts.Models
             {
                 _characterWindowRect = GUI.Window(_windowID, _characterWindowRect, DrawHeroWindow, "PLAYER INFO");
             }
+
         }
 
         public void OnUpdate()

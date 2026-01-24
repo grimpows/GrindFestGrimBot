@@ -13,7 +13,8 @@ namespace Scripts.Models
     public class Bot_Agent_Consumer
     {
         private AutomaticHero _hero;
-        private ItemBehaviour _lastCosumedItem;
+        public ItemBehaviour? LastCosumedItem;
+        public SkillBehaviour? LastUsedSkill;
 
         public Bot_Agent_Consumer(AutomaticHero hero)
         {
@@ -23,33 +24,40 @@ namespace Scripts.Models
 
         public bool IsActing()
         {
+            if (_hero.Character.SkillUser.IsUsingSkill && _hero.Character.SkillUser.CurrentlyUsedSkill == LastUsedSkill)
+            {
+                _hero.RunAwayFromNearestEnemy(20); // Keep distance while using skills
+                return true;
+            }
+
+            if (ConsumeHealthPotion())
+                return true;
+
             return false;
-           
         }
 
         bool ConsumeHealthPotion()
         {
             if (_hero.Health < _hero.MaxHealth * 0.5f && _hero.HasHealthPotion()) // Below 50% health
             {
-                _hero.DrinkHealthPotion();
+                DrinkHealthPotion();
                 _hero.RunAwayFromNearestEnemy(30); // Good practice to retreat while drinking
                 return true;
             }
-
-
 
             return false;
         }
 
         void DrinkHealthPotion()
         {
-            if (!Hero.Character.SkillUser.IsUsingSkill)
+            if (!_hero.Character.SkillUser.IsUsingSkill)
             {
                 ItemBehaviour itemBehaviour = _hero.Character.FindItem(_hero.IsHealthPotion);
                 if (itemBehaviour != null)
                 {
                     itemBehaviour.Consumable.Consume(_hero.Hero);
-                    _lastCosumedItem = itemBehaviour;
+                    LastCosumedItem = itemBehaviour;
+                    LastUsedSkill = _hero.Character.SkillUser.CurrentlyUsedSkill;
                 }
                 else
                 {

@@ -11,15 +11,18 @@ namespace Scripts.Models
     {
         public static List<MonsterBehaviour> FindNearestEnemiesByReward(this AutomaticHero hero, float maxDistance = 15f, float howNear = 2)
         {
-            List<MonsterBehaviour> FoundMonster = hero.FindNearestEnemies(maxDistance: maxDistance, howNear: howNear)
-                 .Where(enemy => enemy.Health.CurrentHealth > 0)
-                 .OrderByDescending(enemy => enemy?.Rank?.ExperienceReward.ExperienceReward)
-                 .ToList();
+            List<MonsterBehaviour> foundMonster = hero.FindNearestEnemies(maxDistance: maxDistance, howNear: howNear)?.ToList() ?? new List<MonsterBehaviour>();
 
-            
 
-            return FoundMonster;
+            foundMonster = foundMonster
+            .Where(enemy => enemy.Health.CurrentHealth > 0)
+            .OrderByDescending(enemy => enemy?.Rank?.ExperienceReward?.ExperienceReward ?? 0)
+            .ToList();
+
+
+
+            return foundMonster;
         }
-        
+
     }
 }

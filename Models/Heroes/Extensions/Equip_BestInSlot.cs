@@ -88,12 +88,12 @@ namespace Scripts.Models
 
             if (itemDPS > equipedItemDPS && itemStat > equipedItemStat)
             {
-                hero.Say($"Better weapon {itemWeapon.name} found based on DPS and Stats. DPS diff = {itemDPS - equipedItemDPS}, Stat diff = {itemStat - equipedItemStat}, slot = {slot}");
+                //hero.Say($"Better weapon {itemWeapon.name} found based on DPS and Stats. DPS diff = {itemDPS - equipedItemDPS}, Stat diff = {itemStat - equipedItemStat}, slot = {slot}");
 
                 return true;
             }else if (itemDPS > equipedItemDPS)
             {
-                hero.Say($"Better weapon {itemWeapon.name} found based on DPS only. DPS diff = {itemDPS - equipedItemDPS}, slot = {slot}");
+                //hero.Say($"Better weapon {itemWeapon.name} found based on DPS only. DPS diff = {itemDPS - equipedItemDPS}, slot = {slot}");
                 return true;
             }
 

@@ -16,7 +16,6 @@ namespace Scripts.Models
 
         // requied rects
         private Rect _worldUIRect = new Rect(100, 100, 800, 800);
-        private Dictionary<EquipmentSlot, Rect> _slotRects = new Dictionary<EquipmentSlot, Rect>();
 
 
         public WorldUI(KeyCode toggleShowKey)
@@ -31,16 +30,31 @@ namespace Scripts.Models
             hero.Display_NameTag();
             hero.Display_InteractiveObjets(GLOBAL.INTERACTIVE_ITEM_LIST, 100);
 
+            if (_isShow)
+            {
+                _worldUIRect = GUI.Window(WindowsConstants.WORLD_UI_ID, _worldUIRect, DrawWorldUI, "World");
+            }
+
             //GrindFest.UI.UIHealthBall
         }
 
         public void OnUpdate()
         {
-            
+
 
         }
 
-     
+        void DrawWorldUI(int windowID)
+        {
+            GUILayout.Label("World UI Settings will be here.");
 
+            //show list of flags in the world
+
+
+            GUI.DragWindow(new Rect(0, 0, 10000, 20));
+
+
+
+        }
     }
 }

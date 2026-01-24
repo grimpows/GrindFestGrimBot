@@ -12,5 +12,6 @@ namespace Scripts.Models
         public const int INVENTORY_WINDOW_ID = 2;
         public const int MINIMAP_WINDOW_ID = 3;
         public const int HERO_WINDOW_ID = 4;
+        public const int WORLD_UI_ID = 5;
     }
 }

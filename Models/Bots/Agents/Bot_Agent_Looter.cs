@@ -56,8 +56,7 @@ namespace Scripts.Models
                 //_hero.Character.Inventory.DropItemInInventory(TargetedItem);
                 //OnPickedUp();
                 _hero.PickUp(TargetedItem, OnPickedUp);
-
-                //_hero.
+                
 
 
                 return true;
@@ -85,7 +84,37 @@ namespace Scripts.Models
             if ((DateTime.Now - LastScanTime).TotalSeconds < ScanFrequency && !ForceRescan)
                 return;
 
+            var deadEnemies = _hero.FindDeadNearbyEnemies(maxDistance: 500).ToList();
+
+            var equippedItemsOnDeadEnemies = deadEnemies
+                .SelectMany(enemy => enemy.Character?.Equipment?._items.Values)
+                .Where(item => item != null && item.Item != null)
+                .Select(item => item.Item)
+                .ToList() ?? new List<ItemBehaviour>();
+
+        
+            foreach (var item in equippedItemsOnDeadEnemies)
+            {
+                //_hero.Say("Found item on dead enemy: " + item.name);
+                item?.Equipable?.Unequip();
+            }
+
+            var storedItemInDeadEnemies = deadEnemies
+                .SelectMany(enemy => enemy?.Character?.Inventory?.Items != null ? enemy.Character.Inventory.Items : new List<ItemBehaviour>())
+                .Where(item => item != null)
+                .ToList() ?? new List<ItemBehaviour>();
+
+            foreach (var item in storedItemInDeadEnemies)
+            {
+                _hero.Say("Found stored item on dead enemy: " + item.name);
+                item?.Container?.RemoveItem(item);
+            }
+
+
             LastScanTime = DateTime.Now;
+
+
+
 
             //_hero.Say("Scanning for items to loot...");
             if (LootFilter == null)
@@ -94,11 +123,7 @@ namespace Scripts.Models
             var itemsOnGround = _hero.FindItemsOnGround(LootFilter, maxDistance: 500).ToList();
 
             
-            var DeadEnemiesItems = _hero.FindNearestDeadEnnemies(maxDistance: 500)
-                .SelectMany(enemy => enemy.Character?.Equipment?._items.Values)
-                .Where(item => item != null && item.Item != null)
-                .Select(item => item.Item)
-                .ToList();
+            
 
             ScannedItems = itemsOnGround.Where(item => LootFilter(item)).ToList();
             //ScannedItems.AddRange(DeadEnemiesItems.Where(item => LootFilter(item)).ToList());
