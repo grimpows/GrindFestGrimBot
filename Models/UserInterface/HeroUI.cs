@@ -139,6 +139,7 @@ namespace Scripts.Models
         public void OnUpdate()
         {
             UpdateEquippedItem();
+
         }
 
         void InitializeEquippedItems()

@@ -17,8 +17,9 @@ namespace Scripts.Models
 
             try
             {
-                item.SpellScroll.Interactive.OnPlayerDoubleClick(hero.Hero);
-                item.InteractiveBehaviour.OnPlayerDoubleClick(hero.Hero);
+                //item.SpellScroll.Interactive.OnPlayerDoubleClick(hero.Hero);
+                //item.InteractiveBehaviour.OnPlayerDoubleClick(hero.Hero);
+                item.SpellScroll.ExecuteSpell(hero.Hero, true);
 
             }
             catch (Exception ex)

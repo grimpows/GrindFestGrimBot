@@ -19,11 +19,13 @@ namespace Scripts.Models
         private Rect _InventoryWindowRect = new Rect(100, 100, 650, 500);
         private Vector2 _scrollPosition = Vector2.zero;
 
-        private const int ITEM_HEIGHT = 100;
+        private const int ITEM_HEIGHT = 120;
         private const int ITEM_PADDING = 10;
         private const int HEADER_HEIGHT = 30;
         private const int TAB_HEIGHT = 35;
         private const int SUBTAB_HEIGHT = 30;
+        private const int BUTTON_WIDTH = 90;
+        private const int BUTTON_HEIGHT = 25;
 
         private InventoryTab _currentTab = InventoryTab.Equipment;
         private EquipmentSlotFilter _currentEquipmentFilter = EquipmentSlotFilter.All;
@@ -383,6 +385,7 @@ namespace Scripts.Models
 
             GUILayout.BeginVertical(GUI.skin.box, GUILayout.Height(ITEM_HEIGHT));
 
+            // Header row with item number, name and type
             GUILayout.BeginHorizontal();
             GUILayout.Label($"#{index + 1}", GUILayout.Width(40));
             GUILayout.Label($"{item.Name}", GUILayout.Width(200));
@@ -392,6 +395,7 @@ namespace Scripts.Models
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
+            // Item details
             DrawItemSpecificInfo(item);
 
             if (item.Level != null && item.Level.Level > 0)
@@ -405,87 +409,97 @@ namespace Scripts.Models
                 Color durabilityColor = GetDurabilityColor(durabilityPercent);
                 Color originalColor = GUI.color;
                 GUI.color = durabilityColor;
-                GUILayout.Label($"Durability: {durabilityPercent}% ({item.Durability.CurrentDurability}/{item.Durability.MaxDurability})");
+                GUILayout.Label($"Durability: {durabilityPercent:F0}% ({item.Durability.CurrentDurability}/{item.Durability.MaxDurability})");
                 GUI.color = originalColor;
             }
 
+            // Action buttons row
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+
+            // Specific action button based on item type
             if (item.name.ToLower().Contains("scroll"))
             {
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-
                 Color originalBgColor = GUI.backgroundColor;
                 GUI.backgroundColor = new Color(1f, 0.8f, 0.2f);
 
-                if (GUILayout.Button("Use Scroll", GUILayout.Width(120), GUILayout.Height(25)))
+                if (GUILayout.Button("Use Scroll", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
                 {
                     _hero.UseScroll(item);
                 }
 
                 GUI.backgroundColor = originalBgColor;
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
             }
             else if (item.name.ToLower().Contains("book"))
             {
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-
                 Color originalBgColor = GUI.backgroundColor;
                 GUI.backgroundColor = new Color(0.8f, 0.4f, 1f);
 
-                if (GUILayout.Button("Learn Spell", GUILayout.Width(120), GUILayout.Height(25)))
+                if (GUILayout.Button("Learn", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
                 {
                     _hero.LearnSpellBook(item);
                 }
 
                 GUI.backgroundColor = originalBgColor;
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
             }
             else if (item.Consumable != null)
             {
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-
                 Color originalBgColor = GUI.backgroundColor;
                 GUI.backgroundColor = new Color(0.3f, 1f, 0.3f);
 
-                if (GUILayout.Button("Consume", GUILayout.Width(120), GUILayout.Height(25)))
+                if (GUILayout.Button("Consume", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
                 {
                     ConsumeItem(item);
                 }
 
                 GUI.backgroundColor = originalBgColor;
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
             }
             else if (item.Armor != null || item.Weapon != null)
             {
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-
                 Color originalBgColor = GUI.backgroundColor;
                 GUI.backgroundColor = new Color(0.3f, 0.7f, 1f);
 
-                if (GUILayout.Button("Equip", GUILayout.Width(120), GUILayout.Height(25)))
+                if (GUILayout.Button("Equip", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
                 {
                     EquipItem(item);
                 }
 
                 GUI.backgroundColor = originalBgColor;
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
             }
+
+            // Drop button
+            Color dropBgColor = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(1f, 0.4f, 0.4f);
+
+            if (GUILayout.Button("Drop", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
+            {
+                DropItem(item);
+            }
+
+            GUI.backgroundColor = dropBgColor;
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
 
             GUILayout.Space(ITEM_PADDING);
         }
 
-
-
-
+        void DropItem(ItemBehaviour item)
+        {
+            if (item != null && _hero != null)
+            {
+                try
+                {
+                    _hero.Drop(item);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Error dropping item {item.Name}: {ex.Message}");
+                }
+            }
+        }
 
         void ConsumeItem(ItemBehaviour item)
         {

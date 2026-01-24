@@ -5,7 +5,7 @@ using Scripts.Models;
 
 class Grim : Hero_Base
 {
-   //sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssisssssssssssssssisssssssssssssss
+   //ssss
 }
 
 
