@@ -30,10 +30,12 @@ namespace Scripts.Models
 
         private InventoryTab _currentTab = InventoryTab.Equipment;
         private EquipmentSlotFilter _currentEquipmentFilter = EquipmentSlotFilter.All;
+        private ConsumableFilter _currentConsumableFilter = ConsumableFilter.All;
 
         // Cache system
         private Dictionary<InventoryTab, int> _itemCountCache = new Dictionary<InventoryTab, int>();
         private Dictionary<EquipmentSlotFilter, int> _equipmentSlotCountCache = new Dictionary<EquipmentSlotFilter, int>();
+        private Dictionary<ConsumableFilter, int> _consumableCountCache = new Dictionary<ConsumableFilter, int>();
         private List<ItemBehaviour> _filteredItemsCache = new List<ItemBehaviour>();
         private float _lastCacheRefreshTime = 0f;
         private bool _needsCacheUpdate = true;
@@ -61,6 +63,16 @@ namespace Scripts.Models
             Accessories
         }
 
+        private enum ConsumableFilter
+        {
+            All,
+            EPotion,
+            MPotion,
+            OPotion,
+            Food,
+            Misc
+        }
+
         public void OnStart(Hero_Base hero, KeyCode toggleShowKey, int windowID)
         {
             _hero = hero;
@@ -81,6 +93,12 @@ namespace Scripts.Models
             foreach (EquipmentSlotFilter filter in System.Enum.GetValues(typeof(EquipmentSlotFilter)))
             {
                 _equipmentSlotCountCache[filter] = 0;
+            }
+
+            _consumableCountCache.Clear();
+            foreach (ConsumableFilter filter in System.Enum.GetValues(typeof(ConsumableFilter)))
+            {
+                _consumableCountCache[filter] = 0;
             }
 
             _needsCacheUpdate = true;
@@ -118,6 +136,14 @@ namespace Scripts.Models
             _equipmentSlotCountCache[EquipmentSlotFilter.Weapons] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Weapons).Count();
             _equipmentSlotCountCache[EquipmentSlotFilter.Accessories] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Accessories).Count();
 
+            // Update consumable filter counts
+            _consumableCountCache[ConsumableFilter.All] = FilterItemsByTab(inventory, InventoryTab.Consumable).Count();
+            _consumableCountCache[ConsumableFilter.EPotion] = FilterItemsByConsumableType(inventory, "e_potion").Count();
+            _consumableCountCache[ConsumableFilter.MPotion] = FilterItemsByConsumableType(inventory, "m_potion").Count();
+            _consumableCountCache[ConsumableFilter.OPotion] = FilterItemsByConsumableType(inventory, "o_potion").Count();
+            _consumableCountCache[ConsumableFilter.Food] = FilterItemsByConsumableType(inventory, "food").Count();
+            _consumableCountCache[ConsumableFilter.Misc] = FilterItemsByConsumableType(inventory, "misc").Count();
+
             // Update filtered items for current view
             UpdateFilteredItemsCache();
 
@@ -136,6 +162,10 @@ namespace Scripts.Models
             if (_currentTab == InventoryTab.Equipment)
             {
                 _filteredItemsCache = FilterItemsByEquipmentSlot(_filteredItemsCache, _currentEquipmentFilter).ToList();
+            }
+            else if (_currentTab == InventoryTab.Consumable)
+            {
+                _filteredItemsCache = FilterConsumablesByType(_filteredItemsCache, _currentConsumableFilter).ToList();
             }
         }
 
@@ -176,8 +206,14 @@ namespace Scripts.Models
             {
                 DrawEquipmentSubTabs();
             }
+            else if (_currentTab == InventoryTab.Consumable)
+            {
+                DrawConsumableSubTabs();
+            }
 
-            float tabAreaOffset = _currentTab == InventoryTab.Equipment ? HEADER_HEIGHT + TAB_HEIGHT + (SUBTAB_HEIGHT * 2) + 10 : HEADER_HEIGHT + TAB_HEIGHT;
+            float tabAreaOffset = (_currentTab == InventoryTab.Equipment || _currentTab == InventoryTab.Consumable)
+                ? HEADER_HEIGHT + TAB_HEIGHT + SUBTAB_HEIGHT + 10
+                : HEADER_HEIGHT + TAB_HEIGHT;
 
             int itemCount = _filteredItemsCache.Count;
 
@@ -237,6 +273,7 @@ namespace Scripts.Models
             if (DrawTab($"Consumable ({_itemCountCache[InventoryTab.Consumable]})", new Rect(startX + tabWidth + 5, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Consumable))
             {
                 _currentTab = InventoryTab.Consumable;
+                _currentConsumableFilter = ConsumableFilter.All;
                 _scrollPosition = Vector2.zero;
                 UpdateFilteredItemsCache();
             }
@@ -351,6 +388,52 @@ namespace Scripts.Models
             GUI.backgroundColor = originalColor;
         }
 
+        void DrawConsumableSubTabs()
+        {
+            float subTabWidth = (_InventoryWindowRect.width - 50) / 5f;
+            float startX = 10;
+            float startY = HEADER_HEIGHT + TAB_HEIGHT;
+
+            Color originalColor = GUI.backgroundColor;
+
+            if (DrawSubTab($"All ({_consumableCountCache[ConsumableFilter.All]})", new Rect(startX, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.All))
+            {
+                _currentConsumableFilter = ConsumableFilter.All;
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+
+            if (DrawSubTab($"E-Potions ({_consumableCountCache[ConsumableFilter.EPotion]})", new Rect(startX + subTabWidth + 5, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.EPotion))
+            {
+                _currentConsumableFilter = ConsumableFilter.EPotion;
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+
+            if (DrawSubTab($"M-Potions ({_consumableCountCache[ConsumableFilter.MPotion]})", new Rect(startX + (subTabWidth + 5) * 2, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.MPotion))
+            {
+                _currentConsumableFilter = ConsumableFilter.MPotion;
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+
+            if (DrawSubTab($"O-Potions ({_consumableCountCache[ConsumableFilter.OPotion]})", new Rect(startX + (subTabWidth + 5) * 3, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.OPotion))
+            {
+                _currentConsumableFilter = ConsumableFilter.OPotion;
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+
+            if (DrawSubTab($"Food ({_consumableCountCache[ConsumableFilter.Food]})", new Rect(startX + (subTabWidth + 5) * 4, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.Food))
+            {
+                _currentConsumableFilter = ConsumableFilter.Food;
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+
+            GUI.backgroundColor = originalColor;
+        }
+
         bool DrawTab(string label, Rect rect, bool isActive)
         {
             Color originalColor = GUI.backgroundColor;
@@ -420,6 +503,87 @@ namespace Scripts.Models
                 EquipmentSlotFilter.Accessories => items.Where(item => MatchesEquipmentSlot(item, EquipmentSlot.Ring) || MatchesEquipmentSlot(item, EquipmentSlot.Hair) || MatchesEquipmentSlot(item, EquipmentSlot.FacialHair)),
                 _ => items
             };
+        }
+
+        IEnumerable<ItemBehaviour> FilterConsumablesByType(IEnumerable<ItemBehaviour> items, ConsumableFilter filter)
+        {
+            return filter switch
+            {
+                ConsumableFilter.All => items.Where(item => item.Consumable != null),
+                ConsumableFilter.EPotion => items.Where(item => HasHealthPotion(item)),
+                ConsumableFilter.MPotion => items.Where(item => HasManaPotion(item)),
+                ConsumableFilter.OPotion => items.Where(item => HasOtherPotion(item)),
+                ConsumableFilter.Food => items.Where(item => IsFood(item)),
+                ConsumableFilter.Misc => items.Where(item => IsMiscConsumable(item)),
+                _ => items
+            };
+        }
+
+        IEnumerable<ItemBehaviour> FilterItemsByConsumableType(IEnumerable<ItemBehaviour> items, string consumableType)
+        {
+            return consumableType switch
+            {
+                "e_potion" => items.Where(item => HasHealthPotion(item)),
+                "m_potion" => items.Where(item => HasManaPotion(item)),
+                "o_potion" => items.Where(item => HasOtherPotion(item)),
+                "food" => items.Where(item => IsFood(item)),
+                "misc" => items.Where(item => IsMiscConsumable(item)),
+                _ => items.Where(item => item.Consumable != null)
+            };
+        }
+
+        private bool HasHealthPotion(ItemBehaviour item)
+        {
+            if (item?.LiquidContainer != null)
+            {
+                int healthAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Health);
+                return healthAmount > 0;
+            }
+            return false;
+        }
+
+        private bool HasManaPotion(ItemBehaviour item)
+        {
+            if (item?.LiquidContainer != null)
+            {
+                int manaAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Mana);
+                return manaAmount > 0;
+            }
+            return false;
+        }
+
+        private bool HasOtherPotion(ItemBehaviour item)
+        {
+            //ignore food
+            if (item?.Consumable != null && item.Consumable.Food != null)
+            {
+                return false;
+            }
+
+            if (item?.Consumable != null && item.LiquidContainer == null)
+            {
+                return true;
+            }
+            if (item?.LiquidContainer != null)
+            {
+                int healthAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Health);
+                int manaAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Mana);
+                return healthAmount == 0 && manaAmount == 0;
+            }
+            return false;
+        }
+
+        private bool IsFood(ItemBehaviour item)
+        {
+            return item?.Consumable != null && item.Consumable.Food != null;
+        }
+
+        private bool IsMiscConsumable(ItemBehaviour item)
+        {
+            if (item?.Consumable == null)
+                return false;
+
+            return !IsFood(item) && !HasHealthPotion(item) && !HasManaPotion(item) && !HasOtherPotion(item);
         }
 
         bool MatchesEquipmentSlot(ItemBehaviour item, EquipmentSlot slot)
