@@ -571,9 +571,23 @@ namespace Scripts.Models
             if (item?.LiquidContainer != null)
             {
                 int healthAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Health);
+                if (healthAmount > 0)
+                    return false;
                 int manaAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Mana);
-                int totalLiquid = healthAmount + manaAmount;
-                return totalLiquid > 0;
+                if (manaAmount > 0)
+                    return false;
+
+                int totalAmount = 0;
+                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Fire);
+                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Honey);
+                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Ink);
+                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Oil);
+                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Rage);
+                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Stamina);
+                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Water);
+
+
+                return totalAmount > 0;
             }
             return false;
         }
@@ -585,12 +599,24 @@ namespace Scripts.Models
 
             if (item?.LiquidContainer != null)
             {
-                int healthAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Health);
-                int manaAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Mana);
-                int totalLiquid = healthAmount + manaAmount;
-                return totalLiquid == 0;
+                //int healthAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Health);
+                //int manaAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Mana);
+                //int totalLiquid = healthAmount + manaAmount;
+                return GetTotalAmouttInLiquidContainer(item) == 0;
             }
             return false;
+        }
+
+        private int GetTotalAmouttInLiquidContainer(ItemBehaviour item)
+        {
+            if (item?.LiquidContainer == null)
+                return 0;
+            int totalAmount = 0;
+            foreach (ResourceType resourceType in Enum.GetValues(typeof(ResourceType)))
+            {
+                totalAmount += item.LiquidContainer.GetResourceAmount(resourceType);
+            }
+            return totalAmount;
         }
 
         private bool IsFood(ItemBehaviour item)
