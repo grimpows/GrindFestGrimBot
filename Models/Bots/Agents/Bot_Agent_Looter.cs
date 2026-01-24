@@ -45,7 +45,7 @@ namespace Scripts.Models
 
             RemoveUsedHealthPotFromInventory();
 
-            RemoveUnusedWeapo();
+            RemoveUnusedWeapon();
 
             ScanForItems();
 
@@ -139,7 +139,7 @@ namespace Scripts.Models
 
             ScannedItems = ScannedItems.Where(item =>
             {
-                if (item.Weapon != null)
+                if (item.Weapon != null && !item.name.ToLower().Contains("hammer"))
                 {
                     if (item.Weapon.DamagePerSecond < averageDPS)
                     {
@@ -197,8 +197,9 @@ namespace Scripts.Models
             if (_hero.Character.Inventory.Items.Count(i => i.Weapon != null) == 0)
                 return 0f;
 
+            // dont forget to not consider blacksmith items used for crafting
             var weaponDPS = _hero.Character.Inventory.Items
-                .Where(i => i.Weapon != null)
+                .Where(i => i.Weapon != null && !i.name.ToLower().Contains("hammer"))
                 .OrderByDescending(i => i.Weapon.DamagePerSecond)
                 .Take(5)
                 .Average(i => i.Weapon.DamagePerSecond);
@@ -206,10 +207,11 @@ namespace Scripts.Models
             return weaponDPS;
         }
 
-        public void RemoveUnusedWeapo()
+        public void RemoveUnusedWeapon()
         {
+            //dont forget to not remove blacksmith items used for crafting
             var itemsToRemove = _hero.Character.Inventory.Items
-                .Where(item => item.Weapon != null)
+                .Where(item => item.Weapon != null && !item.name.ToLower().Contains("hammer"))
                 .OrderByDescending(item => item.Weapon.DamagePerSecond)
                 .ToList();
 

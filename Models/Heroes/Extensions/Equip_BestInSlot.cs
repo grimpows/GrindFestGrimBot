@@ -15,12 +15,11 @@ namespace Scripts.Models
                 .Where(item => item.Weapon != null)
                 .ToList();
 
-            //var bestWeapon = weaponInventoryList.FirstOrDefault();
+            //ignoring the hammer Keyword cause its used for crafting
+            weaponInventoryList = weaponInventoryList
+                .Where(item => !item.name.ToLower().Contains("hammer"))
+                .ToList();
 
-            //if (bestWeapon != null && hero.EquipWeaponIfBetter(bestWeapon))
-            //{
-            //    return;
-            //}
 
             foreach (var weapon in weaponInventoryList)
             {
