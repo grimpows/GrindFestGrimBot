@@ -109,7 +109,7 @@ namespace Scripts.Models
             foreach (var item in storedItemInDeadEnemies)
             {
                 _hero.Say("Found stored item on dead enemy: " + item.name);
-                item?.Container?.RemoveItem(item);
+                item?.Container?.DropAllOnGround();
             }
 
 
