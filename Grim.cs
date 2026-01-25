@@ -5,7 +5,7 @@ using Scripts.Models;
 
 class Grim : Hero_Base
 {
-    //evertyhing is in the base class so its easy to add new heroes !!s
+    //evertyhing is in the base class so its easy to add new heroes !!ssssssssssssss
 }
 
 

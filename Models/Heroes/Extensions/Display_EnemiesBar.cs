@@ -20,8 +20,8 @@ namespace Scripts.Models
                 if (hp <= 0) continue;
 
                 Vector3 pos = enemy.transform.position;
-                float disC = Vector3.Distance(pos, hero.transform.position);
-                if (Vector3.Distance(hero.transform.position, pos) > distance) continue;
+                float distanceFrom = Vector3.Distance(pos, hero.transform.position);
+                if (distanceFrom > distance) continue;
 
                 float maxhp = enemy.Health.MaxHealth;
                 string name = enemy.name;

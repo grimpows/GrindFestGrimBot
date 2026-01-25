@@ -48,7 +48,9 @@ namespace Scripts.Models
                 //var rect = new Rect(itemX, itemY, itemWidth, 30);
                 //GUI.Box(rect, body.name);
 
-                var equipedItems = body.Character.Equipment._items.Values;
+                var equipedItems = body.Character?.Equipment?._items?.Values;
+
+                if (equipedItems == null) continue;
 
 
                 foreach (var equipedItem in equipedItems)

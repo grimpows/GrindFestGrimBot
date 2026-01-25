@@ -48,7 +48,7 @@ namespace Scripts.Models
 
         public bool IsActing(float maxDistance = 15f)
         {
-            if (!_hero.IsBotting)
+            if (!_hero.IsBotting && KillCount > 0)
             {
                 KillCount = 0;
             }

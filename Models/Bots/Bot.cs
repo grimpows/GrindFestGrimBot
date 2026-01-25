@@ -84,6 +84,8 @@ namespace Scripts.Models
             _hero.UpgradeStats();
 
 
+            PickUpAgent.ScanForItems();
+
             if (FightingAgent.TargetedMonster == null && PickUpAgent.IsActing())
                 return;
 
@@ -96,7 +98,7 @@ namespace Scripts.Models
             if (FightingAgent.TargetedMonster == null && _hero.TryMoveToBestFarmArea(IsAllowedToChangeArea))
                 return;
 
-            if (FightingAgent.IsActing(20))
+            if (FightingAgent.IsActing(200))
                 return;
 
 

@@ -19,15 +19,26 @@ class MyParty : Party_Base
 
     private WorldUI _worldUI = new WorldUI(KeyCode.W);
 
+    private GoldShopManager _goldShopManager = null;
+
     public void OnGUI()
     {
-        _worldUI?.OnGUI(SelectedHero);
+        _worldUI?.OnGUI(SelectedHero, 400);
 
 
     }
 
     public void Update()
     {
+
+        if (_goldShopManager == null)
+        {
+            _goldShopManager = new GoldShopManager(this,KeyCode.Dollar);
+        }
+
+
+        _goldShopManager?.OnUpdate();
+
         _worldUI?.OnUpdate();
 
 
@@ -48,8 +59,6 @@ class MyParty : Party_Base
             SelectedHero.OpenInventory();
         }
 
-
-        BuyGoldShopItems();
 
         ResurectDeadHeroes(PartyMembers);
     }

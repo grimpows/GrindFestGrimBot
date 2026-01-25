@@ -23,12 +23,12 @@ namespace Scripts.Models
             _toggleShowKey = toggleShowKey;
         }
 
-        public void OnGUI(AutomaticHero hero)
+        public void OnGUI(AutomaticHero hero, int distance = 200)
         {
-            hero.Display_EnemiesBar(100);
-            hero.Display_ItemsOnGround(200);
+            hero.Display_EnemiesBar(distance);
+            hero.Display_ItemsOnGround(distance);
             hero.Display_NameTag();
-            hero.Display_InteractiveObjets(GLOBAL.INTERACTIVE_ITEM_LIST, 100);
+            hero.Display_InteractiveObjets(GLOBAL.INTERACTIVE_ITEM_LIST, distance);
 
             if (_isShow)
             {

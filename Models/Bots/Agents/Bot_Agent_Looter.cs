@@ -88,21 +88,28 @@ namespace Scripts.Models
 
             var deadEnemies = _hero.FindDeadNearbyEnemies(maxDistance: 500).ToList();
 
-            var equippedItemsOnDeadEnemies = deadEnemies
-                .SelectMany(enemy => enemy.Character?.Equipment?._items.Values)
+            if (deadEnemies != null)
+            {
+                var equippedItemsOnDeadEnemies = deadEnemies
+                .Where(enemy => enemy.Character?.Equipment?._items?.Values != null)
+                .SelectMany(enemy => enemy.Character?.Equipment?._items?.Values)
                 .Where(item => item != null && item.Item != null)
                 .Select(item => item.Item)
                 .ToList() ?? new List<ItemBehaviour>();
 
 
-            foreach (var item in equippedItemsOnDeadEnemies)
-            {
-                //_hero.Say("Found item on dead enemy: " + item.name);
-                item?.Equipable?.Unequip();
+                foreach (var item in equippedItemsOnDeadEnemies)
+                {
+                    //_hero.Say("Found item on dead enemy: " + item.name);
+                    item?.Equipable?.Unequip();
+                }
             }
 
+            
+
             var storedItemInDeadEnemies = deadEnemies
-                .SelectMany(enemy => enemy?.Character?.Inventory?.Items != null ? enemy.Character.Inventory.Items : new List<ItemBehaviour>())
+                .Where(enemy => enemy != null)
+                .SelectMany(enemy => enemy.Character?.Inventory?.Items ?? new List<ItemBehaviour>())
                 .Where(item => item != null)
                 .ToList() ?? new List<ItemBehaviour>();
 
@@ -164,7 +171,10 @@ namespace Scripts.Models
 
             if (TargetedItem == null && ScannedItems.Count > 0)
             {
-                TargetedItem = ScannedItems.OrderBy(i => Vector3.Distance(_hero.transform.position, i.transform.position)).First();
+                var scannedItemsWithPosition = ScannedItems.Where(i => i != null && i.transform != null).ToList();
+
+
+                TargetedItem = scannedItemsWithPosition.OrderBy(i => Vector3.Distance(_hero.transform.position, i.transform.position)).First();
 
                 LastItemTargetTime = DateTime.Now;
             }
@@ -209,7 +219,7 @@ namespace Scripts.Models
 
         public void RemoveUnusedWeapon()
         {
-            //dont forget to not remove blacksmith items used for crafting
+            //dontforget to not remove blacksmith items used for crafting
             var itemsToRemove = _hero.Character.Inventory.Items
                 .Where(item => item.Weapon != null && !item.name.ToLower().Contains("hammer"))
                 .OrderByDescending(item => item.Weapon.DamagePerSecond)

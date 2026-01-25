@@ -37,19 +37,6 @@ namespace Scripts.Models
             }
         }
 
-        public void BuyGoldShopItems()
-        {
-
-            var goldShopItems = this.GetGoldShopItems();
-            foreach (var item in goldShopItems)
-            {
-                if (this.Gold >= item.GoldPrice && this.Souls >= item.SoulPrice && this.Gems >= item.GemPrice)
-                {
-                    this.BuyFromGoldShop(item.Name);
-                    return;
-                }
-
-            }
-        }
+        
     }
 }
