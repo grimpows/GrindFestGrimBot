@@ -62,14 +62,14 @@ namespace Scripts.Models
             GUILayout.Label("Consumption Stats", GUI.skin.box);
             GUILayout.Space(ELEMENT_PADDING);
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Status:", GUILayout.Width(150));
-            bool isActing = _consumerAgent.IsActing();
-            GUI.color = isActing ? Color.green : Color.red;
-            GUILayout.Label(isActing ? "ACTIVE" : "IDLE", GUILayout.Width(100));
-            GUI.color = Color.white;
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            //GUILayout.BeginHorizontal();
+            //GUILayout.Label("Status:", GUILayout.Width(150));
+            //bool isActing = _consumerAgent.IsActing();
+            //GUI.color = isActing ? Color.green : Color.red;
+            //GUILayout.Label(isActing ? "ACTIVE" : "IDLE", GUILayout.Width(100));
+            //GUI.color = Color.white;
+            //GUILayout.FlexibleSpace();
+            //GUILayout.EndHorizontal();
 
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();

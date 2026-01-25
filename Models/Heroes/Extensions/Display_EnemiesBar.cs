@@ -40,7 +40,7 @@ namespace Scripts.Models
                 GUI.backgroundColor = Color.clear;
 
                 //show distance above bar
-                GUI.Button(new Rect(barX, barY - 15, 100, 50), $"Dist:{distanceFrom:F1}");
+                GUI.Button(new Rect(barX, barY - 50, 100, 50), $"Dist:{distanceFrom:F1}");
 
 
                 //GUI.Button(new Rect(barX, barY, 100, 10), $"{name} HP: {hp}/{maxhp} ({hpPercent:P1}) Exp: {exp} STR: {str}");

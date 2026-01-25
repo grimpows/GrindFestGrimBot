@@ -185,9 +185,50 @@ namespace Scripts.Model
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
+            //Last position
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Last Position:", GUILayout.Width(150));
+            string lastPositionStr = _bot.LastHeroPosition != null ? $"({_bot.LastHeroPosition.normalized.x:F2}, {_bot.LastHeroPosition.normalized.y:F2}, {_bot.LastHeroPosition.normalized.z:F2})" : "N/A";
+            GUILayout.Label(lastPositionStr, GUILayout.Width(200));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+
+            //Last Position time elapsed
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Time Since Last Move:", GUILayout.Width(150));
+            TimeSpan timeSinceLastMove = DateTime.Now - _bot.LastHeroPositionTime;
+            GUILayout.Label($"{timeSinceLastMove.TotalSeconds:F1} seconds", GUILayout.Width(200));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            //distance from last position
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Distance From Last Pos:", GUILayout.Width(150));
+            float distanceFromLastPos =  Vector3.Distance(_hero.Character.transform.position, _bot.LastHeroPosition);
+            GUILayout.Label($"{distanceFromLastPos:F2} units", GUILayout.Width(200));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+
+            //Unstick mode and the timer
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Unstick Mode:", GUILayout.Width(150));
+            GUI.color = _bot.IsOnUnstickMode ? Color.green : Color.red;
+            GUILayout.Label(_bot.IsOnUnstickMode ? "ACTIVE" : "INACTIVE", GUILayout.Width(100));
+            GUI.color = Color.white;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            //GUILayout.BeginHorizontal();
+            
+
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
             GUILayout.EndArea();
+
+            
+
         }
     }
 }

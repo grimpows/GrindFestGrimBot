@@ -22,7 +22,7 @@ namespace Scripts.Models
 
         }
 
-        public bool IsActing(float healthThreshold = 0.5f)
+        public bool IsActing(bool usePotionFirst,float healthThreshold = 0.5f)
         {
             if (_hero.Character.SkillUser.IsUsingSkill && _hero.Character.SkillUser.CurrentlyUsedSkill == LastUsedSkill)
             {
@@ -30,7 +30,7 @@ namespace Scripts.Models
                 return true;
             }
 
-            if (RestoreHealth(healthThreshold))
+            if (RestoreHealth(usePotionFirst, healthThreshold))
                 return true;
 
 
@@ -38,7 +38,7 @@ namespace Scripts.Models
             return false;
         }
 
-        bool RestoreHealth(float healthThreshold = 0.5f)
+        bool RestoreHealth(bool usePotionFirst, float healthThreshold = 0.5f)
         {
             // prevent thresholds above 100%
             if (healthThreshold > 1f)
@@ -47,16 +47,19 @@ namespace Scripts.Models
             if (_hero.Health < _hero.MaxHealth * healthThreshold) // Below threshold health
             {
 
-                Predicate<ItemBehaviour> foodPredicate = item => item.Consumable != null && item.Consumable.Food != null && item.Consumable.Food.HealthRestore > 500;
+                Predicate<ItemBehaviour> foodPredicate = item => item.Consumable != null && item.Consumable.Food != null && item.Consumable.Food.HealthRestore > 0;
 
-                if (HasFood(foodPredicate))
+                bool hasFood = HasFood(foodPredicate);
+                bool hasPotion = _hero.HasHealthPotion();
+
+                if (hasFood && (usePotionFirst == false || hasPotion == false))
                 {
                     ConsumeFood(foodPredicate);
                     _hero.RunAwayFromNearestEnemy(20); // Good practice to retreat while eating
                     return true;
                 }
 
-                if (_hero.HasHealthPotion())
+                if (hasPotion)
                 {
                     DrinkHealthPotion();
                     _hero.RunAwayFromNearestEnemy(30); // Good practice to retreat while drinking

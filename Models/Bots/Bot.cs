@@ -18,7 +18,30 @@ namespace Scripts.Models
         public Vector3 LastHeroPosition = Vector3.zero;
         public DateTime LastHeroPositionTime = DateTime.MinValue;
 
-
+        private bool _isOnUnstickMode = false;
+        public bool IsOnUnstickMode
+        {
+            get { return _isOnUnstickMode; }
+            set
+            {
+                if (_isOnUnstickMode != value)
+                {
+                    _isOnUnstickMode = value;
+                    if (_isOnUnstickMode)
+                    {
+                        UnstickStartTime = DateTime.Now;
+                        _hero.Say("Entering Unstick Mode");
+                    }
+                    else
+                    {
+                        _hero.Say("Exiting Unstick Mode");
+                        LastHeroPosition = _hero.Character.transform.position;
+                        LastHeroPositionTime = DateTime.Now;
+                    }
+                }
+            }
+        }
+        public DateTime UnstickStartTime = DateTime.MinValue;
 
         private AutomaticHero _hero;
         private BotUI? _botUI = null;
@@ -66,7 +89,11 @@ namespace Scripts.Models
 
         public void OnUpdate()
         {
-
+            if (LastHeroPosition == Vector3.zero)
+            {
+                LastHeroPosition = _hero.Character.transform.position;
+                LastHeroPositionTime = DateTime.Now;
+            }
 
 
             if (_hero == null)
@@ -79,48 +106,65 @@ namespace Scripts.Models
 
 
             //try keep health up first
-            if (ConsumerAgent.IsActing(0.5f))
+            if (ConsumerAgent.IsActing(true, 0.5f))
+            {
+                this.IDontCareAboutStick();
                 return;
-
-
+            }
 
             _hero.UpgradeStats();
+
+            if (IsOnUnstickMode)
+            {
+                _hero.RunAroundInArea();
+                if ((DateTime.Now - UnstickStartTime).TotalSeconds > 30)
+                {
+                    IsOnUnstickMode = false;
+
+                }
+                return;
+            }
+
 
             if (FightingAgent.IsActing())
             {
                 PickUpAgent.TargetedItem = null;
+                this.IDontCareAboutStick();
                 return;
             }
 
             if (PickUpAgent.IsActing())
+            {
+                this.IDontCareAboutStick();
                 return;
+            }
 
             // once looting and fighting is done, try to consume if needed before other actions
-            if (ConsumerAgent.IsActing(0.9f))
+            if (ConsumerAgent.IsActing(false, 0.8f))
+            {
+                this.IDontCareAboutStick();
                 return;
+            }
 
             _hero.Equip_BestInSlot();
 
 
 
-            if (LastHeroPosition == Vector3.zero)
+
+            if (Vector3.Distance(LastHeroPosition, _hero.Character.transform.position) > 1f)
             {
                 LastHeroPosition = _hero.Character.transform.position;
                 LastHeroPositionTime = DateTime.Now;
             }
-            else
+
+
+            if ((DateTime.Now - LastHeroPositionTime).TotalSeconds > 5)
             {
-                if(Vector3.Distance(LastHeroPosition, _hero.Character.transform.position) > 1f)
-                {
-                    LastHeroPosition = _hero.Character.transform.position;
-                    LastHeroPositionTime = DateTime.Now;
-                }
+                //_hero.RunAroundInArea();
+                IsOnUnstickMode = true;
             }
 
-            if ((DateTime.Now - LastHeroPositionTime).TotalSeconds > 1)
-            {
-                _hero.RunAroundInArea();
-            }
+
 
             if (_hero.TryInteractWithObjects())
                 return;
@@ -129,11 +173,14 @@ namespace Scripts.Models
                 return;
 
 
-
-
             _hero.RunAroundInArea();
         }
 
+
+        private void IDontCareAboutStick()
+        {
+            LastHeroPositionTime = DateTime.Now;
+        }
 
 
 

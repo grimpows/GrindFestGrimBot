@@ -16,8 +16,8 @@ namespace Scripts.Models
         public MonsterBehaviour? TargetedMonster = null;
         public int? LastTargetedMonsterHealth = null;
         public DateTime? LastTargetMonsterHealthChanged = null;
-        public int TargetMonsterTimeout = 10;
-        public float MaxDistance = 15f;
+        public int TargetMonsterTimeout = 15;
+        public float MaxDistance = 10f;
 
         private int _killCount = 0;
         public int KillCount
