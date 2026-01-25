@@ -14,11 +14,11 @@ namespace Scripts.Models
 
             switch (level)
             {
-                case int n when (n < 5):
+                case int n when (n < 4):
                     return "Stony Plains";
-                case int n when (n < 7):
+                case int n when (n < 10):
                     return "Crimson Meadows";
-                case int n when (n < 11):
+                case int n when (n < 15):
                     return "Rotten Burrows";
                 default:
                     return "Ashen Pastures";
