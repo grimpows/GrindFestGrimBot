@@ -17,6 +17,7 @@ namespace Scripts.Models
         public int? LastTargetedMonsterHealth = null;
         public DateTime? LastTargetMonsterHealthChanged = null;
         public int TargetMonsterTimeout = 10;
+        public float MaxDistance = 15f;
 
         private int _killCount = 0;
         public int KillCount
@@ -46,24 +47,24 @@ namespace Scripts.Models
 
         }
 
-        public bool IsActing(float maxDistance = 15f)
+        public bool IsActing()
         {
             if (!_hero.IsBotting && KillCount > 0)
             {
                 KillCount = 0;
             }
 
-            return TryFight(maxDistance);
+            return TryFight();
 
         }
 
-        bool TryFight(float maxDistance = 15f)
+        bool TryFight()
         {
 
             if (TargetedMonster == null)
             {
                 //get ennemies exept ignored ones
-                var enemy = _hero.FindNearestEnemiesByReward(maxDistance)
+                var enemy = _hero.FindNearestEnemiesByReward(MaxDistance)
                     .Where(enemy => !IgnoredMonsters.Contains(enemy))
                     .ToList()
                     .FirstOrDefault();
@@ -104,14 +105,14 @@ namespace Scripts.Models
                 }
                 else
                 {
-                    return Attack(TargetedMonster, maxDistance: maxDistance);
+                    return Attack(TargetedMonster);
                 }
             }
             return false;
 
         }
 
-        bool Attack(MonsterBehaviour target, float maxDistance = 15f)
+        bool Attack(MonsterBehaviour target)
         {
             if (target == null)
             {
@@ -144,7 +145,7 @@ namespace Scripts.Models
 
             Vector3 vector = target.transform.position - (target.transform.position - _hero.Character.transform.position).normalized * range * 0.7f;
             float num = Vector3.Distance(_hero.Character.transform.position, target.transform.position);
-            if (num > maxDistance && !_hero.Character.CanNavigateTo(vector, 1f))
+            if (num > MaxDistance && !_hero.Character.CanNavigateTo(vector, 1f))
             {
                 _hero.AttackTarget = null;
                 return false;

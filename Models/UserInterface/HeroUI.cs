@@ -303,7 +303,10 @@ namespace Scripts.Models
             string charactereStatLabel = string.Empty;
             charactereStatLabel += $"Level: {_hero.Character.Level.Level}\n";
             charactereStatLabel += $"\nHealth: {_hero.Character.Health.CurrentHealth}/{_hero.Character.Health.MaxHealth}\n";
-            charactereStatLabel += $"\nArmor: {_hero.TotalArmor()}\n";
+            charactereStatLabel += $"\nArmor:{_hero.Character.Combat.Armor} ({_hero.TotalArmorFromItem()})\n";
+            charactereStatLabel += $"\nSTR: {_hero.Character.Strength} ({_hero.Character.BaseStrength} + {_hero.Character.ItemStrengthBonus}) \n";
+            charactereStatLabel += $"\nDEX: {_hero.Character.Dexterity} ({_hero.Character.BaseDexterity} + {_hero.Character.ItemDexterityBonus}) \n";
+            charactereStatLabel += $"\nINT: {_hero.Character.Intelligence} ({_hero.Character.BaseIntelligence} + {_hero.Character.ItemIntelligenceBonus}) \n";
             GUI.Box(_characterStatRect, charactereStatLabel, LeftLabelStyle);
 
             GUI.DragWindow();
@@ -395,12 +398,6 @@ namespace Scripts.Models
             GUI.Box(tooltipRect, tooltipText.TrimEnd(), WordWrapBoxStyle);
         }
 
-        Color GetDurabilityColor(float percentage)
-        {
-            if (percentage > 75f) return Color.green;
-            if (percentage > 50f) return Color.yellow;
-            if (percentage > 25f) return new Color(1f, 0.5f, 0f);
-            return Color.red;
-        }
+        
     }
 }

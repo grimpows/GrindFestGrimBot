@@ -39,6 +39,20 @@ namespace Scripts.Models
 
             GUILayout.Space(ELEMENT_PADDING);
 
+            // Max Distance Display
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Max Distance:", GUILayout.Width(150));
+            string maxDistanceStr = GUILayout.TextField(_fightingAgent.MaxDistance.ToString("F1"), GUILayout.Width(INPUT_FIELD_WIDTH));
+            if (float.TryParse(maxDistanceStr, out float newMaxDistance) && newMaxDistance > 0)
+            {
+                _fightingAgent.MaxDistance = newMaxDistance;
+            }
+            GUILayout.Label("units", GUILayout.Width(50));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(ELEMENT_PADDING);
+
             // Target Monster Display
             GUILayout.BeginHorizontal();
             GUILayout.Label("Targeted Monster:", GUILayout.Width(150));

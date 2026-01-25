@@ -9,8 +9,9 @@ namespace Scripts.Models
 {
     public static partial class HeroExtensions
     {
-        public static int TotalArmor(this AutomaticHero hero)
+        public static int TotalArmorFromItem(this AutomaticHero hero)
         {
+            
             int totalArmor = 0;
             foreach (var equipment in hero.Equipment._items.Values)
             {

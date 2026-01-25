@@ -83,23 +83,25 @@ namespace Scripts.Models
 
             _hero.UpgradeStats();
 
+            if (FightingAgent.IsActing())
+                return;
+
 
             PickUpAgent.ScanForItems();
 
-            if (FightingAgent.TargetedMonster == null && PickUpAgent.IsActing())
+            if ( PickUpAgent.IsActing())
                 return;
 
-            if (FightingAgent.TargetedMonster == null &&  _hero.TryInteractWithObjects())
+            if ( _hero.TryInteractWithObjects())
                 return;
 
 
             _hero.Equip_BestInSlot();
 
-            if (FightingAgent.TargetedMonster == null && _hero.TryMoveToBestFarmArea(IsAllowedToChangeArea))
+            if (_hero.TryMoveToBestFarmArea(IsAllowedToChangeArea))
                 return;
 
-            if (FightingAgent.IsActing(200))
-                return;
+            
 
 
             _hero.RunAroundInArea();
