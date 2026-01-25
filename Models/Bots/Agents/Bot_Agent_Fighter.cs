@@ -96,7 +96,7 @@ namespace Scripts.Models
                 }
 
 
-                if (TargetedMonster.Health.CurrentHealth <= 0)
+                if (TargetedMonster.Health.IsDead)
                 {
                     TargetedMonster = null;
                     LastTargetedMonsterHealth = null;

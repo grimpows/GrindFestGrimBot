@@ -84,10 +84,10 @@ namespace Scripts.Models
             _hero.UpgradeStats();
 
             if (FightingAgent.IsActing())
+            {
+                PickUpAgent.TargetedItem = null;
                 return;
-
-
-            PickUpAgent.ScanForItems();
+            }
 
             if ( PickUpAgent.IsActing())
                 return;

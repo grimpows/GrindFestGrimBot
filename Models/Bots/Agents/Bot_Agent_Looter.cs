@@ -86,7 +86,7 @@ namespace Scripts.Models
             if ((DateTime.Now - LastScanTime).TotalSeconds < ScanFrequency && !ForceRescan)
                 return;
 
-            var deadEnemies = _hero.FindDeadNearbyEnemies(maxDistance: 500).ToList();
+            var deadEnemies = _hero.FindDeadNearbyEnemies(maxDistance: 200).ToList();
 
             if (deadEnemies != null)
             {
@@ -105,7 +105,7 @@ namespace Scripts.Models
                 }
             }
 
-            
+
 
             var storedItemInDeadEnemies = deadEnemies
                 .Where(enemy => enemy != null)

@@ -128,10 +128,19 @@ namespace Scripts.Models
         {
             GUILayout.BeginHorizontal(GUI.skin.box);
 
+            var actualGold = _goldShopManager.Party?.Gold;
+            var actualSouls = _goldShopManager.Party?.Souls;
+            var actualGems = _goldShopManager.Party?.Gems;
+            
+
             _goldShopManager.IsEnabled = GUILayout.Toggle(_goldShopManager.IsEnabled, "Enable Auto Buy", GUILayout.Width(150));
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+
+            GUILayout.Space(5);
+
+            GUILayout.Label($"Current Resources: {actualGold} Gold, {actualSouls} Souls, {actualGems} Gems", GUI.skin.box);
 
             GUILayout.Space(5);
         }
@@ -154,7 +163,12 @@ namespace Scripts.Models
             {
                 bool isEnabled = _goldShopManager.AutoBuyGoldShopItemSelection[itemKey];
 
-                DrawGoldShopItem(itemKey, ref isEnabled);
+                var goldShopItems = _goldShopManager?.Party?.GetGoldShopItems();
+                var item = goldShopItems?.FirstOrDefault(i => i.Name == itemKey);
+
+                string itemName = $"{itemKey} ({item.GoldPrice} Gold, {item.SoulPrice} Souls, {item.GemPrice} Gems)";
+
+                DrawGoldShopItem(itemName, ref isEnabled);
 
                 _goldShopManager.AutoBuyGoldShopItemSelection[itemKey] = isEnabled;
             }

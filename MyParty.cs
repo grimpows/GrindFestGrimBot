@@ -31,7 +31,6 @@ class MyParty : Party_Base
 
     public void Update()
     {
-
         if (_goldShopManager == null)
         {
             Debug.Log("Initializing Gold Shop Manager");

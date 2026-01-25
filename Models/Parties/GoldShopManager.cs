@@ -11,7 +11,7 @@ namespace Scripts.Models
     public class GoldShopManager
     {
         private GoldShopManagerUI _goldShopManagerUI = null;
-        private AutomaticParty _party = null;
+        public AutomaticParty Party = null;
 
         public bool IsEnabled { get; set; } = true;
 
@@ -25,7 +25,7 @@ namespace Scripts.Models
                 _goldShopManagerUI = new GoldShopManagerUI(this, toggleShowKey);
             }
 
-            _party = party;
+            Party = party;
         }
 
         public void OnGUI()
@@ -46,7 +46,7 @@ namespace Scripts.Models
         public void BuyGoldShopItems()
         {
 
-            var goldShopItems = _party.GetGoldShopItems();
+            var goldShopItems = Party.GetGoldShopItems();
             foreach (var item in goldShopItems)
             {
                 string itemKey = item.Name;
@@ -62,17 +62,18 @@ namespace Scripts.Models
 
 
                     // check if can afford
-                    if (_party.Gold >= item.GoldPrice && _party.Souls >= item.SoulPrice && _party.Gems >= item.GemPrice)
+                    if (Party.Gold >= item.GoldPrice && Party.Souls >= item.SoulPrice && Party.Gems >= item.GemPrice)
                     {
                         //buy item
-                        _party.BuyFromGoldShop(item.Name);
+                        Party.BuyFromGoldShop(item.Name);
                         return;
                     }
 
                 }
                 else
                 {
-                    AutoBuyGoldShopItemSelection[itemKey] = false;
+                    // add to dictionary if not present
+                    AutoBuyGoldShopItemSelection[itemKey] = item.Name.ToLower().Contains("gold") ? true : false;
                 }
 
               
