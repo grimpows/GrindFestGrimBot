@@ -16,11 +16,13 @@ namespace Scripts.Models
                 return;
             }
 
-            int STRBasePoints = 10;
-            int DEXBasePoints = 10;
-            int INTBasePoints = 10;
+            
 
+            int STRBasePoints = hero.Character.BaseStrength;
+            int DEXBasePoints = hero.Character.BaseDexterity;
+            int INTBasePoints = hero.Character.BaseIntelligence;
 
+            
             int levelGaigned = hero.Level - 1;
 
             int targetSTRPoints = STRBasePoints + levelGaigned * 3;

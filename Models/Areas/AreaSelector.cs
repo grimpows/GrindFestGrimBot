@@ -16,7 +16,7 @@ namespace Scripts.Models
             {
                 case int n when (n < 4):
                     return "Stony Plains";
-                case int n when (n < 11):
+                case int n when (n < 13):
                     return "Crimson Meadows";
                 case int n when (n < 15):
                     return "Rotten Burrows";

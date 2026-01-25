@@ -14,7 +14,7 @@ class MyParty : Party_Base
     public static List<PartyMember> PartyMembers =>
          new List<PartyMember>()
         {
-            new PartyMember("Grim", "Hero"),
+            new PartyMember("Grim", "Warrior"),
         };
 
     private WorldUI _worldUI = new WorldUI(KeyCode.W);
