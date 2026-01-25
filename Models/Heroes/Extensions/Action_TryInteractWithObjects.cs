@@ -9,7 +9,7 @@ namespace Scripts.Models
 {
     public static partial class HeroExtensions
     {
-        public static bool TryInteractWithObjects(this AutomaticHero hero)
+        public static bool Action_TryInteractWithObjects(this AutomaticHero hero)
         {
             var chest = hero.FindNearestInteractive("Chest", maxDistance: 500);
             if (chest != null && chest.Item?.Armor == null)

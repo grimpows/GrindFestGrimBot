@@ -30,7 +30,7 @@ namespace Scripts.Models
                 GUI.Box(rect, item.Name);
             }
 
-            var deadBodies = hero.FindDeadNearbyEnemies(maxDistance: distance);
+            var deadBodies = hero.Find_DeadNearbyEnemies(maxDistance: distance);
 
             foreach (var body in deadBodies)
             {

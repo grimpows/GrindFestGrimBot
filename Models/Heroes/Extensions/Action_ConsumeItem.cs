@@ -9,7 +9,7 @@ namespace Scripts.Models
 {
     public static partial class HeroExtensions
     {
-        public static void ConsumeItem(this AutomaticHero hero, ItemBehaviour item)
+        public static void Action_ConsumeItem(this AutomaticHero hero, ItemBehaviour item)
         {
             if (item == null)
             {

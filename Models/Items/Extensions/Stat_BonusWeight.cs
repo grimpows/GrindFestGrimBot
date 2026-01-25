@@ -9,7 +9,7 @@ namespace Scripts.Models
 {
     public static partial class ItemExtensions
     {
-        public static int StatBonusWeight(this ItemBehaviour item)
+        public static int Stat_BonusWeight(this ItemBehaviour item)
         {
             int result = 0;
 
@@ -21,6 +21,11 @@ namespace Scripts.Models
             if (item?.BonusStrength is not null)
             {
                 result += item.BonusStrength;
+            }
+
+            if (item?.BonusIntelligence is not null)
+            {
+                result += item.BonusIntelligence;
             }
 
             return result;

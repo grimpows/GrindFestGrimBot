@@ -9,9 +9,9 @@ namespace Scripts.Models
 {
     public static partial class HeroExtensions
     {
-        public static void LearnSpellBook(this AutomaticHero hero, ItemBehaviour item)
+        public static void Action_LearnSpellBook(this AutomaticHero hero, ItemBehaviour spellBook)
         {
-            hero.Log($"Learning spell from {item.Name}");
+            hero.Log($"Learning spell from {spellBook.Name}");
 
             //if (item?.Usable == null)
             //{
@@ -19,21 +19,21 @@ namespace Scripts.Models
             //    return;
             //}
 
-            if (item?.InteractiveBehaviour == null)
+            if (spellBook?.InteractiveBehaviour == null)
             {
                 hero.Log($"Item has no InteractiveBehaviour !");
                 return;
             }
 
-            if (item?.InteractiveBehaviour != null && hero?.Hero != null)
+            if (spellBook?.InteractiveBehaviour != null && hero?.Hero != null)
             {
                 try
                 {
-                    item.InteractiveBehaviour.OnPlayerDoubleClick(hero.Hero);
+                    spellBook.InteractiveBehaviour.OnPlayerDoubleClick(hero.Hero);
                 }
                 catch (Exception ex)
                 {
-                    hero.Log($"Error learning spell from {item.Name}: {ex.Message}");
+                    hero.Log($"Error learning spell from {spellBook.Name}: {ex.Message}");
                 }
             }
         }

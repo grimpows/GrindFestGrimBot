@@ -10,7 +10,7 @@ namespace Scripts.Models
 {
     public static partial class HeroExtensions
     {
-        public static Predicate<ItemBehaviour> Default_LootFilter(this AutomaticHero hero, bool ignoreRangedWeapon = true)
+        public static Predicate<ItemBehaviour> LootFilter_GetDefault(this AutomaticHero hero, bool ignoreRangedWeapon = true)
         {
             Predicate<ItemBehaviour> lootFilter = delegate (ItemBehaviour item)
              {

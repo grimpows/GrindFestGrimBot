@@ -86,7 +86,7 @@ namespace Scripts.Models
             if ((DateTime.Now - LastScanTime).TotalSeconds < ScanFrequency && !ForceRescan)
                 return;
 
-            var deadEnemies = _hero.FindDeadNearbyEnemies(maxDistance: 200).ToList();
+            var deadEnemies = _hero.Find_DeadNearbyEnemies(maxDistance: 200).ToList();
 
             if (deadEnemies != null)
             {
@@ -127,7 +127,7 @@ namespace Scripts.Models
 
             //_hero.Say("Scanning for items to loot...");
             if (LootFilter == null)
-                LootFilter = _hero.Default_LootFilter();
+                LootFilter = _hero.LootFilter_GetDefault();
 
             var itemsOnGround = _hero.FindItemsOnGround(LootFilter, maxDistance: 500).ToList();
 

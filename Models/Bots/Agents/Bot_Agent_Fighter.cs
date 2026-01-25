@@ -64,7 +64,7 @@ namespace Scripts.Models
             if (TargetedMonster == null)
             {
                 //get ennemies exept ignored ones
-                var enemy = _hero.FindNearestEnemiesByReward(MaxDistance)
+                var enemy = _hero.Find_NearestEnemiesByReward(MaxDistance)
                     .Where(enemy => !IgnoredMonsters.Contains(enemy))
                     .ToList()
                     .FirstOrDefault();

@@ -704,7 +704,7 @@ namespace Scripts.Models
 
                 if (GUILayout.Button("Use Scroll", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
                 {
-                    _hero.UseScroll(item);
+                    _hero.Action_UseScroll(item);
                     _needsCacheUpdate = true;
                 }
 
@@ -717,7 +717,7 @@ namespace Scripts.Models
 
                 if (GUILayout.Button("Learn", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
                 {
-                    _hero.LearnSpellBook(item);
+                    _hero.Action_LearnSpellBook(item);
                     _needsCacheUpdate = true;
                 }
 
@@ -790,7 +790,7 @@ namespace Scripts.Models
             {
                 try
                 {
-                    _hero.ConsumeItem(item);
+                    _hero.Action_ConsumeItem(item);
                     _needsCacheUpdate = true;
                 }
                 catch (Exception ex)

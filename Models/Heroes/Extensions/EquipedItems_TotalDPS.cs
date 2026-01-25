@@ -10,7 +10,7 @@ namespace Scripts.Models
     public static partial class HeroExtensions
     {
        
-        public static float TotalDamagePerSecond(this AutomaticHero hero)
+        public static float EquipedItems_TotalDPS(this AutomaticHero hero)
         {
             float totalDPS = 0f;
             foreach (var equipment in hero.Equipment._items.Values)

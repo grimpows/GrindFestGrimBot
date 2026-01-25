@@ -9,14 +9,12 @@ namespace Scripts.Models
 {
     public static partial class HeroExtensions
     {
-        public static void UpgradeStats(this AutomaticHero hero)
+        public static void Action_UpgradeStats(this AutomaticHero hero)
         {
             if (hero.StatPoints == 0)
             {
                 return;
             }
-
-            
 
             int STRBasePoints = hero.Character.BaseStrength;
             int DEXBasePoints = hero.Character.BaseDexterity;

@@ -10,7 +10,7 @@ namespace Scripts.Models
 {
     public static partial class HeroExtensions
     {
-        public static IReadOnlyList<MonsterBehaviour> FindDeadNearbyEnemies(this AutomaticHero hero, string name1 = "", string name2 = null, string name3 = null, float maxDistance = 15f, float howNear = 2f)
+        public static IReadOnlyList<MonsterBehaviour> Find_DeadNearbyEnemies(this AutomaticHero hero, string name1 = "", string name2 = null, string name3 = null, float maxDistance = 15f, float howNear = 2f)
         {
             //_nearbyEnemies.Clear();
             

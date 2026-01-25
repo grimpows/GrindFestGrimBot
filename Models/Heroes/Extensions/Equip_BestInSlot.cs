@@ -80,10 +80,10 @@ namespace Scripts.Models
             }
 
             float equipedItemDPS = equipedItem.Weapon.DamagePerSecond;
-            int equipedItemStat = equipedItem.StatBonusWeight();
+            int equipedItemStat = equipedItem.Stat_BonusWeight();
 
             float itemDPS = itemWeapon.Weapon.DamagePerSecond;
-            int itemStat = itemWeapon.StatBonusWeight();
+            int itemStat = itemWeapon.Stat_BonusWeight();
 
             if (itemDPS > equipedItemDPS && itemStat > equipedItemStat)
             {
@@ -125,8 +125,8 @@ namespace Scripts.Models
                 return false;
             }
 
-            int equipedItemStat = equipedItem.StatBonusWeight();
-            int itemStat = item.StatBonusWeight();
+            int equipedItemStat = equipedItem.Stat_BonusWeight();
+            int itemStat = item.Stat_BonusWeight();
             if (itemStat > equipedItemStat)
             {
                 return true;

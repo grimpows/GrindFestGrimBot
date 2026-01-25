@@ -112,7 +112,7 @@ namespace Scripts.Models
                 return;
             }
 
-            _hero.UpgradeStats();
+            _hero.Action_UpgradeStats();
 
             if (IsOnUnstickMode)
             {
@@ -166,10 +166,10 @@ namespace Scripts.Models
 
 
 
-            if (_hero.TryInteractWithObjects())
+            if (_hero.Action_TryInteractWithObjects())
                 return;
 
-            if (_hero.TryMoveToBestFarmArea(IsAllowedToChangeArea))
+            if (_hero.Action_TryMoveToBestFarmArea(IsAllowedToChangeArea))
                 return;
 
 

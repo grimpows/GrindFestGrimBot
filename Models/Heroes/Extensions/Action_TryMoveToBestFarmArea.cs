@@ -9,7 +9,7 @@ namespace Scripts.Models
 {
     public static partial class HeroExtensions
     {
-        public static bool TryMoveToBestFarmArea(this AutomaticHero hero, bool isHeroAllowedChangeArea = true)
+        public static bool Action_TryMoveToBestFarmArea(this AutomaticHero hero, bool isHeroAllowedChangeArea = true)
         {
             if (!isHeroAllowedChangeArea)
             {
