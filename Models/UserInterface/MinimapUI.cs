@@ -16,7 +16,7 @@ namespace Scripts.Models
         private bool _isShow = true;
         private int _windowID;
 
-        private Rect _minimapRect = new Rect(Screen.width - 310, 70, 300, 200);
+        private Rect _minimapRect = new Rect(Screen.width - 310, Screen.height - 210, 300, 200);
 
         private Vector3 _lastPosition;
 

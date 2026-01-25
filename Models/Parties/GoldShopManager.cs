@@ -15,7 +15,7 @@ namespace Scripts.Models
 
         public bool IsEnabled { get; set; } = true;
 
-        public Dictionary<GoldShopItem, bool> AutoBuyGoldShopItemSelection = new Dictionary<GoldShopItem, bool>();
+        public Dictionary<string, bool> AutoBuyGoldShopItemSelection = new Dictionary<string, bool>();
 
 
         public GoldShopManager(AutomaticParty party, KeyCode toggleShowKey)
@@ -30,7 +30,7 @@ namespace Scripts.Models
 
         public void OnGUI()
         {
-            _goldShopManagerUI?.OnGUI(_party.SelectedHero, 200);
+            _goldShopManagerUI?.OnGUI();
         }
 
         public void OnUpdate()
@@ -49,12 +49,13 @@ namespace Scripts.Models
             var goldShopItems = _party.GetGoldShopItems();
             foreach (var item in goldShopItems)
             {
+                string itemKey = item.Name;
 
                 //check if present in selection dictionary 
-                if (AutoBuyGoldShopItemSelection.ContainsKey(item))
+                if (AutoBuyGoldShopItemSelection.ContainsKey(itemKey))
                 {
                     // check if enabled
-                    if (!AutoBuyGoldShopItemSelection[item])
+                    if (!AutoBuyGoldShopItemSelection[itemKey])
                     {
                         continue;
                     }
@@ -71,7 +72,7 @@ namespace Scripts.Models
                 }
                 else
                 {
-                    AutoBuyGoldShopItemSelection[item] = false;
+                    AutoBuyGoldShopItemSelection[itemKey] = false;
                 }
 
               

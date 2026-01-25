@@ -23,7 +23,7 @@ namespace Scripts.Models
                 Vector2 screen = Camera.main.WorldToScreenPoint(pos);
                 screen.y = Screen.height - screen.y;
                 GUI.backgroundColor = Color.clear;
-                Int32 itemWidth = item.name.Length * 8;
+                Int32 itemWidth = item.name.Length * 8 + 5;
                 float itemX = screen.x - itemWidth / 2f;
                 float itemY = screen.y - 50f;
                 var rect = new Rect(itemX, itemY, itemWidth, 30);

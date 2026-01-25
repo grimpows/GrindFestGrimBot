@@ -24,6 +24,7 @@ class MyParty : Party_Base
     public void OnGUI()
     {
         _worldUI?.OnGUI(SelectedHero, 400);
+        _goldShopManager?.OnGUI();
 
 
     }
@@ -33,7 +34,9 @@ class MyParty : Party_Base
 
         if (_goldShopManager == null)
         {
-            _goldShopManager = new GoldShopManager(this,KeyCode.Dollar);
+            Debug.Log("Initializing Gold Shop Manager");
+            _goldShopManager = new GoldShopManager(this,KeyCode.A);
+            Debug.Log($"Gold Shop Manager Initialized with KeyCode: {KeyCode.A}");
         }
 
 
