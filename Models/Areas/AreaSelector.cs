@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GrindFest;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,11 +9,22 @@ namespace Scripts.Models
 {
     public static class AreaSelector
     {
-        public static string GetBestAreaForLevel(int level)
+        public static string GetBestArea(AutomaticHero hero)
         {
             //    area = ((Level < 5) ? "Stony Plains" : ((Level < 8) ? "Crimson Meadows" : ((Level < 11) ? "Rotten Burrows" : "Ashen Pastures")));
 
-            switch (level)
+
+            if(hero.HealthPotionCount() < 5)
+            {
+                return "Crimson Meadows";
+            }
+
+            if(hero.CurrentArea.name == "Crimson Meadows" && hero.HealthPotionCount() < 20)
+            {
+                return "Crimson Meadows";
+            }
+
+            switch (hero.Level)
             {
                 case int n when (n < 4):
                     return "Stony Plains";

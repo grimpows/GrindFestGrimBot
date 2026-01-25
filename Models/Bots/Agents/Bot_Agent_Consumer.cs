@@ -22,7 +22,7 @@ namespace Scripts.Models
 
         }
 
-        public bool IsActing()
+        public bool IsActing(float healthThreshold = 0.5f)
         {
             if (_hero.Character.SkillUser.IsUsingSkill && _hero.Character.SkillUser.CurrentlyUsedSkill == LastUsedSkill)
             {
@@ -30,22 +30,26 @@ namespace Scripts.Models
                 return true;
             }
 
-            if (RestoreHealth())
+            if (RestoreHealth(healthThreshold))
                 return true;
 
-            
+
 
             return false;
         }
 
-        bool RestoreHealth()
+        bool RestoreHealth(float healthThreshold = 0.5f)
         {
-            Predicate<ItemBehaviour> foodPredicate = item => item.Consumable != null && item.Consumable.Food != null && item.Consumable.Food.HealthRestore > 0;
+            // prevent thresholds above 100%
+            if (healthThreshold > 1f)
+                healthThreshold = 1f;
 
-            if (_hero.Health < _hero.MaxHealth * 0.5f) // Below 50% health
+            if (_hero.Health < _hero.MaxHealth * healthThreshold) // Below threshold health
             {
 
-                if(HasFood(foodPredicate))
+                Predicate<ItemBehaviour> foodPredicate = item => item.Consumable != null && item.Consumable.Food != null && item.Consumable.Food.HealthRestore > 500;
+
+                if (HasFood(foodPredicate))
                 {
                     ConsumeFood(foodPredicate);
                     _hero.RunAwayFromNearestEnemy(20); // Good practice to retreat while eating
@@ -58,7 +62,7 @@ namespace Scripts.Models
                     _hero.RunAwayFromNearestEnemy(30); // Good practice to retreat while drinking
                     return true;
                 }
-                
+
             }
 
             return false;

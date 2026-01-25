@@ -15,7 +15,7 @@ namespace Scripts.Models
             {
                 return false;
             }
-            string areaName = AreaSelector.GetBestAreaForLevel(hero.Level);
+            string areaName = AreaSelector.GetBestArea(hero);
             if (hero.CurrentArea?.Root.name != areaName)
             {
                 hero.Say($"Changing area to {areaName}");

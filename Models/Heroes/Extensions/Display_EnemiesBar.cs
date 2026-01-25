@@ -38,6 +38,12 @@ namespace Scripts.Models
                 GUI.backgroundColor = Color.red;
                 GUI.Button(new Rect(barX, barY, 100 * hpPercent, 10), GUIContent.none);
                 GUI.backgroundColor = Color.clear;
+
+                //show distance above bar
+                GUI.Button(new Rect(barX, barY - 15, 100, 50), $"Dist:{distanceFrom:F1}");
+
+
+                //GUI.Button(new Rect(barX, barY, 100, 10), $"{name} HP: {hp}/{maxhp} ({hpPercent:P1}) Exp: {exp} STR: {str}");
                 //if (Vector3.Distance(hero.transform.position, enemy.transform.position) < 5) continue;
             }
         }

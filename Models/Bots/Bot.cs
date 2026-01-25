@@ -15,6 +15,9 @@ namespace Scripts.Models
         public Bot_Agent_Fighter FightingAgent = null;
         public Bot_Agent_Consumer ConsumerAgent = null;
 
+        public Vector3 LastHeroPosition = Vector3.zero;
+        public DateTime LastHeroPositionTime = DateTime.MinValue;
+
 
 
         private AutomaticHero _hero;
@@ -63,6 +66,9 @@ namespace Scripts.Models
 
         public void OnUpdate()
         {
+
+
+
             if (_hero == null)
                 return;
 
@@ -71,12 +77,9 @@ namespace Scripts.Models
                 return;
             }
 
-            //if (_hero.TryUsePotions())
-            //{
-            //    return;
-            //}
 
-            if (ConsumerAgent.IsActing())
+            //try keep health up first
+            if (ConsumerAgent.IsActing(0.5f))
                 return;
 
 
@@ -89,25 +92,49 @@ namespace Scripts.Models
                 return;
             }
 
-            if ( PickUpAgent.IsActing())
+            if (PickUpAgent.IsActing())
                 return;
 
-            if ( _hero.TryInteractWithObjects())
+            // once looting and fighting is done, try to consume if needed before other actions
+            if (ConsumerAgent.IsActing(0.9f))
                 return;
-
 
             _hero.Equip_BestInSlot();
+
+
+
+            if (LastHeroPosition == Vector3.zero)
+            {
+                LastHeroPosition = _hero.Character.transform.position;
+                LastHeroPositionTime = DateTime.Now;
+            }
+            else
+            {
+                if(Vector3.Distance(LastHeroPosition, _hero.Character.transform.position) > 1f)
+                {
+                    LastHeroPosition = _hero.Character.transform.position;
+                    LastHeroPositionTime = DateTime.Now;
+                }
+            }
+
+            if ((DateTime.Now - LastHeroPositionTime).TotalSeconds > 1)
+            {
+                _hero.RunAroundInArea();
+            }
+
+            if (_hero.TryInteractWithObjects())
+                return;
 
             if (_hero.TryMoveToBestFarmArea(IsAllowedToChangeArea))
                 return;
 
-            
+
 
 
             _hero.RunAroundInArea();
         }
 
-        
+
 
 
 
