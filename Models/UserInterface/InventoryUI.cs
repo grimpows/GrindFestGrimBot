@@ -213,7 +213,9 @@ namespace Scripts.Models
                 DrawConsumableSubTabs();
             }
 
-            float tabAreaOffset = (_currentTab == InventoryTab.Equipment || _currentTab == InventoryTab.Consumable)
+            float tabAreaOffset = (_currentTab == InventoryTab.Equipment)
+                ? HEADER_HEIGHT + TAB_HEIGHT + (SUBTAB_HEIGHT * 2) + 20
+                : (_currentTab == InventoryTab.Consumable)
                 ? HEADER_HEIGHT + TAB_HEIGHT + SUBTAB_HEIGHT + 10
                 : HEADER_HEIGHT + TAB_HEIGHT;
 
