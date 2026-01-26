@@ -24,7 +24,7 @@ namespace Scripts.Models
             
             if (hero.StatPoints > 0 && isMelee)
             {
-                if (DEXBasePoints < 2 / 3 * STRBasePoints)
+                if (DEXBasePoints < (2.0 / 3.0) * STRBasePoints)
                 {
                     hero.AllocateStatPoints(Stat.Dexterity, 1);
                     hero.Say($"Upgraded Dexterity");

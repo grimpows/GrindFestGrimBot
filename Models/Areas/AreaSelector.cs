@@ -29,13 +29,13 @@ namespace Scripts.Models
 
             }
 
-            if (hero.HealthPotionCount() < 5 && hero.CurrentArea.name == areaForLevel.Value)
+            if (hero.HealthPotionCount() < 5 && hero.CurrentArea?.Root.name == areaForLevel.Value)
             {
                 
                 return lowerAreaForLevel.Value;
             }
 
-            if (hero.CurrentArea.name == lowerAreaForLevel.Value && hero.HealthPotionCount() < 20)
+            if (hero.CurrentArea?.Root.name == lowerAreaForLevel.Value && hero.HealthPotionCount() < 20)
             {
                 return lowerAreaForLevel.Value;
             }

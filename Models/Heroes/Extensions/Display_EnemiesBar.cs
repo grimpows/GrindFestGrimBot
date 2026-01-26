@@ -21,7 +21,7 @@ namespace Scripts.Models
 
                 Vector3 pos = enemy.transform.position;
                 float distanceFrom = Vector3.Distance(pos, hero.transform.position);
-                if (distanceFrom > distance) continue;
+                //if (distanceFrom > distance) continue;
 
                 float maxhp = enemy.Health.MaxHealth;
                 string name = enemy.name;

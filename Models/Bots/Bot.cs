@@ -101,6 +101,8 @@ namespace Scripts.Models
 
             if (!_hero.IsBotting)
             {
+                LastHeroPosition = _hero.Character.transform.position;
+                LastHeroPositionTime = DateTime.Now;
                 return;
             }
 

@@ -23,7 +23,7 @@ class MyParty : Party_Base
 
     public void OnGUI()
     {
-        _worldUI?.OnGUI(SelectedHero, 400);
+        _worldUI?.OnGUI(SelectedHero, 20);
         _goldShopManager?.OnGUI();
 
 
