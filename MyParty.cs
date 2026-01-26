@@ -77,6 +77,11 @@ class MyParty : Party_Base
         CreateHero(firstHero.Name, firstHero.ClassName).StartBotting();
     }
 
+    //public bool IsAnyHeroReachedLevelCap()
+    //{
+
+    //}
+
 
     
 

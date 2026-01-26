@@ -352,6 +352,7 @@ namespace Scripts.Models
             charactereStatLabel += $"\nSTR: {_hero.Character.Strength} ({_hero.Character.BaseStrength} + {_hero.Character.ItemStrengthBonus}) \n";
             charactereStatLabel += $"\nDEX: {_hero.Character.Dexterity} ({_hero.Character.BaseDexterity} + {_hero.Character.ItemDexterityBonus}) \n";
             charactereStatLabel += $"\nINT: {_hero.Character.Intelligence} ({_hero.Character.BaseIntelligence} + {_hero.Character.ItemIntelligenceBonus}) \n";
+           
             GUI.Box(_characterStatRect, charactereStatLabel, LeftLabelStyle);
 
             if (hoveredItem != null)

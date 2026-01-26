@@ -31,11 +31,13 @@ namespace Scripts.Models
         private InventoryTab _currentTab = InventoryTab.Equipment;
         private EquipmentSlotFilter _currentEquipmentFilter = EquipmentSlotFilter.All;
         private ConsumableFilter _currentConsumableFilter = ConsumableFilter.All;
+        private BookScrollFilter _currentBookScrollFilter = BookScrollFilter.All;
 
         // Cache system
         private Dictionary<InventoryTab, int> _itemCountCache = new Dictionary<InventoryTab, int>();
         private Dictionary<EquipmentSlotFilter, int> _equipmentSlotCountCache = new Dictionary<EquipmentSlotFilter, int>();
         private Dictionary<ConsumableFilter, int> _consumableCountCache = new Dictionary<ConsumableFilter, int>();
+        private Dictionary<BookScrollFilter, int> _bookScrollCountCache = new Dictionary<BookScrollFilter, int>();
         private List<ItemBehaviour> _filteredItemsCache = new List<ItemBehaviour>();
         private float _lastCacheRefreshTime = 0f;
         private bool _needsCacheUpdate = true;
@@ -44,8 +46,7 @@ namespace Scripts.Models
         {
             Equipment,
             Consumable,
-            SpellBook,
-            Scroll,
+            BookScroll,
             Misc
         }
 
@@ -72,6 +73,14 @@ namespace Scripts.Models
             JunkPot,
             Food,
             Misc
+        }
+
+        private enum BookScrollFilter
+        {
+            All,
+            SkillBook,
+            SpellBook,
+            Scroll
         }
 
         public void OnStart(Hero_Base hero, KeyCode toggleShowKey, int windowID)
@@ -102,6 +111,12 @@ namespace Scripts.Models
                 _consumableCountCache[filter] = 0;
             }
 
+            _bookScrollCountCache.Clear();
+            foreach (BookScrollFilter filter in System.Enum.GetValues(typeof(BookScrollFilter)))
+            {
+                _bookScrollCountCache[filter] = 0;
+            }
+
             _needsCacheUpdate = true;
         }
 
@@ -120,8 +135,7 @@ namespace Scripts.Models
             // Update tab counts
             _itemCountCache[InventoryTab.Equipment] = FilterItemsByTab(inventory, InventoryTab.Equipment).Count();
             _itemCountCache[InventoryTab.Consumable] = FilterItemsByTab(inventory, InventoryTab.Consumable).Count();
-            _itemCountCache[InventoryTab.SpellBook] = FilterItemsByTab(inventory, InventoryTab.SpellBook).Count();
-            _itemCountCache[InventoryTab.Scroll] = FilterItemsByTab(inventory, InventoryTab.Scroll).Count();
+            _itemCountCache[InventoryTab.BookScroll] = FilterItemsByTab(inventory, InventoryTab.BookScroll).Count();
             _itemCountCache[InventoryTab.Misc] = FilterItemsByTab(inventory, InventoryTab.Misc).Count();
 
             // Update equipment slot counts
@@ -146,6 +160,13 @@ namespace Scripts.Models
             _consumableCountCache[ConsumableFilter.Food] = FilterItemsByConsumableType(inventory, "food").Count();
             _consumableCountCache[ConsumableFilter.Misc] = FilterItemsByConsumableType(inventory, "misc").Count();
 
+            // Update book/scroll filter counts
+            var bookScrollItems = FilterItemsByTab(inventory, InventoryTab.BookScroll).ToList();
+            _bookScrollCountCache[BookScrollFilter.All] = bookScrollItems.Count;
+            _bookScrollCountCache[BookScrollFilter.SkillBook] = bookScrollItems.Where(item => IsSkillBook(item)).Count();
+            _bookScrollCountCache[BookScrollFilter.SpellBook] = bookScrollItems.Where(item => IsSpellBook(item)).Count();
+            _bookScrollCountCache[BookScrollFilter.Scroll] = bookScrollItems.Where(item => item.SpellScroll != null).Count();
+
             // Update filtered items for current view
             UpdateFilteredItemsCache();
 
@@ -168,6 +189,10 @@ namespace Scripts.Models
             else if (_currentTab == InventoryTab.Consumable)
             {
                 _filteredItemsCache = FilterConsumablesByType(_filteredItemsCache, _currentConsumableFilter).ToList();
+            }
+            else if (_currentTab == InventoryTab.BookScroll)
+            {
+                _filteredItemsCache = FilterBooksAndScrollsByType(_filteredItemsCache, _currentBookScrollFilter).ToList();
             }
         }
 
@@ -212,14 +237,19 @@ namespace Scripts.Models
             {
                 DrawConsumableSubTabs();
             }
+            else if (_currentTab == InventoryTab.BookScroll)
+            {
+                DrawBookScrollSubTabs();
+            }
 
             float tabAreaOffset = (_currentTab == InventoryTab.Equipment)
                 ? HEADER_HEIGHT + TAB_HEIGHT + (SUBTAB_HEIGHT * 2) + 20
-                : (_currentTab == InventoryTab.Consumable)
+                : (_currentTab == InventoryTab.Consumable || _currentTab == InventoryTab.BookScroll)
                 ? HEADER_HEIGHT + TAB_HEIGHT + SUBTAB_HEIGHT + 10
                 : HEADER_HEIGHT + TAB_HEIGHT;
 
             int itemCount = _filteredItemsCache.Count;
+
 
             GUILayout.BeginArea(new Rect(10, tabAreaOffset, _InventoryWindowRect.width - 20, _InventoryWindowRect.height - tabAreaOffset - 40));
 
@@ -282,21 +312,14 @@ namespace Scripts.Models
                 UpdateFilteredItemsCache();
             }
 
-            if (DrawTab($"SpellBook ({_itemCountCache[InventoryTab.SpellBook]})", new Rect(startX + (tabWidth + 5) * 2, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.SpellBook))
+            if (DrawTab($"Book/Scroll ({_itemCountCache[InventoryTab.BookScroll]})", new Rect(startX + (tabWidth + 5) * 2, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.BookScroll))
             {
-                _currentTab = InventoryTab.SpellBook;
+                _currentTab = InventoryTab.BookScroll;
                 _scrollPosition = Vector2.zero;
                 UpdateFilteredItemsCache();
             }
 
-            if (DrawTab($"Scroll ({_itemCountCache[InventoryTab.Scroll]})", new Rect(startX + (tabWidth + 5) * 3, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Scroll))
-            {
-                _currentTab = InventoryTab.Scroll;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawTab($"Misc ({_itemCountCache[InventoryTab.Misc]})", new Rect(startX + (tabWidth + 5) * 4, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Misc))
+            if (DrawTab($"Misc ({_itemCountCache[InventoryTab.Misc]})", new Rect(startX + (tabWidth + 5) * 3, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Misc))
             {
                 _currentTab = InventoryTab.Misc;
                 _scrollPosition = Vector2.zero;
@@ -445,6 +468,45 @@ namespace Scripts.Models
             GUI.backgroundColor = originalColor;
         }
 
+        void DrawBookScrollSubTabs()
+        {
+            float subTabWidth = (_InventoryWindowRect.width - 50) / 4f;
+            float startX = 10;
+            float startY = HEADER_HEIGHT + TAB_HEIGHT;
+
+            Color originalColor = GUI.backgroundColor;
+
+            if (DrawSubTab($"All ({_bookScrollCountCache[BookScrollFilter.All]})", new Rect(startX, startY, subTabWidth, SUBTAB_HEIGHT), _currentBookScrollFilter == BookScrollFilter.All))
+            {
+                _currentBookScrollFilter = BookScrollFilter.All;
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+
+            if (DrawSubTab($"Skill ({_bookScrollCountCache[BookScrollFilter.SkillBook]})", new Rect(startX + subTabWidth + 5, startY, subTabWidth, SUBTAB_HEIGHT), _currentBookScrollFilter == BookScrollFilter.SkillBook))
+            {
+                _currentBookScrollFilter = BookScrollFilter.SkillBook;
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+
+            if (DrawSubTab($"Spell ({_bookScrollCountCache[BookScrollFilter.SpellBook]})", new Rect(startX + (subTabWidth + 5) * 2, startY, subTabWidth, SUBTAB_HEIGHT), _currentBookScrollFilter == BookScrollFilter.SpellBook))
+            {
+                _currentBookScrollFilter = BookScrollFilter.SpellBook;
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+
+            if (DrawSubTab($"Scroll ({_bookScrollCountCache[BookScrollFilter.Scroll]})", new Rect(startX + (subTabWidth + 5) * 3, startY, subTabWidth, SUBTAB_HEIGHT), _currentBookScrollFilter == BookScrollFilter.Scroll))
+            {
+                _currentBookScrollFilter = BookScrollFilter.Scroll;
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+
+            GUI.backgroundColor = originalColor;
+        }
+
         bool DrawTab(string label, Rect rect, bool isActive)
         {
             Color originalColor = GUI.backgroundColor;
@@ -491,8 +553,7 @@ namespace Scripts.Models
             {
                 InventoryTab.Equipment => items.Where(item => item.Armor != null || item.Weapon != null),
                 InventoryTab.Consumable => items.Where(item => item.Consumable != null),
-                InventoryTab.SpellBook => items.Where(item => item.Name.ToLower().Contains("book")),
-                InventoryTab.Scroll => items.Where(item => item.SpellScroll != null),
+                InventoryTab.BookScroll => items.Where(item => item.Name.ToLower().Contains("book") || item.SpellScroll != null),
                 InventoryTab.Misc => items.Where(item => item.Armor == null && item.Weapon == null && item.Consumable == null && item.SpellBook == null && item.SpellScroll == null),
                 _ => items
             };
@@ -527,6 +588,18 @@ namespace Scripts.Models
                 ConsumableFilter.JunkPot => items.Where(item => IsJunkPotion(item)),
                 ConsumableFilter.Food => items.Where(item => IsFood(item)),
                 ConsumableFilter.Misc => items.Where(item => IsMiscConsumable(item)),
+                _ => items
+            };
+        }
+
+        IEnumerable<ItemBehaviour> FilterBooksAndScrollsByType(IEnumerable<ItemBehaviour> items, BookScrollFilter filter)
+        {
+            return filter switch
+            {
+                BookScrollFilter.All => items.Where(item => item.SpellScroll != null || item.Name.ToLower().Contains("book")),
+                BookScrollFilter.SkillBook => items.Where(item => IsSkillBook(item)),
+                BookScrollFilter.SpellBook => items.Where(item => IsSpellBook(item)),
+                BookScrollFilter.Scroll => items.Where(item => item.SpellScroll != null),
                 _ => items
             };
         }
@@ -634,6 +707,20 @@ namespace Scripts.Models
             return !IsFood(item) && !HasHealthPotion(item) && !HasManaPotion(item) && !IsMiscPotion(item) && !IsJunkPotion(item);
         }
 
+        private bool IsSkillBook(ItemBehaviour item)
+        {
+            if (item == null)
+                return false;
+            return item.GetComponent<SkillBookBehavior>() != null;
+        }
+
+        private bool IsSpellBook(ItemBehaviour item)
+        {
+            if (item == null)
+                return false;
+            return item.GetComponent<SkillBookBehavior>() == null && item.SpellBook != null;
+        }
+
         bool MatchesEquipmentSlot(ItemBehaviour item, EquipmentSlot slot)
         {
             // Check if the item can be equipped in this slot
@@ -694,7 +781,7 @@ namespace Scripts.Models
             GUILayout.FlexibleSpace();
 
             // Specific action button based on item type
-            if (item.name.ToLower().Contains("scroll"))
+            if (item.SpellScroll != null)
             {
                 Color originalBgColor = GUI.backgroundColor;
                 GUI.backgroundColor = new Color(1f, 0.8f, 0.2f);
@@ -707,20 +794,22 @@ namespace Scripts.Models
 
                 GUI.backgroundColor = originalBgColor;
             }
-            else if (item.name.ToLower().Contains("book"))
+
+            if (IsSkillBook(item))
             {
                 Color originalBgColor = GUI.backgroundColor;
                 GUI.backgroundColor = new Color(0.8f, 0.4f, 1f);
 
                 if (GUILayout.Button("Learn", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
                 {
-                    _hero.Action_LearnSpellBook(item);
+                    _hero.Action_LearnSkillBook(item);
                     _needsCacheUpdate = true;
                 }
 
                 GUI.backgroundColor = originalBgColor;
             }
-            else if (item.Consumable != null)
+
+            if (item.Consumable != null)
             {
                 Color originalBgColor = GUI.backgroundColor;
                 GUI.backgroundColor = new Color(0.3f, 1f, 0.3f);
@@ -732,7 +821,8 @@ namespace Scripts.Models
 
                 GUI.backgroundColor = originalBgColor;
             }
-            else if (item.Armor != null || item.Weapon != null)
+
+            if (item.Armor != null || item.Weapon != null)
             {
                 Color originalBgColor = GUI.backgroundColor;
                 GUI.backgroundColor = new Color(0.3f, 0.7f, 1f);
