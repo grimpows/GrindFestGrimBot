@@ -640,13 +640,10 @@ namespace Scripts.Models
             // This is a simplified check - you may need to adjust based on your ItemBehaviour implementation
             if (item.Armor != null)
             {
-                return (slot == EquipmentSlot.Head && item.name.Contains("Head")) ||
-                       (slot == EquipmentSlot.Chest && item.name.Contains("Chest")) ||
-                       (slot == EquipmentSlot.Legs && item.name.Contains("Legs")) ||
-                       ((slot == EquipmentSlot.LeftShoulder || slot == EquipmentSlot.RightShoulder) && item.name.Contains("Shoulder")) ||
-                       ((slot == EquipmentSlot.LeftArm || slot == EquipmentSlot.RightArm) && item.name.Contains("Arm")) ||
-                       ((slot == EquipmentSlot.LeftGlove || slot == EquipmentSlot.RightGlove) && item.name.Contains("Glove")) ||
-                       ((slot == EquipmentSlot.LeftFeet || slot == EquipmentSlot.RightFeet) && item.name.Contains("Boots"));
+                if (item?.Equipable?.Slot != null)
+                {
+                    return item.Equipable.Slot == slot;
+                }
             }
 
             if (item.Weapon != null)

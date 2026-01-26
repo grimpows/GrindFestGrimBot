@@ -23,6 +23,24 @@ namespace Scripts.Models
 
         private Dictionary<EquipmentSlot, Rect> _slotRects = new Dictionary<EquipmentSlot, Rect>();
 
+        private GUIStyle _opaqueBox;
+
+        public GUIStyle OpaqueBox
+        {
+            get
+            {
+                if (_opaqueBox != null)
+                {
+                    return _opaqueBox;
+                }
+                _opaqueBox = new GUIStyle(GUI.skin.box);
+                _opaqueBox.normal.background = OpaqueTex;
+                _opaqueBox.alignment = TextAnchor.UpperLeft;
+                _opaqueBox.padding = new RectOffset(5, 5, 5, 5);
+                return _opaqueBox;
+            }
+        }
+
 
         private GUIStyle _leftLabelStyle = null;
 
@@ -70,6 +88,26 @@ namespace Scripts.Models
         private Texture2D _durabilityOrangeTex;
         private Texture2D _durabilityRedTex;
         private Texture2D _durabilityBackgroundTex;
+
+        private Texture2D _opaqueTex;
+
+        public Texture2D OpaqueTex
+        {
+            get
+            {
+                if (_opaqueTex == null)
+                {
+                    _opaqueTex = new Texture2D(1, 1);
+                    _opaqueTex.SetPixel(0, 0, new Color(0f, 0f, 0f, 1f));
+                    _opaqueTex.Apply();
+                }
+                return _opaqueTex;
+            }
+        }
+
+
+
+
 
         void InitDurabilityTextures()
         {
@@ -262,6 +300,8 @@ namespace Scripts.Models
 
         void DrawHeroWindow(int windowID)
         {
+            HeroUI_EquipedItem hoveredItem = null;
+
             foreach (var kvp in _slotRects)
             {
                 EquipmentSlot slot = kvp.Key;
@@ -296,9 +336,14 @@ namespace Scripts.Models
                 // Handle mouse over for detailed stats
                 if (rect.Contains(Event.current.mousePosition))
                 {
-                    DrawItemTooltip(item, slot, new Rect(Event.current.mousePosition.x + 15, Event.current.mousePosition.y + 15, 350, 150));
+                    hoveredItem = item;
+                    
+                    
                 }
             }
+
+
+
 
             string charactereStatLabel = string.Empty;
             charactereStatLabel += $"Level: {_hero.Character.Level.Level}\n";
@@ -308,6 +353,11 @@ namespace Scripts.Models
             charactereStatLabel += $"\nDEX: {_hero.Character.Dexterity} ({_hero.Character.BaseDexterity} + {_hero.Character.ItemDexterityBonus}) \n";
             charactereStatLabel += $"\nINT: {_hero.Character.Intelligence} ({_hero.Character.BaseIntelligence} + {_hero.Character.ItemIntelligenceBonus}) \n";
             GUI.Box(_characterStatRect, charactereStatLabel, LeftLabelStyle);
+
+            if (hoveredItem != null)
+            {
+                DrawItemTooltip(hoveredItem, hoveredItem.Slot, Event.current.mousePosition.x + 40, Event.current.mousePosition.y + 15);
+            }
 
             GUI.DragWindow();
         }
@@ -344,11 +394,26 @@ namespace Scripts.Models
       
 
         
-        void DrawItemTooltip(HeroUI_EquipedItem item, EquipmentSlot slot, Rect tooltipRect)
+        void DrawItemTooltip(HeroUI_EquipedItem item, EquipmentSlot slot, float rectX, float rectY)
         {
+            
+
             if (item == null || item.Name == "Empty")
             {
-                GUI.Box(tooltipRect, $"{slot}\n\nEmpty Slot", WordWrapBoxStyle);
+                string text = $"{slot}\n\nEmpty Slot";
+                //count max size
+                string[] lines = text.Split('\n');
+                int maxWidth = 0;
+                foreach (string line in lines)
+                {
+                    int lineWidth  = line.Length * 8; // Approximate character width
+                    if (lineWidth > maxWidth)
+                    {
+                        maxWidth = lineWidth;
+                    }
+                }
+
+                GUI.Box(new Rect(rectX, rectY, maxWidth, 150), text, OpaqueBox);
                 return;
             }
 
@@ -395,9 +460,27 @@ namespace Scripts.Models
                 }
             }
 
-            GUI.Box(tooltipRect, tooltipText.TrimEnd(), WordWrapBoxStyle);
+           tooltipText = tooltipText.TrimEnd() + "\n";
+
+            GUI.Box(new Rect(rectX, rectY, GetWitdhOfLongestLine(tooltipText), 150), tooltipText, OpaqueBox);
+            
         }
 
-        
+        private int GetWitdhOfLongestLine(string text)
+        {
+            string[] lines = text.Split('\n');
+            int maxWidth = 0;
+            foreach (string line in lines)
+            {
+                int lineWidth = line.Length * 8; // Approximate character width
+                if (lineWidth > maxWidth)
+                {
+                    maxWidth = lineWidth;
+                }
+            }
+            return maxWidth;
+        }
+
+
     }
 }

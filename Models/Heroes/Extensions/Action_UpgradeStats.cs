@@ -20,32 +20,26 @@ namespace Scripts.Models
             int DEXBasePoints = hero.Character.BaseDexterity;
             int INTBasePoints = hero.Character.BaseIntelligence;
 
+            bool isMelee = hero.Hero.Class.name.ToLower().Contains("hero") || hero.Hero.Class.name.ToLower().Contains("warrior");
             
-            int levelGaigned = hero.Level - 1;
-
-            int targetSTRPoints = STRBasePoints + levelGaigned * 3;
-            int targetDEXPoints = DEXBasePoints + levelGaigned * 2;
-
-            
-
-            if (hero.StatPoints > 0)
+            if (hero.StatPoints > 0 && isMelee)
             {
-                if (hero.Strength < targetSTRPoints)
-                {
-                    hero.AllocateStatPoints(Stat.Strength, 1);
-                    hero.Say($"Upgraded Strength");
-                    return;
-                }
-
-                if (hero.Dexterity < targetDEXPoints)
+                if (DEXBasePoints < 2 / 3 * STRBasePoints)
                 {
                     hero.AllocateStatPoints(Stat.Dexterity, 1);
                     hero.Say($"Upgraded Dexterity");
                     return;
                 }
+
+
+                hero.AllocateStatPoints(Stat.Strength, 1);
+                hero.Say($"Upgraded Strength");
+                return;
+
             }
         }
 
+     
 
     }
 }

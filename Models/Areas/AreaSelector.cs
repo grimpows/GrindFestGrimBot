@@ -11,34 +11,45 @@ namespace Scripts.Models
     {
         public static string GetBestArea(AutomaticHero hero)
         {
-            //    area = ((Level < 5) ? "Stony Plains" : ((Level < 8) ? "Crimson Meadows" : ((Level < 11) ? "Rotten Burrows" : "Ashen Pastures")));
+         
+            int heroLevel = hero.Level;
+            var areaForLevel = MinLevelAreaDictionary
+                .Where(kv => kv.Key <= heroLevel)
+                .OrderByDescending(kv => kv.Key)
+                .First();
 
+            var lowerAreaForLevel = MinLevelAreaDictionary.First();
 
-            if(hero.HealthPotionCount() < 5)
+            if (areaForLevel.Key > 1)
             {
-                return "Crimson Meadows";
+                lowerAreaForLevel = MinLevelAreaDictionary
+                    .Where(kv => kv.Key < areaForLevel.Key)
+                    .OrderByDescending(kv => kv.Key)
+                    .First();
+
             }
 
-            if(hero.CurrentArea.name == "Crimson Meadows" && hero.HealthPotionCount() < 20)
+            if (hero.HealthPotionCount() < 5 && hero.CurrentArea.name == areaForLevel.Value)
             {
-                return "Crimson Meadows";
+                
+                return lowerAreaForLevel.Value;
             }
 
-            switch (hero.Level)
+            if (hero.CurrentArea.name == lowerAreaForLevel.Value && hero.HealthPotionCount() < 20)
             {
-                case int n when (n < 4):
-                    return "Stony Plains";
-                case int n when (n < 8):
-                    return "Crimson Meadows";
-                case int n when (n < 15):
-                    return "Rotten Burrows";
-                default:
-                    return "Ashen Pastures";
+                return lowerAreaForLevel.Value;
             }
 
-            //return "Human Encampment";
+            return areaForLevel.Value;
         }
 
+        public static Dictionary<int, string> MinLevelAreaDictionary = new Dictionary<int, string>()
+        {
+            {1, "Stony Plains" },
+            {5, "Crimson Meadows" },
+            {8, "Rotten Burrows" },
+            {11, "Ashen Pastures" }
+        };
 
     }
 }
