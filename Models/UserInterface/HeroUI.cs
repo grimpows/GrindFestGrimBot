@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-using static Scripts.Models.Hero_Base;
 
 namespace Scripts.Models
 {
@@ -58,26 +57,6 @@ namespace Scripts.Models
                 _leftLabelStyle.padding = new RectOffset(5, 5, 5, 5);
 
                 return _leftLabelStyle;
-
-            }
-
-        }
-
-        private GUIStyle _wordWrapBoxStyle = null;
-
-        private GUIStyle WordWrapBoxStyle
-        {
-            get
-            {
-                if (_wordWrapBoxStyle != null)
-                {
-                    return _wordWrapBoxStyle;
-                }
-
-                _wordWrapBoxStyle = new GUIStyle(GUI.skin.box);
-                _wordWrapBoxStyle.wordWrap = true;
-
-                return _wordWrapBoxStyle;
 
             }
 
@@ -354,6 +333,7 @@ namespace Scripts.Models
             charactereStatLabel += $"\nINT: {_hero.Character.Intelligence} ({_hero.Character.BaseIntelligence} + {_hero.Character.ItemIntelligenceBonus}) \n";
            
             GUI.Box(_characterStatRect, charactereStatLabel, LeftLabelStyle);
+
 
             if (hoveredItem != null)
             {

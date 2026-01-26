@@ -1,4 +1,4 @@
-using GrindFest;
+﻿using GrindFest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -215,8 +215,7 @@ namespace Scripts.Models
 
         public void OnUpdate()
         {
-            // Mark cache as needing update (called once per frame but less frequently than OnGUI)
-            // This allows the cache to refresh at a controlled rate
+            
         }
 
         void DrawInventoryWindow(int windowID)
@@ -751,6 +750,7 @@ namespace Scripts.Models
             GUILayout.BeginHorizontal();
             GUILayout.Label($"#{index + 1}", GUILayout.Width(40));
             GUILayout.Label($"{item.Name}", GUILayout.Width(200));
+            
 
             DrawItemTypeLabel(item);
 
@@ -775,6 +775,7 @@ namespace Scripts.Models
                 GUI.color = originalColor;
             }
 
+            
 
             // Action buttons row
             GUILayout.BeginHorizontal();
@@ -847,12 +848,14 @@ namespace Scripts.Models
 
             GUI.backgroundColor = dropBgColor;
 
+        
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
 
             GUILayout.Space(ITEM_PADDING);
+
         }
 
         void DropItem(ItemBehaviour item)
@@ -1034,5 +1037,43 @@ namespace Scripts.Models
             if (percentage > 25f) return new Color(1f, 0.5f, 0f);
             return Color.red;
         }
+
+        private GUIStyle _opaqueBoxStyle;
+
+        private GUIStyle OpaqueBoxStyle
+        {
+            get
+            {
+                if (_opaqueBoxStyle != null)
+                {
+                    return _opaqueBoxStyle;
+                }
+
+                _opaqueBoxStyle = new GUIStyle(GUI.skin.box);
+                _opaqueBoxStyle.normal.background = OpaqueTexture;
+                _opaqueBoxStyle.alignment = TextAnchor.UpperLeft;
+                _opaqueBoxStyle.padding = new RectOffset(5, 5, 5, 5);
+                _opaqueBoxStyle.wordWrap = true;
+
+                return _opaqueBoxStyle;
+            }
+        }
+
+        private Texture2D _opaqueTexture;
+
+        private Texture2D OpaqueTexture
+        {
+            get
+            {
+                if (_opaqueTexture == null)
+                {
+                    _opaqueTexture = new Texture2D(1, 1);
+                    _opaqueTexture.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.95f));
+                    _opaqueTexture.Apply();
+                }
+                return _opaqueTexture;
+            }
+        }
+
     }
 }

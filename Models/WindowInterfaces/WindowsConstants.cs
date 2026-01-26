@@ -14,5 +14,6 @@ namespace Scripts.Models
         public const int HERO_WINDOW_ID = 4;
         public const int WORLD_UI_ID = 5;
         public const int GOLD_SHOP_MANAGER_UI_ID = 6;
+        public const int SKILL_UI_ID = 7;
     }
 }

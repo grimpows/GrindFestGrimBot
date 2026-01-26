@@ -26,7 +26,6 @@ class MyParty : Party_Base
         _worldUI?.OnGUI(SelectedHero, 20);
         _goldShopManager?.OnGUI();
 
-
     }
 
     public void Update()

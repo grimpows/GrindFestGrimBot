@@ -16,11 +16,7 @@ namespace Scripts.Models
         private HeroUI _heroUI = new HeroUI();
         private MinimapUI _minimapUI = new MinimapUI();
         private InventoryUI _inventoryUI = new InventoryUI();
-
-
-
-        //private List<Item> inventory = new List<Item>();
-        //private List<Item> bagContents = new List<Item>();
+        private SkillUI _skillUI = new SkillUI();
 
 
         public void Start()
@@ -28,6 +24,7 @@ namespace Scripts.Models
             _heroUI.OnStart(this, KeyCode.P, WindowsConstants.HERO_WINDOW_ID);
             _minimapUI.OnStart(this, KeyCode.M, WindowsConstants.MINIMAP_WINDOW_ID);
             _inventoryUI.OnStart(this, KeyCode.I, WindowsConstants.INVENTORY_WINDOW_ID);
+            _skillUI.OnStart(this, KeyCode.S, WindowsConstants.SKILL_UI_ID);
 
 
 
@@ -42,6 +39,7 @@ namespace Scripts.Models
             _heroUI.OnGUI();
             _minimapUI.OnGUI();
             _inventoryUI.OnGUI();
+            _skillUI.OnGUI();
 
             _bot.OnGUI();
         }
@@ -51,6 +49,7 @@ namespace Scripts.Models
             _heroUI.OnUpdate();
             _minimapUI.OnUpdate();
             _inventoryUI.OnUpdate();
+            _skillUI.OnUpdate();
 
 
             _bot.OnUpdate();
