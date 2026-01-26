@@ -72,8 +72,9 @@ namespace Scripts.Models
                 }
                 else
                 {
-                    // add to dictionary if not present
-                    AutoBuyGoldShopItemSelection[itemKey] = item.Name.ToLower().Contains("gold") ? true : false;
+                    // add to dictionary if not present and set up default value for gold items
+                    string lowerName = item.Name.ToLower();
+                    AutoBuyGoldShopItemSelection[itemKey] = lowerName.Contains("gold") || lowerName.Contains("experience") || lowerName.Contains("magicfind") ? true : false;
                 }
 
               
