@@ -16,16 +16,12 @@ namespace Scripts.Models
         private bool _isShow = false;
         private int _windowId;
 
-        private Rect _InventoryWindowRect = new Rect(100, 100, 650, 500);
+        private Rect _InventoryWindowRect = new Rect(100, 100, 1250, 780);
         private Vector2 _scrollPosition = Vector2.zero;
 
-        private const int ITEM_HEIGHT = 120;
-        private const int ITEM_PADDING = 10;
-        private const int HEADER_HEIGHT = 30;
-        private const int TAB_HEIGHT = 35;
-        private const int SUBTAB_HEIGHT = 30;
-        private const int BUTTON_WIDTH = 90;
-        private const int BUTTON_HEIGHT = 25;
+        private const float ITEM_CARD_WIDTH = 280f;
+        private const float ITEM_CARD_HEIGHT = 180f;
+        private const float ITEM_CARD_PADDING = 12f;
         private const float CACHE_REFRESH_INTERVAL = 0.5f;
 
         private InventoryTab _currentTab = InventoryTab.Equipment;
@@ -42,46 +38,42 @@ namespace Scripts.Models
         private float _lastCacheRefreshTime = 0f;
         private bool _needsCacheUpdate = true;
 
-        private enum InventoryTab
-        {
-            Equipment,
-            Consumable,
-            BookScroll,
-            Misc
-        }
+        // GUI Styles
+        private GUIStyle _windowStyle;
+        private GUIStyle _itemCardStyle;
+        private GUIStyle _titleStyle;
+        private GUIStyle _subtitleStyle;
+        private GUIStyle _statLabelStyle;
+        private GUIStyle _tabActiveStyle;
+        private GUIStyle _tabInactiveStyle;
+        private GUIStyle _subTabActiveStyle;
+        private GUIStyle _subTabInactiveStyle;
 
-        private enum EquipmentSlotFilter
-        {
-            All,
-            Head,
-            Shoulders,
-            Arms,
-            Hands,
-            Chest,
-            Legs,
-            Feet,
-            Weapons,
-            Accessories
-        }
+        // Textures
+        private Texture2D _windowBackgroundTexture;
+        private Texture2D _cardBackgroundTexture;
+        private Texture2D _tabActiveTexture;
+        private Texture2D _tabInactiveTexture;
+        private Texture2D _subTabActiveTexture;
+        private Texture2D _subTabInactiveTexture;
 
-        private enum ConsumableFilter
-        {
-            All,
-            EPotion,
-            MPotion,
-            MiscPot,
-            JunkPot,
-            Food,
-            Misc
-        }
+        // Colors
+        private Color _windowBgColor = new Color(0.08f, 0.08f, 0.1f, 0.98f);
+        private Color _cardColor = new Color(0.15f, 0.15f, 0.18f, 0.95f);
+        private Color _accentColor = new Color(0.8f, 0.6f, 0.2f, 1f);
+        private Color _equipmentColor = new Color(0.3f, 0.6f, 1f, 1f);
+        private Color _consumableColor = new Color(0.2f, 0.9f, 0.4f, 1f);
+        private Color _bookScrollColor = new Color(0.9f, 0.7f, 0.3f, 1f);
+        private Color _miscColor = new Color(0.6f, 0.6f, 0.6f, 1f);
+        private Color _weaponColor = new Color(1f, 0.3f, 0.3f, 1f);
+        private Color _armorColor = new Color(0.4f, 0.7f, 1f, 1f);
+        private Color _positiveColor = new Color(0.2f, 0.85f, 0.4f, 1f);
+        private Color _dangerColor = new Color(0.9f, 0.3f, 0.3f, 1f);
 
-        private enum BookScrollFilter
-        {
-            All,
-            SkillBook,
-            SpellBook,
-            Scroll
-        }
+        private enum InventoryTab { Equipment, Consumable, BookScroll, Misc }
+        private enum EquipmentSlotFilter { All, Head, Shoulders, Arms, Hands, Chest, Legs, Feet, Weapons, Accessories }
+        private enum ConsumableFilter { All, EPotion, MPotion, MiscPot, JunkPot, Food, Misc }
+        private enum BookScrollFilter { All, SkillBook, SpellBook, Scroll }
 
         public void OnStart(Hero_Base hero, KeyCode toggleShowKey, int windowID)
         {
@@ -89,111 +81,6 @@ namespace Scripts.Models
             _toggleShowKey = toggleShowKey;
             _windowId = windowID;
             InitializeCache();
-        }
-
-        private void InitializeCache()
-        {
-            _itemCountCache.Clear();
-            foreach (InventoryTab tab in System.Enum.GetValues(typeof(InventoryTab)))
-            {
-                _itemCountCache[tab] = 0;
-            }
-
-            _equipmentSlotCountCache.Clear();
-            foreach (EquipmentSlotFilter filter in System.Enum.GetValues(typeof(EquipmentSlotFilter)))
-            {
-                _equipmentSlotCountCache[filter] = 0;
-            }
-
-            _consumableCountCache.Clear();
-            foreach (ConsumableFilter filter in System.Enum.GetValues(typeof(ConsumableFilter)))
-            {
-                _consumableCountCache[filter] = 0;
-            }
-
-            _bookScrollCountCache.Clear();
-            foreach (BookScrollFilter filter in System.Enum.GetValues(typeof(BookScrollFilter)))
-            {
-                _bookScrollCountCache[filter] = 0;
-            }
-
-            _needsCacheUpdate = true;
-        }
-
-        private void UpdateCacheIfNeeded()
-        {
-            if (!_needsCacheUpdate && Time.time - _lastCacheRefreshTime < CACHE_REFRESH_INTERVAL)
-            {
-                return;
-            }
-
-            if (_hero?.Character?.Inventory?.Items == null)
-                return;
-
-            var inventory = _hero.Character.Inventory.Items;
-
-            // Update tab counts
-            _itemCountCache[InventoryTab.Equipment] = FilterItemsByTab(inventory, InventoryTab.Equipment).Count();
-            _itemCountCache[InventoryTab.Consumable] = FilterItemsByTab(inventory, InventoryTab.Consumable).Count();
-            _itemCountCache[InventoryTab.BookScroll] = FilterItemsByTab(inventory, InventoryTab.BookScroll).Count();
-            _itemCountCache[InventoryTab.Misc] = FilterItemsByTab(inventory, InventoryTab.Misc).Count();
-
-            // Update equipment slot counts
-            var equipmentItems = FilterItemsByTab(inventory, InventoryTab.Equipment).ToList();
-            _equipmentSlotCountCache[EquipmentSlotFilter.All] = equipmentItems.Count;
-            _equipmentSlotCountCache[EquipmentSlotFilter.Head] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Head).Count();
-            _equipmentSlotCountCache[EquipmentSlotFilter.Shoulders] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Shoulders).Count();
-            _equipmentSlotCountCache[EquipmentSlotFilter.Arms] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Arms).Count();
-            _equipmentSlotCountCache[EquipmentSlotFilter.Hands] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Hands).Count();
-            _equipmentSlotCountCache[EquipmentSlotFilter.Chest] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Chest).Count();
-            _equipmentSlotCountCache[EquipmentSlotFilter.Legs] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Legs).Count();
-            _equipmentSlotCountCache[EquipmentSlotFilter.Feet] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Feet).Count();
-            _equipmentSlotCountCache[EquipmentSlotFilter.Weapons] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Weapons).Count();
-            _equipmentSlotCountCache[EquipmentSlotFilter.Accessories] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Accessories).Count();
-
-            // Update consumable filter counts
-            _consumableCountCache[ConsumableFilter.All] = FilterItemsByTab(inventory, InventoryTab.Consumable).Count();
-            _consumableCountCache[ConsumableFilter.EPotion] = FilterItemsByConsumableType(inventory, "e_potion").Count();
-            _consumableCountCache[ConsumableFilter.MPotion] = FilterItemsByConsumableType(inventory, "m_potion").Count();
-            _consumableCountCache[ConsumableFilter.MiscPot] = FilterItemsByConsumableType(inventory, "misc_pot").Count();
-            _consumableCountCache[ConsumableFilter.JunkPot] = FilterItemsByConsumableType(inventory, "junk_pot").Count();
-            _consumableCountCache[ConsumableFilter.Food] = FilterItemsByConsumableType(inventory, "food").Count();
-            _consumableCountCache[ConsumableFilter.Misc] = FilterItemsByConsumableType(inventory, "misc").Count();
-
-            // Update book/scroll filter counts
-            var bookScrollItems = FilterItemsByTab(inventory, InventoryTab.BookScroll).ToList();
-            _bookScrollCountCache[BookScrollFilter.All] = bookScrollItems.Count;
-            _bookScrollCountCache[BookScrollFilter.SkillBook] = bookScrollItems.Where(item => IsSkillBook(item)).Count();
-            _bookScrollCountCache[BookScrollFilter.SpellBook] = bookScrollItems.Where(item => IsSpellBook(item)).Count();
-            _bookScrollCountCache[BookScrollFilter.Scroll] = bookScrollItems.Where(item => item.SpellScroll != null).Count();
-
-            // Update filtered items for current view
-            UpdateFilteredItemsCache();
-
-            _lastCacheRefreshTime = Time.time;
-            _needsCacheUpdate = false;
-        }
-
-        private void UpdateFilteredItemsCache()
-        {
-            if (_hero?.Character?.Inventory?.Items == null)
-                return;
-
-            var inventory = _hero.Character.Inventory.Items;
-            _filteredItemsCache = FilterItemsByTab(inventory, _currentTab).ToList();
-
-            if (_currentTab == InventoryTab.Equipment)
-            {
-                _filteredItemsCache = FilterItemsByEquipmentSlot(_filteredItemsCache, _currentEquipmentFilter).ToList();
-            }
-            else if (_currentTab == InventoryTab.Consumable)
-            {
-                _filteredItemsCache = FilterConsumablesByType(_filteredItemsCache, _currentConsumableFilter).ToList();
-            }
-            else if (_currentTab == InventoryTab.BookScroll)
-            {
-                _filteredItemsCache = FilterBooksAndScrollsByType(_filteredItemsCache, _currentBookScrollFilter).ToList();
-            }
         }
 
         public void OnGUI()
@@ -208,872 +95,737 @@ namespace Scripts.Models
 
             if (_isShow)
             {
+                InitializeStyles();
                 UpdateCacheIfNeeded();
-                _InventoryWindowRect = GUI.Window(WindowsConstants.INVENTORY_WINDOW_ID, _InventoryWindowRect, DrawInventoryWindow, "Inventory");
+                _InventoryWindowRect = GUI.Window(_windowId, _InventoryWindowRect, DrawInventoryWindow, "", _windowStyle);
             }
         }
 
-        public void OnUpdate()
+        public void OnUpdate() { }
+
+        private void InitializeStyles()
         {
+            if (_windowStyle != null) return;
+
+            // Window Style
+            _windowBackgroundTexture = CreateTexture(_windowBgColor);
+            _windowStyle = new GUIStyle(GUI.skin.window)
+            {
+                normal = { background = _windowBackgroundTexture },
+                onNormal = { background = _windowBackgroundTexture },
+                focused = { background = _windowBackgroundTexture },
+                onFocused = { background = _windowBackgroundTexture },
+                active = { background = _windowBackgroundTexture },
+                onActive = { background = _windowBackgroundTexture },
+                border = new RectOffset(2, 2, 2, 2)
+            };
+
+            // Card Style
+            _cardBackgroundTexture = CreateTexture(_cardColor);
+            _itemCardStyle = new GUIStyle(GUI.skin.box)
+            {
+                normal = { background = _cardBackgroundTexture },
+                border = new RectOffset(1, 1, 1, 1),
+                padding = new RectOffset(10, 10, 8, 8)
+            };
+
+            // Title Style
+            _titleStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 14,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleLeft,
+                normal = { textColor = Color.white }
+            };
+
+            // Subtitle Style
+            _subtitleStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 18,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = _accentColor }
+            };
+
+            // Stat Label Style
+            _statLabelStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 11,
+                alignment = TextAnchor.MiddleLeft,
+                normal = { textColor = new Color(0.85f, 0.85f, 0.85f) },
+                wordWrap = false
+            };
+
+            // Tab Styles
+            _tabActiveTexture = CreateTexture(new Color(0.25f, 0.5f, 0.8f, 0.95f));
+            _tabInactiveTexture = CreateTexture(new Color(0.2f, 0.2f, 0.25f, 0.9f));
             
+            _tabActiveStyle = new GUIStyle(GUI.skin.button)
+            {
+                fontSize = 12,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { background = _tabActiveTexture, textColor = Color.white },
+                hover = { background = _tabActiveTexture, textColor = Color.white },
+                active = { background = _tabActiveTexture, textColor = Color.white },
+                focused = { background = _tabActiveTexture, textColor = Color.white }
+            };
+
+            _tabInactiveStyle = new GUIStyle(GUI.skin.button)
+            {
+                fontSize = 12,
+                fontStyle = FontStyle.Normal,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { background = _tabInactiveTexture, textColor = new Color(0.7f, 0.7f, 0.7f) },
+                hover = { background = CreateTexture(new Color(0.3f, 0.3f, 0.35f, 0.95f)), textColor = Color.white },
+                active = { background = _tabInactiveTexture, textColor = Color.white },
+                focused = { background = _tabInactiveTexture, textColor = new Color(0.7f, 0.7f, 0.7f) }
+            };
+
+            // SubTab Styles
+            _subTabActiveTexture = CreateTexture(new Color(0.2f, 0.6f, 0.3f, 0.9f));
+            _subTabInactiveTexture = CreateTexture(new Color(0.18f, 0.18f, 0.22f, 0.85f));
+
+            _subTabActiveStyle = new GUIStyle(GUI.skin.button)
+            {
+                fontSize = 10,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { background = _subTabActiveTexture, textColor = Color.white },
+                hover = { background = _subTabActiveTexture, textColor = Color.white },
+                active = { background = _subTabActiveTexture, textColor = Color.white },
+                focused = { background = _subTabActiveTexture, textColor = Color.white }
+            };
+
+            _subTabInactiveStyle = new GUIStyle(GUI.skin.button)
+            {
+                fontSize = 10,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { background = _subTabInactiveTexture, textColor = new Color(0.6f, 0.6f, 0.6f) },
+                hover = { background = CreateTexture(new Color(0.25f, 0.25f, 0.3f, 0.9f)), textColor = Color.white },
+                active = { background = _subTabInactiveTexture, textColor = Color.white },
+                focused = { background = _subTabInactiveTexture, textColor = new Color(0.6f, 0.6f, 0.6f) }
+            };
         }
 
-        void DrawInventoryWindow(int windowID)
+        private Texture2D CreateTexture(Color color)
         {
-            if (!_isShow || _hero?.Character?.Inventory?.Items == null)
+            Texture2D tex = new Texture2D(1, 1);
+            tex.SetPixel(0, 0, color);
+            tex.Apply();
+            return tex;
+        }
+
+        private void DrawInventoryWindow(int windowID)
+        {
+            if (_hero?.Character?.Inventory?.Items == null)
             {
                 GUI.DragWindow();
                 return;
             }
 
-            DrawTabs();
+            GUILayout.BeginVertical();
 
-            if (_currentTab == InventoryTab.Equipment)
-            {
-                DrawEquipmentSubTabs();
-            }
-            else if (_currentTab == InventoryTab.Consumable)
-            {
-                DrawConsumableSubTabs();
-            }
-            else if (_currentTab == InventoryTab.BookScroll)
-            {
-                DrawBookScrollSubTabs();
-            }
+            // Header
+            DrawHeader();
+            GUILayout.Space(8);
 
-            float tabAreaOffset = (_currentTab == InventoryTab.Equipment)
-                ? HEADER_HEIGHT + TAB_HEIGHT + (SUBTAB_HEIGHT * 2) + 20
-                : (_currentTab == InventoryTab.Consumable || _currentTab == InventoryTab.BookScroll)
-                ? HEADER_HEIGHT + TAB_HEIGHT + SUBTAB_HEIGHT + 10
-                : HEADER_HEIGHT + TAB_HEIGHT;
+            // Main Tabs
+            DrawMainTabs();
+            GUILayout.Space(6);
 
-            int itemCount = _filteredItemsCache.Count;
+            // Sub Tabs
+            DrawSubTabs();
+            GUILayout.Space(10);
 
+            // Items Grid
+            DrawItemsGrid();
 
-            GUILayout.BeginArea(new Rect(10, tabAreaOffset, _InventoryWindowRect.width - 20, _InventoryWindowRect.height - tabAreaOffset - 40));
+            // Footer with actions
+            DrawFooter();
 
-            float scrollViewHeight = _InventoryWindowRect.height - tabAreaOffset - 70;
-
-            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, GUILayout.Width(_InventoryWindowRect.width - 30), GUILayout.Height(scrollViewHeight));
-
-            int index = 0;
-            foreach (var item in _filteredItemsCache)
-            {
-                DrawInventoryItem(item, index);
-                index++;
-            }
-
-            //add a button to dorp all items in the current tab
-            if (GUILayout.Button("Drop All Items in Current Tab"))
-            {
-                foreach (var item in _filteredItemsCache.ToList())
-                {
-                    try
-                    {
-                        _hero.Drop(item);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"Error dropping item {item.Name}: {ex.Message}");
-                    }
-                }
-                _needsCacheUpdate = true;
-            }
-
-
-            GUILayout.EndScrollView();
-            GUILayout.EndArea();
+            GUILayout.EndVertical();
 
             GUI.DragWindow(new Rect(0, 0, _InventoryWindowRect.width, 30));
         }
 
-        void DrawTabs()
+        private void DrawHeader()
         {
-            float tabWidth = (_InventoryWindowRect.width - 60) / 5f;
-            float startX = 10;
-            float startY = HEADER_HEIGHT;
-
-            Color originalColor = GUI.backgroundColor;
-
-            if (DrawTab($"Equipment ({_itemCountCache[InventoryTab.Equipment]})", new Rect(startX, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Equipment))
-            {
-                _currentTab = InventoryTab.Equipment;
-                _currentEquipmentFilter = EquipmentSlotFilter.All;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawTab($"Consumable ({_itemCountCache[InventoryTab.Consumable]})", new Rect(startX + tabWidth + 5, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Consumable))
-            {
-                _currentTab = InventoryTab.Consumable;
-                _currentConsumableFilter = ConsumableFilter.All;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawTab($"Book/Scroll ({_itemCountCache[InventoryTab.BookScroll]})", new Rect(startX + (tabWidth + 5) * 2, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.BookScroll))
-            {
-                _currentTab = InventoryTab.BookScroll;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawTab($"Misc ({_itemCountCache[InventoryTab.Misc]})", new Rect(startX + (tabWidth + 5) * 3, startY, tabWidth, TAB_HEIGHT), _currentTab == InventoryTab.Misc))
-            {
-                _currentTab = InventoryTab.Misc;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            GUI.backgroundColor = originalColor;
-        }
-
-        void DrawEquipmentSubTabs()
-        {
-            float subTabWidth = (_InventoryWindowRect.width - 50) / 5f;
-            float startX = 10;
-            float startY = HEADER_HEIGHT + TAB_HEIGHT;
-
-            Color originalColor = GUI.backgroundColor;
-
-            if (DrawSubTab($"All ({_equipmentSlotCountCache[EquipmentSlotFilter.All]})", new Rect(startX, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.All))
-            {
-                _currentEquipmentFilter = EquipmentSlotFilter.All;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Head ({_equipmentSlotCountCache[EquipmentSlotFilter.Head]})", new Rect(startX + subTabWidth + 5, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Head))
-            {
-                _currentEquipmentFilter = EquipmentSlotFilter.Head;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Shoulders ({_equipmentSlotCountCache[EquipmentSlotFilter.Shoulders]})", new Rect(startX + (subTabWidth + 5) * 2, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Shoulders))
-            {
-                _currentEquipmentFilter = EquipmentSlotFilter.Shoulders;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Arms ({_equipmentSlotCountCache[EquipmentSlotFilter.Arms]})", new Rect(startX + (subTabWidth + 5) * 3, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Arms))
-            {
-                _currentEquipmentFilter = EquipmentSlotFilter.Arms;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Hands ({_equipmentSlotCountCache[EquipmentSlotFilter.Hands]})", new Rect(startX + (subTabWidth + 5) * 4, startY, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Hands))
-            {
-                _currentEquipmentFilter = EquipmentSlotFilter.Hands;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            GUI.backgroundColor = originalColor;
-
-            // Second row of sub-tabs
-            float startY2 = startY + SUBTAB_HEIGHT + 10;
-
-            if (DrawSubTab($"Chest ({_equipmentSlotCountCache[EquipmentSlotFilter.Chest]})", new Rect(startX, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Chest))
-            {
-                _currentEquipmentFilter = EquipmentSlotFilter.Chest;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Legs ({_equipmentSlotCountCache[EquipmentSlotFilter.Legs]})", new Rect(startX + subTabWidth + 5, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Legs))
-            {
-                _currentEquipmentFilter = EquipmentSlotFilter.Legs;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Feet ({_equipmentSlotCountCache[EquipmentSlotFilter.Feet]})", new Rect(startX + (subTabWidth + 5) * 2, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Feet))
-            {
-                _currentEquipmentFilter = EquipmentSlotFilter.Feet;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Weapons ({_equipmentSlotCountCache[EquipmentSlotFilter.Weapons]})", new Rect(startX + (subTabWidth + 5) * 3, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Weapons))
-            {
-                _currentEquipmentFilter = EquipmentSlotFilter.Weapons;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Accessories ({_equipmentSlotCountCache[EquipmentSlotFilter.Accessories]})", new Rect(startX + (subTabWidth + 5) * 4, startY2, subTabWidth, SUBTAB_HEIGHT), _currentEquipmentFilter == EquipmentSlotFilter.Accessories))
-            {
-                _currentEquipmentFilter = EquipmentSlotFilter.Accessories;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            GUI.backgroundColor = originalColor;
-        }
-
-        void DrawConsumableSubTabs()
-        {
-            float subTabWidth = (_InventoryWindowRect.width - 50) / 6f;
-            float startX = 10;
-            float startY = HEADER_HEIGHT + TAB_HEIGHT;
-
-            Color originalColor = GUI.backgroundColor;
-
-            if (DrawSubTab($"All ({_consumableCountCache[ConsumableFilter.All]})", new Rect(startX, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.All))
-            {
-                _currentConsumableFilter = ConsumableFilter.All;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"HP-Pot ({_consumableCountCache[ConsumableFilter.EPotion]})", new Rect(startX + subTabWidth + 5, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.EPotion))
-            {
-                _currentConsumableFilter = ConsumableFilter.EPotion;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"MP-Pot ({_consumableCountCache[ConsumableFilter.MPotion]})", new Rect(startX + (subTabWidth + 5) * 2, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.MPotion))
-            {
-                _currentConsumableFilter = ConsumableFilter.MPotion;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Misc-Pot ({_consumableCountCache[ConsumableFilter.MiscPot]})", new Rect(startX + (subTabWidth + 5) * 3, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.MiscPot))
-            {
-                _currentConsumableFilter = ConsumableFilter.MiscPot;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Junk-Pot ({_consumableCountCache[ConsumableFilter.JunkPot]})", new Rect(startX + (subTabWidth + 5) * 4, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.JunkPot))
-            {
-                _currentConsumableFilter = ConsumableFilter.JunkPot;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Food ({_consumableCountCache[ConsumableFilter.Food]})", new Rect(startX + (subTabWidth + 5) * 5, startY, subTabWidth, SUBTAB_HEIGHT), _currentConsumableFilter == ConsumableFilter.Food))
-            {
-                _currentConsumableFilter = ConsumableFilter.Food;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            GUI.backgroundColor = originalColor;
-        }
-
-        void DrawBookScrollSubTabs()
-        {
-            float subTabWidth = (_InventoryWindowRect.width - 50) / 4f;
-            float startX = 10;
-            float startY = HEADER_HEIGHT + TAB_HEIGHT;
-
-            Color originalColor = GUI.backgroundColor;
-
-            if (DrawSubTab($"All ({_bookScrollCountCache[BookScrollFilter.All]})", new Rect(startX, startY, subTabWidth, SUBTAB_HEIGHT), _currentBookScrollFilter == BookScrollFilter.All))
-            {
-                _currentBookScrollFilter = BookScrollFilter.All;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Skill ({_bookScrollCountCache[BookScrollFilter.SkillBook]})", new Rect(startX + subTabWidth + 5, startY, subTabWidth, SUBTAB_HEIGHT), _currentBookScrollFilter == BookScrollFilter.SkillBook))
-            {
-                _currentBookScrollFilter = BookScrollFilter.SkillBook;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Spell ({_bookScrollCountCache[BookScrollFilter.SpellBook]})", new Rect(startX + (subTabWidth + 5) * 2, startY, subTabWidth, SUBTAB_HEIGHT), _currentBookScrollFilter == BookScrollFilter.SpellBook))
-            {
-                _currentBookScrollFilter = BookScrollFilter.SpellBook;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            if (DrawSubTab($"Scroll ({_bookScrollCountCache[BookScrollFilter.Scroll]})", new Rect(startX + (subTabWidth + 5) * 3, startY, subTabWidth, SUBTAB_HEIGHT), _currentBookScrollFilter == BookScrollFilter.Scroll))
-            {
-                _currentBookScrollFilter = BookScrollFilter.Scroll;
-                _scrollPosition = Vector2.zero;
-                UpdateFilteredItemsCache();
-            }
-
-            GUI.backgroundColor = originalColor;
-        }
-
-        bool DrawTab(string label, Rect rect, bool isActive)
-        {
-            Color originalColor = GUI.backgroundColor;
-
-            if (isActive)
-            {
-                GUI.backgroundColor = new Color(0.3f, 0.7f, 1f);
-            }
-            else
-            {
-                GUI.backgroundColor = new Color(0.6f, 0.6f, 0.6f);
-            }
-
-            bool clicked = GUI.Button(rect, label);
-
-            GUI.backgroundColor = originalColor;
-
-            return clicked;
-        }
-
-        bool DrawSubTab(string label, Rect rect, bool isActive)
-        {
-            Color originalColor = GUI.backgroundColor;
-
-            if (isActive)
-            {
-                GUI.backgroundColor = new Color(0.2f, 0.9f, 0.2f);
-            }
-            else
-            {
-                GUI.backgroundColor = new Color(0.5f, 0.8f, 0.5f);
-            }
-
-            bool clicked = GUI.Button(rect, label, GUI.skin.button);
-
-            GUI.backgroundColor = originalColor;
-
-            return clicked;
-        }
-
-        IEnumerable<ItemBehaviour> FilterItemsByTab(IEnumerable<ItemBehaviour> items, InventoryTab tab)
-        {
-            return tab switch
-            {
-                InventoryTab.Equipment => items.Where(item => item.Armor != null || item.Weapon != null),
-                InventoryTab.Consumable => items.Where(item => item.Consumable != null),
-                InventoryTab.BookScroll => items.Where(item => item.Name.ToLower().Contains("book") || item.SpellScroll != null),
-                InventoryTab.Misc => items.Where(item => item.Armor == null && item.Weapon == null && item.Consumable == null && item.SpellBook == null && item.SpellScroll == null),
-                _ => items
-            };
-        }
-
-        IEnumerable<ItemBehaviour> FilterItemsByEquipmentSlot(IEnumerable<ItemBehaviour> items, EquipmentSlotFilter filter)
-        {
-            return filter switch
-            {
-                EquipmentSlotFilter.All => items,
-                EquipmentSlotFilter.Head => items.Where(item => MatchesEquipmentSlot(item, EquipmentSlot.Head)),
-                EquipmentSlotFilter.Shoulders => items.Where(item => MatchesEquipmentSlot(item, EquipmentSlot.LeftShoulder) || MatchesEquipmentSlot(item, EquipmentSlot.RightShoulder)),
-                EquipmentSlotFilter.Arms => items.Where(item => MatchesEquipmentSlot(item, EquipmentSlot.LeftArm) || MatchesEquipmentSlot(item, EquipmentSlot.RightArm)),
-                EquipmentSlotFilter.Hands => items.Where(item => MatchesEquipmentSlot(item, EquipmentSlot.LeftGlove) || MatchesEquipmentSlot(item, EquipmentSlot.RightGlove)),
-                EquipmentSlotFilter.Chest => items.Where(item => MatchesEquipmentSlot(item, EquipmentSlot.Chest)),
-                EquipmentSlotFilter.Legs => items.Where(item => MatchesEquipmentSlot(item, EquipmentSlot.Legs)),
-                EquipmentSlotFilter.Feet => items.Where(item => MatchesEquipmentSlot(item, EquipmentSlot.LeftFeet) || MatchesEquipmentSlot(item, EquipmentSlot.RightFeet)),
-                EquipmentSlotFilter.Weapons => items.Where(item => MatchesEquipmentSlot(item, EquipmentSlot.LeftHand) || MatchesEquipmentSlot(item, EquipmentSlot.RightHand)),
-                EquipmentSlotFilter.Accessories => items.Where(item => MatchesEquipmentSlot(item, EquipmentSlot.Ring) || MatchesEquipmentSlot(item, EquipmentSlot.Hair) || MatchesEquipmentSlot(item, EquipmentSlot.FacialHair)),
-                _ => items
-            };
-        }
-
-        IEnumerable<ItemBehaviour> FilterConsumablesByType(IEnumerable<ItemBehaviour> items, ConsumableFilter filter)
-        {
-            return filter switch
-            {
-                ConsumableFilter.All => items.Where(item => item.Consumable != null),
-                ConsumableFilter.EPotion => items.Where(item => HasHealthPotion(item)),
-                ConsumableFilter.MPotion => items.Where(item => HasManaPotion(item)),
-                ConsumableFilter.MiscPot => items.Where(item => IsMiscPotion(item)),
-                ConsumableFilter.JunkPot => items.Where(item => IsJunkPotion(item)),
-                ConsumableFilter.Food => items.Where(item => IsFood(item)),
-                ConsumableFilter.Misc => items.Where(item => IsMiscConsumable(item)),
-                _ => items
-            };
-        }
-
-        IEnumerable<ItemBehaviour> FilterBooksAndScrollsByType(IEnumerable<ItemBehaviour> items, BookScrollFilter filter)
-        {
-            return filter switch
-            {
-                BookScrollFilter.All => items.Where(item => item.SpellScroll != null || item.Name.ToLower().Contains("book")),
-                BookScrollFilter.SkillBook => items.Where(item => IsSkillBook(item)),
-                BookScrollFilter.SpellBook => items.Where(item => IsSpellBook(item)),
-                BookScrollFilter.Scroll => items.Where(item => item.SpellScroll != null),
-                _ => items
-            };
-        }
-
-        IEnumerable<ItemBehaviour> FilterItemsByConsumableType(IEnumerable<ItemBehaviour> items, string consumableType)
-        {
-            return consumableType switch
-            {
-                "e_potion" => items.Where(item => HasHealthPotion(item)),
-                "m_potion" => items.Where(item => HasManaPotion(item)),
-                "misc_pot" => items.Where(item => IsMiscPotion(item)),
-                "junk_pot" => items.Where(item => IsJunkPotion(item)),
-                "food" => items.Where(item => IsFood(item)),
-                "misc" => items.Where(item => IsMiscConsumable(item)),
-                _ => items.Where(item => item.Consumable != null)
-            };
-        }
-
-        private bool HasHealthPotion(ItemBehaviour item)
-        {
-            if (item?.LiquidContainer != null)
-            {
-                int healthAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Health);
-                return healthAmount > 0;
-            }
-            return false;
-        }
-
-        private bool HasManaPotion(ItemBehaviour item)
-        {
-            if (item?.LiquidContainer != null)
-            {
-                int manaAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Mana);
-                return manaAmount > 0;
-            }
-            return false;
-        }
-
-        private bool IsMiscPotion(ItemBehaviour item)
-        {
-            if (item?.Consumable == null || item.Consumable.Food != null)
-                return false;
-
-            if (item?.LiquidContainer != null)
-            {
-                int healthAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Health);
-                if (healthAmount > 0)
-                    return false;
-                int manaAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Mana);
-                if (manaAmount > 0)
-                    return false;
-
-                int totalAmount = 0;
-                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Fire);
-                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Honey);
-                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Ink);
-                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Oil);
-                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Rage);
-                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Stamina);
-                totalAmount += item.LiquidContainer.GetResourceAmount(ResourceType.Water);
-
-
-                return totalAmount > 0;
-            }
-            return false;
-        }
-
-        private bool IsJunkPotion(ItemBehaviour item)
-        {
-            if (item?.Consumable == null || item.Consumable.Food != null)
-                return false;
-
-            if (item?.LiquidContainer != null)
-            {
-                //int healthAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Health);
-                //int manaAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Mana);
-                //int totalLiquid = healthAmount + manaAmount;
-                return GetTotalAmouttInLiquidContainer(item) == 0;
-            }
-            return false;
-        }
-
-        private int GetTotalAmouttInLiquidContainer(ItemBehaviour item)
-        {
-            if (item?.LiquidContainer == null)
-                return 0;
-            int totalAmount = 0;
-            foreach (ResourceType resourceType in Enum.GetValues(typeof(ResourceType)))
-            {
-                totalAmount += item.LiquidContainer.GetResourceAmount(resourceType);
-            }
-            return totalAmount;
-        }
-
-        private bool IsFood(ItemBehaviour item)
-        {
-            return item?.Consumable != null && item.Consumable.Food != null;
-        }
-
-        private bool IsMiscConsumable(ItemBehaviour item)
-        {
-            if (item?.Consumable == null)
-                return false;
-
-            return !IsFood(item) && !HasHealthPotion(item) && !HasManaPotion(item) && !IsMiscPotion(item) && !IsJunkPotion(item);
-        }
-
-        private bool IsSkillBook(ItemBehaviour item)
-        {
-            if (item == null)
-                return false;
-            return item.GetComponent<SkillBookBehavior>() != null;
-        }
-
-        private bool IsSpellBook(ItemBehaviour item)
-        {
-            if (item == null)
-                return false;
-            return item.GetComponent<SkillBookBehavior>() == null && item.SpellBook != null;
-        }
-
-        bool MatchesEquipmentSlot(ItemBehaviour item, EquipmentSlot slot)
-        {
-            // Check if the item can be equipped in this slot
-            // This is a simplified check - you may need to adjust based on your ItemBehaviour implementation
-            if (item.Armor != null)
-            {
-                if (item?.Equipable?.Slot != null)
-                {
-                    return item.Equipable.Slot == slot;
-                }
-            }
-
-            if (item.Weapon != null)
-            {
-                return slot == EquipmentSlot.LeftHand || slot == EquipmentSlot.RightHand;
-            }
-
-            return false;
-        }
-
-        void DrawInventoryItem(ItemBehaviour item, int index)
-        {
-            if (item == null) return;
-
-            GUILayout.BeginVertical(GUI.skin.box, GUILayout.Height(ITEM_HEIGHT));
-
-            // Header row with item number, name and type
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"#{index + 1}", GUILayout.Width(40));
-            GUILayout.Label($"{item.Name}", GUILayout.Width(200));
-            
-
-            DrawItemTypeLabel(item);
-
+            GUILayout.Label("INVENTORY", _subtitleStyle, GUILayout.Height(30));
             GUILayout.FlexibleSpace();
+            
+            // Item count badge
+            GUI.backgroundColor = _accentColor;
+            GUILayout.Box($"{_filteredItemsCache.Count} items", GUILayout.Width(80), GUILayout.Height(25));
+            GUI.backgroundColor = Color.white;
+            
             GUILayout.EndHorizontal();
 
-            // Item details
-            DrawItemSpecificInfo(item);
+            // Separator
+            Rect sepRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(2));
+            GUI.color = _accentColor;
+            GUI.Box(sepRect, "");
+            GUI.color = Color.white;
+        }
+
+        private void DrawMainTabs()
+        {
+            GUILayout.BeginHorizontal();
+
+            DrawMainTab("⚔ Equipment", InventoryTab.Equipment, _itemCountCache[InventoryTab.Equipment], _equipmentColor);
+            GUILayout.Space(4);
+            DrawMainTab("🧪 Consumable", InventoryTab.Consumable, _itemCountCache[InventoryTab.Consumable], _consumableColor);
+            GUILayout.Space(4);
+            DrawMainTab("📖 Books/Scrolls", InventoryTab.BookScroll, _itemCountCache[InventoryTab.BookScroll], _bookScrollColor);
+            GUILayout.Space(4);
+            DrawMainTab("📦 Misc", InventoryTab.Misc, _itemCountCache[InventoryTab.Misc], _miscColor);
+
+            GUILayout.EndHorizontal();
+        }
+
+        private void DrawMainTab(string label, InventoryTab tab, int count, Color tabColor)
+        {
+            bool isActive = _currentTab == tab;
+            GUIStyle style = isActive ? _tabActiveStyle : _tabInactiveStyle;
+            
+            if (isActive)
+            {
+                GUI.backgroundColor = tabColor;
+            }
+
+            if (GUILayout.Button($"{label} ({count})", style, GUILayout.Height(32), GUILayout.ExpandWidth(true)))
+            {
+                _currentTab = tab;
+                ResetSubFilters();
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+
+            GUI.backgroundColor = Color.white;
+        }
+
+        private void ResetSubFilters()
+        {
+            _currentEquipmentFilter = EquipmentSlotFilter.All;
+            _currentConsumableFilter = ConsumableFilter.All;
+            _currentBookScrollFilter = BookScrollFilter.All;
+        }
+
+        private void DrawSubTabs()
+        {
+            GUILayout.BeginHorizontal();
+
+            switch (_currentTab)
+            {
+                case InventoryTab.Equipment:
+                    DrawEquipmentSubTabs();
+                    break;
+                case InventoryTab.Consumable:
+                    DrawConsumableSubTabs();
+                    break;
+                case InventoryTab.BookScroll:
+                    DrawBookScrollSubTabs();
+                    break;
+                default:
+                    GUILayout.Label("All items in this category", _statLabelStyle);
+                    break;
+            }
+
+            GUILayout.EndHorizontal();
+        }
+
+        private void DrawEquipmentSubTabs()
+        {
+            DrawSubTab("All", EquipmentSlotFilter.All, _equipmentSlotCountCache[EquipmentSlotFilter.All]);
+            DrawSubTab("Head", EquipmentSlotFilter.Head, _equipmentSlotCountCache[EquipmentSlotFilter.Head]);
+            DrawSubTab("Chest", EquipmentSlotFilter.Chest, _equipmentSlotCountCache[EquipmentSlotFilter.Chest]);
+            DrawSubTab("Legs", EquipmentSlotFilter.Legs, _equipmentSlotCountCache[EquipmentSlotFilter.Legs]);
+            DrawSubTab("Hands", EquipmentSlotFilter.Hands, _equipmentSlotCountCache[EquipmentSlotFilter.Hands]);
+            DrawSubTab("Feet", EquipmentSlotFilter.Feet, _equipmentSlotCountCache[EquipmentSlotFilter.Feet]);
+            DrawSubTab("Weapons", EquipmentSlotFilter.Weapons, _equipmentSlotCountCache[EquipmentSlotFilter.Weapons]);
+            DrawSubTab("Accessories", EquipmentSlotFilter.Accessories, _equipmentSlotCountCache[EquipmentSlotFilter.Accessories]);
+        }
+
+        private void DrawConsumableSubTabs()
+        {
+            DrawSubTab("All", ConsumableFilter.All, _consumableCountCache[ConsumableFilter.All]);
+            DrawSubTab("HP Potion", ConsumableFilter.EPotion, _consumableCountCache[ConsumableFilter.EPotion]);
+            DrawSubTab("MP Potion", ConsumableFilter.MPotion, _consumableCountCache[ConsumableFilter.MPotion]);
+            DrawSubTab("Food", ConsumableFilter.Food, _consumableCountCache[ConsumableFilter.Food]);
+            DrawSubTab("Misc Pot", ConsumableFilter.MiscPot, _consumableCountCache[ConsumableFilter.MiscPot]);
+            DrawSubTab("Junk", ConsumableFilter.JunkPot, _consumableCountCache[ConsumableFilter.JunkPot]);
+        }
+
+        private void DrawBookScrollSubTabs()
+        {
+            DrawSubTab("All", BookScrollFilter.All, _bookScrollCountCache[BookScrollFilter.All]);
+            DrawSubTab("Skill Books", BookScrollFilter.SkillBook, _bookScrollCountCache[BookScrollFilter.SkillBook]);
+            DrawSubTab("Spell Books", BookScrollFilter.SpellBook, _bookScrollCountCache[BookScrollFilter.SpellBook]);
+            DrawSubTab("Scrolls", BookScrollFilter.Scroll, _bookScrollCountCache[BookScrollFilter.Scroll]);
+        }
+
+        private void DrawSubTab(string label, EquipmentSlotFilter filter, int count)
+        {
+            bool isActive = _currentEquipmentFilter == filter;
+            if (GUILayout.Button($"{label} ({count})", isActive ? _subTabActiveStyle : _subTabInactiveStyle, GUILayout.Height(24)))
+            {
+                _currentEquipmentFilter = filter;
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+        }
+
+        private void DrawSubTab(string label, ConsumableFilter filter, int count)
+        {
+            bool isActive = _currentConsumableFilter == filter;
+            if (GUILayout.Button($"{label} ({count})", isActive ? _subTabActiveStyle : _subTabInactiveStyle, GUILayout.Height(24)))
+            {
+                _currentConsumableFilter = filter;
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+        }
+
+        private void DrawSubTab(string label, BookScrollFilter filter, int count)
+        {
+            bool isActive = _currentBookScrollFilter == filter;
+            if (GUILayout.Button($"{label} ({count})", isActive ? _subTabActiveStyle : _subTabInactiveStyle, GUILayout.Height(24)))
+            {
+                _currentBookScrollFilter = filter;
+                _scrollPosition = Vector2.zero;
+                UpdateFilteredItemsCache();
+            }
+        }
+
+        private void DrawItemsGrid()
+        {
+            float gridHeight = _InventoryWindowRect.height - 200;
+            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(gridHeight));
+
+            if (_filteredItemsCache.Count == 0)
+            {
+                GUILayout.FlexibleSpace();
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("No items found in this category", _subtitleStyle);
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+                GUILayout.FlexibleSpace();
+            }
+            else
+            {
+                int cardsPerRow = 4;
+                int cardInRow = 0;
+
+                GUILayout.BeginHorizontal();
+
+                foreach (var item in _filteredItemsCache)
+                {
+                    if (item == null) continue;
+
+                    if (cardInRow >= cardsPerRow)
+                    {
+                        GUILayout.EndHorizontal();
+                        GUILayout.Space(ITEM_CARD_PADDING);
+                        GUILayout.BeginHorizontal();
+                        cardInRow = 0;
+                    }
+
+                    DrawItemCard(item);
+                    cardInRow++;
+                }
+
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.EndScrollView();
+        }
+
+        private void DrawItemCard(ItemBehaviour item)
+        {
+            GUILayout.BeginVertical(_itemCardStyle, GUILayout.Width(ITEM_CARD_WIDTH), GUILayout.Height(ITEM_CARD_HEIGHT));
+
+            // Item Header with type color
+            GUILayout.BeginHorizontal();
+            Color typeColor = GetItemTypeColor(item);
+            GUI.color = typeColor;
+            GUILayout.Label(GetItemTypeIcon(item), GUILayout.Width(20));
+            GUI.color = Color.white;
+            
+            GUILayout.Label(TruncateString(item.Name, 22), _titleStyle, GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
+
+            // Type badge
+            GUI.color = typeColor;
+            GUILayout.Label(GetItemTypeName(item), _statLabelStyle, GUILayout.Height(16));
+            GUI.color = Color.white;
+
+            GUILayout.Space(4);
+
+            // Stats
+            DrawItemStats(item);
+
+            GUILayout.FlexibleSpace();
+
+            // Action buttons
+            DrawItemActions(item);
+
+            GUILayout.EndVertical();
+        }
+
+        private void DrawItemStats(ItemBehaviour item)
+        {
+            if (item.Weapon != null)
+            {
+                DrawStatLine("DPS", $"{item.Weapon.DamagePerSecond:F1}", _weaponColor);
+            }
+
+            if (item.Armor != null)
+            {
+                DrawStatLine("Armor", $"{item.Armor.Armor}", _armorColor);
+            }
+
+            if (item.LiquidContainer != null)
+            {
+                int health = item.LiquidContainer.GetResourceAmount(ResourceType.Health);
+                int mana = item.LiquidContainer.GetResourceAmount(ResourceType.Mana);
+                if (health > 0) DrawStatLine("Health", $"+{health}", _positiveColor);
+                if (mana > 0) DrawStatLine("Mana", $"+{mana}", new Color(0.4f, 0.6f, 1f));
+            }
+
+            if (item.Consumable?.Food != null)
+            {
+                DrawStatLine("Food", "Restores HP", _consumableColor);
+            }
 
             if (item.Level != null && item.Level.Level > 0)
             {
-                GUILayout.Label($"Level: {item.Level.Level}");
+                DrawStatLine("Level", $"{item.Level.Level}", _accentColor);
             }
 
             if (item.Durability != null && item.Durability.MaxDurability > 0)
             {
-                float durabilityPercent = (float)item.Durability.CurrentDurability / item.Durability.MaxDurability * 100f;
-                Color durabilityColor = GetDurabilityColor(durabilityPercent);
-                Color originalColor = GUI.color;
-                GUI.color = durabilityColor;
-                GUILayout.Label($"Durability: {durabilityPercent:F0}% ({item.Durability.CurrentDurability}/{item.Durability.MaxDurability})");
-                GUI.color = originalColor;
+                float pct = item.Durability.DurabilityPercentage * 100f;
+                Color durColor = pct > 50 ? _positiveColor : pct > 25 ? _accentColor : _dangerColor;
+                DrawStatLine("Durability", $"{pct:F0}%", durColor);
             }
 
-            
+            if (item.GoldValue > 0)
+            {
+                DrawStatLine("Value", $"{item.GoldValue}g", _accentColor);
+            }
+        }
 
-            // Action buttons row
+        private void DrawStatLine(string label, string value, Color valueColor)
+        {
             GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
+            GUILayout.Label($"{label}:", _statLabelStyle, GUILayout.Width(70));
+            GUI.color = valueColor;
+            GUILayout.Label(value, _statLabelStyle);
+            GUI.color = Color.white;
+            GUILayout.EndHorizontal();
+        }
 
-            // Specific action button based on item type
-            if (item.SpellScroll != null)
-            {
-                Color originalBgColor = GUI.backgroundColor;
-                GUI.backgroundColor = new Color(1f, 0.8f, 0.2f);
+        private void DrawItemActions(ItemBehaviour item)
+        {
+            GUILayout.BeginHorizontal();
 
-                if (GUILayout.Button("Use Scroll", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
-                {
-                    _hero.Action_UseScroll(item);
-                    _needsCacheUpdate = true;
-                }
-
-                GUI.backgroundColor = originalBgColor;
-            }
-
-            if (IsSkillBook(item))
-            {
-                Color originalBgColor = GUI.backgroundColor;
-                GUI.backgroundColor = new Color(0.8f, 0.4f, 1f);
-
-                if (GUILayout.Button("Learn", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
-                {
-                    _hero.Action_LearnSkillBook(item);
-                    _needsCacheUpdate = true;
-                }
-
-                GUI.backgroundColor = originalBgColor;
-            }
-
-            if (item.Consumable != null)
-            {
-                Color originalBgColor = GUI.backgroundColor;
-                GUI.backgroundColor = new Color(0.3f, 1f, 0.3f);
-
-                if (GUILayout.Button("Consume", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
-                {
-                    ConsumeItem(item);
-                }
-
-                GUI.backgroundColor = originalBgColor;
-            }
-
+            // Primary action
             if (item.Armor != null || item.Weapon != null)
             {
-                Color originalBgColor = GUI.backgroundColor;
-                GUI.backgroundColor = new Color(0.3f, 0.7f, 1f);
-
-                if (GUILayout.Button("Equip", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
-                {
-                    EquipItem(item);
-                    _needsCacheUpdate = true;
-                }
-
-                GUI.backgroundColor = originalBgColor;
-            }
-
-            // Drop button
-            Color dropBgColor = GUI.backgroundColor;
-            GUI.backgroundColor = new Color(1f, 0.4f, 0.4f);
-
-            if (GUILayout.Button("Drop", GUILayout.Width(BUTTON_WIDTH), GUILayout.Height(BUTTON_HEIGHT)))
-            {
-                DropItem(item);
-            }
-
-            GUI.backgroundColor = dropBgColor;
-
-        
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            GUILayout.EndVertical();
-
-            GUILayout.Space(ITEM_PADDING);
-
-        }
-
-        void DropItem(ItemBehaviour item)
-        {
-            if (item != null && _hero != null)
-            {
-                try
-                {
-                    _hero.Drop(item);
-                    _needsCacheUpdate = true;
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"Error dropping item {item.Name}: {ex.Message}");
-                }
-            }
-        }
-
-        void ConsumeItem(ItemBehaviour item)
-        {
-            if (item?.Consumable != null && _hero != null)
-            {
-                try
-                {
-                    _hero.Action_ConsumeItem(item);
-                    _needsCacheUpdate = true;
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"Error consuming item {item.Name}: {ex.Message}");
-                }
-            }
-        }
-
-        void EquipItem(ItemBehaviour item)
-        {
-            if ((item?.Armor != null || item?.Weapon != null) && _hero != null)
-            {
-                try
-                {
-                    _hero.Equip(item);
-                    _needsCacheUpdate = true;
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"Error equipping item {item.Name}: {ex.Message}");
-                }
-            }
-        }
-
-        void DrawItemTypeLabel(ItemBehaviour item)
-        {
-            Color originalColor = GUI.color;
-            string typeLabel = "";
-
-            if (item.Weapon != null)
-            {
-                GUI.color = new Color(1f, 0.3f, 0.3f);
-                typeLabel = "[Weapon]";
-            }
-            else if (item.Armor != null)
-            {
-                GUI.color = new Color(0.3f, 0.6f, 1f);
-                typeLabel = "[Armor]";
+                GUI.backgroundColor = _equipmentColor;
+                if (GUILayout.Button("Equip", GUILayout.Height(22))) EquipItem(item);
             }
             else if (item.Consumable != null)
             {
-                GUI.color = new Color(0.3f, 1f, 0.3f);
-                typeLabel = "[Consumable]";
+                GUI.backgroundColor = _consumableColor;
+                if (GUILayout.Button("Use", GUILayout.Height(22))) ConsumeItem(item);
+            }
+            else if (IsSkillBook(item))
+            {
+                GUI.backgroundColor = _bookScrollColor;
+                if (GUILayout.Button("Learn", GUILayout.Height(22))) { _hero.Action_LearnSkillBook(item); _needsCacheUpdate = true; }
             }
             else if (item.SpellScroll != null)
             {
-                GUI.color = new Color(1f, 0.8f, 0.2f);
-                typeLabel = "[Scroll]";
-            }
-            else if (item.name.Contains("Book") && item.SpellBook != null)
-            {
-                GUI.color = new Color(0.8f, 0.4f, 1f);
-                typeLabel = "[SpellBook]";
-            }
-            else
-            {
-                GUI.color = Color.gray;
-                typeLabel = "[Item]";
+                GUI.backgroundColor = _bookScrollColor;
+                if (GUILayout.Button("Cast", GUILayout.Height(22))) { _hero.Action_UseScroll(item); _needsCacheUpdate = true; }
             }
 
-            GUILayout.Label(typeLabel, GUILayout.Width(100));
-            GUI.color = originalColor;
+            // Drop button
+            GUI.backgroundColor = _dangerColor;
+            if (GUILayout.Button("✕", GUILayout.Width(28), GUILayout.Height(22))) DropItem(item);
+            
+            GUI.backgroundColor = Color.white;
+            GUILayout.EndHorizontal();
         }
 
-        void DrawItemSpecificInfo(ItemBehaviour item)
+        private void DrawFooter()
         {
+            GUILayout.Space(12);
+            GUILayout.BeginHorizontal();
+            
+            GUI.backgroundColor = _dangerColor;
+            if (GUILayout.Button("Drop All Filtered Items", GUILayout.Height(32), GUILayout.Width(200)))
+            {
+                foreach (var item in _filteredItemsCache.ToList())
+                {
+                    try { _hero.Drop(item); } catch { }
+                }
+                _needsCacheUpdate = true;
+            }
+            GUI.backgroundColor = Color.white;
+
+            GUILayout.FlexibleSpace();
+            GUILayout.Label($"Total inventory: {_hero.Character.Inventory.Items.Count()} items", _statLabelStyle);
+            
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+        }
+
+        private Color GetItemTypeColor(ItemBehaviour item)
+        {
+            if (item.Weapon != null) return _weaponColor;
+            if (item.Armor != null) return _armorColor;
+            if (item.Consumable != null) return _consumableColor;
+            if (item.SpellScroll != null || IsSkillBook(item)) return _bookScrollColor;
+            return _miscColor;
+        }
+
+        private string GetItemTypeIcon(ItemBehaviour item)
+        {
+            if (item.Weapon != null) return "⚔";
+            if (item.Armor != null) return "🛡";
+            if (item.Consumable != null) return "🧪";
+            if (item.SpellScroll != null) return "📜";
+            if (IsSkillBook(item)) return "📖";
+            return "📦";
+        }
+
+        private string GetItemTypeName(ItemBehaviour item)
+        {
+            if (item.Weapon != null) return "Weapon";
+            if (item.Armor != null) return $"Armor • {item.Equipable?.Slot}";
+            if (item.Consumable?.Food != null) return "Food";
+            if (item.Consumable != null) return "Potion";
+            if (item.SpellScroll != null) return "Scroll";
+            if (IsSkillBook(item)) return "Skill Book";
+            return "Misc";
+        }
+
+        private string TruncateString(string str, int maxLength)
+        {
+            if (string.IsNullOrEmpty(str)) return str;
+            return str.Length <= maxLength ? str : str.Substring(0, maxLength - 2) + "..";
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // Cache & Filter Methods (unchanged logic)
+        // ─────────────────────────────────────────────────────────────────
+
+        private void InitializeCache()
+        {
+            _itemCountCache.Clear();
+            foreach (InventoryTab tab in Enum.GetValues(typeof(InventoryTab)))
+                _itemCountCache[tab] = 0;
+
+            _equipmentSlotCountCache.Clear();
+            foreach (EquipmentSlotFilter filter in Enum.GetValues(typeof(EquipmentSlotFilter)))
+                _equipmentSlotCountCache[filter] = 0;
+
+            _consumableCountCache.Clear();
+            foreach (ConsumableFilter filter in Enum.GetValues(typeof(ConsumableFilter)))
+                _consumableCountCache[filter] = 0;
+
+            _bookScrollCountCache.Clear();
+            foreach (BookScrollFilter filter in Enum.GetValues(typeof(BookScrollFilter)))
+                _bookScrollCountCache[filter] = 0;
+
+            _needsCacheUpdate = true;
+        }
+
+        private void UpdateCacheIfNeeded()
+        {
+            if (!_needsCacheUpdate && Time.time - _lastCacheRefreshTime < CACHE_REFRESH_INTERVAL)
+                return;
+
+            if (_hero?.Character?.Inventory?.Items == null)
+                return;
+
+            var inventory = _hero.Character.Inventory.Items;
+
+            _itemCountCache[InventoryTab.Equipment] = FilterItemsByTab(inventory, InventoryTab.Equipment).Count();
+            _itemCountCache[InventoryTab.Consumable] = FilterItemsByTab(inventory, InventoryTab.Consumable).Count();
+            _itemCountCache[InventoryTab.BookScroll] = FilterItemsByTab(inventory, InventoryTab.BookScroll).Count();
+            _itemCountCache[InventoryTab.Misc] = FilterItemsByTab(inventory, InventoryTab.Misc).Count();
+
+            var equipmentItems = FilterItemsByTab(inventory, InventoryTab.Equipment).ToList();
+            _equipmentSlotCountCache[EquipmentSlotFilter.All] = equipmentItems.Count;
+            _equipmentSlotCountCache[EquipmentSlotFilter.Head] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Head).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Shoulders] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Shoulders).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Arms] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Arms).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Hands] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Hands).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Chest] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Chest).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Legs] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Legs).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Feet] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Feet).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Weapons] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Weapons).Count();
+            _equipmentSlotCountCache[EquipmentSlotFilter.Accessories] = FilterItemsByEquipmentSlot(equipmentItems, EquipmentSlotFilter.Accessories).Count();
+
+            _consumableCountCache[ConsumableFilter.All] = FilterItemsByTab(inventory, InventoryTab.Consumable).Count();
+            _consumableCountCache[ConsumableFilter.EPotion] = FilterItemsByConsumableType(inventory, "e_potion").Count();
+            _consumableCountCache[ConsumableFilter.MPotion] = FilterItemsByConsumableType(inventory, "m_potion").Count();
+            _consumableCountCache[ConsumableFilter.MiscPot] = FilterItemsByConsumableType(inventory, "misc_pot").Count();
+            _consumableCountCache[ConsumableFilter.JunkPot] = FilterItemsByConsumableType(inventory, "junk_pot").Count();
+            _consumableCountCache[ConsumableFilter.Food] = FilterItemsByConsumableType(inventory, "food").Count();
+            _consumableCountCache[ConsumableFilter.Misc] = FilterItemsByConsumableType(inventory, "misc").Count();
+
+            var bookScrollItems = FilterItemsByTab(inventory, InventoryTab.BookScroll).ToList();
+            _bookScrollCountCache[BookScrollFilter.All] = bookScrollItems.Count;
+            _bookScrollCountCache[BookScrollFilter.SkillBook] = bookScrollItems.Where(IsSkillBook).Count();
+            _bookScrollCountCache[BookScrollFilter.SpellBook] = bookScrollItems.Where(IsSpellBook).Count();
+            _bookScrollCountCache[BookScrollFilter.Scroll] = bookScrollItems.Where(i => i.SpellScroll != null).Count();
+
+            UpdateFilteredItemsCache();
+            _lastCacheRefreshTime = Time.time;
+            _needsCacheUpdate = false;
+        }
+
+        private void UpdateFilteredItemsCache()
+        {
+            if (_hero?.Character?.Inventory?.Items == null) return;
+
+            var inventory = _hero.Character.Inventory.Items;
+            _filteredItemsCache = FilterItemsByTab(inventory, _currentTab).ToList();
+
+            if (_currentTab == InventoryTab.Equipment)
+                _filteredItemsCache = FilterItemsByEquipmentSlot(_filteredItemsCache, _currentEquipmentFilter).ToList();
+            else if (_currentTab == InventoryTab.Consumable)
+                _filteredItemsCache = FilterConsumablesByType(_filteredItemsCache, _currentConsumableFilter).ToList();
+            else if (_currentTab == InventoryTab.BookScroll)
+                _filteredItemsCache = FilterBooksAndScrollsByType(_filteredItemsCache, _currentBookScrollFilter).ToList();
+        }
+
+        private IEnumerable<ItemBehaviour> FilterItemsByTab(IEnumerable<ItemBehaviour> items, InventoryTab tab) => tab switch
+        {
+            InventoryTab.Equipment => items.Where(i => i.Armor != null || i.Weapon != null),
+            InventoryTab.Consumable => items.Where(i => i.Consumable != null),
+            InventoryTab.BookScroll => items.Where(i => i.Name.ToLower().Contains("book") || i.SpellScroll != null),
+            InventoryTab.Misc => items.Where(i => i.Armor == null && i.Weapon == null && i.Consumable == null && i.SpellBook == null && i.SpellScroll == null),
+            _ => items
+        };
+
+        private IEnumerable<ItemBehaviour> FilterItemsByEquipmentSlot(IEnumerable<ItemBehaviour> items, EquipmentSlotFilter filter) => filter switch
+        {
+            EquipmentSlotFilter.All => items,
+            EquipmentSlotFilter.Head => items.Where(i => MatchesSlot(i, EquipmentSlot.Head)),
+            EquipmentSlotFilter.Shoulders => items.Where(i => MatchesSlot(i, EquipmentSlot.LeftShoulder) || MatchesSlot(i, EquipmentSlot.RightShoulder)),
+            EquipmentSlotFilter.Arms => items.Where(i => MatchesSlot(i, EquipmentSlot.LeftArm) || MatchesSlot(i, EquipmentSlot.RightArm)),
+            EquipmentSlotFilter.Hands => items.Where(i => MatchesSlot(i, EquipmentSlot.LeftGlove) || MatchesSlot(i, EquipmentSlot.RightGlove)),
+            EquipmentSlotFilter.Chest => items.Where(i => MatchesSlot(i, EquipmentSlot.Chest)),
+            EquipmentSlotFilter.Legs => items.Where(i => MatchesSlot(i, EquipmentSlot.Legs)),
+            EquipmentSlotFilter.Feet => items.Where(i => MatchesSlot(i, EquipmentSlot.LeftFeet) || MatchesSlot(i, EquipmentSlot.RightFeet)),
+            EquipmentSlotFilter.Weapons => items.Where(i => MatchesSlot(i, EquipmentSlot.LeftHand) || MatchesSlot(i, EquipmentSlot.RightHand)),
+            EquipmentSlotFilter.Accessories => items.Where(i => MatchesSlot(i, EquipmentSlot.Ring) || MatchesSlot(i, EquipmentSlot.Hair) || MatchesSlot(i, EquipmentSlot.FacialHair)),
+            _ => items
+        };
+
+        private IEnumerable<ItemBehaviour> FilterConsumablesByType(IEnumerable<ItemBehaviour> items, ConsumableFilter filter) => filter switch
+        {
+            ConsumableFilter.All => items.Where(i => i.Consumable != null),
+            ConsumableFilter.EPotion => items.Where(HasHealthPotion),
+            ConsumableFilter.MPotion => items.Where(HasManaPotion),
+            ConsumableFilter.MiscPot => items.Where(IsMiscPotion),
+            ConsumableFilter.JunkPot => items.Where(IsJunkPotion),
+            ConsumableFilter.Food => items.Where(IsFood),
+            ConsumableFilter.Misc => items.Where(IsMiscConsumable),
+            _ => items
+        };
+
+        private IEnumerable<ItemBehaviour> FilterBooksAndScrollsByType(IEnumerable<ItemBehaviour> items, BookScrollFilter filter) => filter switch
+        {
+            BookScrollFilter.All => items.Where(i => i.SpellScroll != null || i.Name.ToLower().Contains("book")),
+            BookScrollFilter.SkillBook => items.Where(IsSkillBook),
+            BookScrollFilter.SpellBook => items.Where(IsSpellBook),
+            BookScrollFilter.Scroll => items.Where(i => i.SpellScroll != null),
+            _ => items
+        };
+
+        private IEnumerable<ItemBehaviour> FilterItemsByConsumableType(IEnumerable<ItemBehaviour> items, string type) => type switch
+        {
+            "e_potion" => items.Where(HasHealthPotion),
+            "m_potion" => items.Where(HasManaPotion),
+            "misc_pot" => items.Where(IsMiscPotion),
+            "junk_pot" => items.Where(IsJunkPotion),
+            "food" => items.Where(IsFood),
+            "misc" => items.Where(IsMiscConsumable),
+            _ => items.Where(i => i.Consumable != null)
+        };
+
+        private bool MatchesSlot(ItemBehaviour item, EquipmentSlot slot)
+        {
+            if (item.Armor != null && item?.Equipable?.Slot != null)
+                return item.Equipable.Slot == slot;
             if (item.Weapon != null)
-            {
-                GUILayout.Label($"DPS: {item.Weapon.DamagePerSecond:F1}");
-            }
-
-            if (item.Armor != null)
-            {
-                GUILayout.Label($"Armor: {item.Armor.Armor}");
-            }
-
-            if (item.Consumable != null)
-            {
-                if (item.LiquidContainer != null)
-                {
-                    int healthAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Health);
-                    if (healthAmount > 0)
-                    {
-                        GUILayout.Label($"Health: +{healthAmount}");
-                    }
-
-                    int manaAmount = item.LiquidContainer.GetResourceAmount(ResourceType.Mana);
-                    if (manaAmount > 0)
-                    {
-                        GUILayout.Label($"Mana: +{manaAmount}");
-                    }
-                }
-
-
-            }
-
-            if (item.SpellScroll != null)
-            {
-                GUILayout.Label($"Type: SpellScroll");
-            }
-
-            if (item.name.ToLower().Contains("book"))
-            {
-                GUILayout.Label($"Type: SpellBook");
-            }
-
-            //check for gold value
-            if (item.GoldValue > 0)
-            {
-                GUILayout.Label($"Gold Value: {item.GoldValue}");
-            }
-
-
-            // Display skill requirements if present
-            if (item?.Equipable != null)
-            {
-                if (item.Equipable.RequiredStrength > 0)
-                {
-                    GUILayout.Label($"Required Strength: {item.Equipable.RequiredStrength}");
-
-                }
-
-                if (item.Equipable.RequiredDexterity > 0)
-                {
-                    GUILayout.Label($"Required Dexterity: {item.Equipable.RequiredDexterity}");
-                }
-
-                if (item.Equipable.RequiredDexterity > 0)
-                {
-                    GUILayout.Label($"Required Intelligence: {item.Equipable.RequiredDexterity}");
-                }
-            }
+                return slot == EquipmentSlot.LeftHand || slot == EquipmentSlot.RightHand;
+            return false;
         }
 
-        Color GetRarityColor(string rarityName)
+        private bool HasHealthPotion(ItemBehaviour item) => item?.LiquidContainer?.GetResourceAmount(ResourceType.Health) > 0;
+        private bool HasManaPotion(ItemBehaviour item) => item?.LiquidContainer?.GetResourceAmount(ResourceType.Mana) > 0;
+        private bool IsFood(ItemBehaviour item) => item?.Consumable?.Food != null;
+        private bool IsSkillBook(ItemBehaviour item) => item?.GetComponent<SkillBookBehavior>() != null;
+        private bool IsSpellBook(ItemBehaviour item) => item?.GetComponent<SkillBookBehavior>() == null && item?.SpellBook != null;
+
+        private bool IsMiscPotion(ItemBehaviour item)
         {
-            return rarityName?.ToLower() switch
-            {
-                "common" => Color.white,
-                "uncommon" => Color.green,
-                "rare" => Color.blue,
-                "epic" => new Color(0.6f, 0.2f, 0.8f),
-                "legendary" => new Color(1f, 0.5f, 0f),
-                "mythic" => Color.red,
-                _ => Color.gray
-            };
+            if (item?.Consumable == null || item.Consumable.Food != null) return false;
+            if (item?.LiquidContainer == null) return false;
+            if (HasHealthPotion(item) || HasManaPotion(item)) return false;
+            return GetTotalLiquid(item) > 0;
         }
 
-        Color GetDurabilityColor(float percentage)
+        private bool IsJunkPotion(ItemBehaviour item)
         {
-            if (percentage > 75f) return Color.green;
-            if (percentage > 50f) return Color.yellow;
-            if (percentage > 25f) return new Color(1f, 0.5f, 0f);
-            return Color.red;
+            if (item?.Consumable == null || item.Consumable.Food != null) return false;
+            if (item?.LiquidContainer == null) return false;
+            return GetTotalLiquid(item) == 0;
         }
 
-        private GUIStyle _opaqueBoxStyle;
-
-        private GUIStyle OpaqueBoxStyle
+        private bool IsMiscConsumable(ItemBehaviour item)
         {
-            get
-            {
-                if (_opaqueBoxStyle != null)
-                {
-                    return _opaqueBoxStyle;
-                }
-
-                _opaqueBoxStyle = new GUIStyle(GUI.skin.box);
-                _opaqueBoxStyle.normal.background = OpaqueTexture;
-                _opaqueBoxStyle.alignment = TextAnchor.UpperLeft;
-                _opaqueBoxStyle.padding = new RectOffset(5, 5, 5, 5);
-                _opaqueBoxStyle.wordWrap = true;
-
-                return _opaqueBoxStyle;
-            }
+            if (item?.Consumable == null) return false;
+            return !IsFood(item) && !HasHealthPotion(item) && !HasManaPotion(item) && !IsMiscPotion(item) && !IsJunkPotion(item);
         }
 
-        private Texture2D _opaqueTexture;
-
-        private Texture2D OpaqueTexture
+        private int GetTotalLiquid(ItemBehaviour item)
         {
-            get
-            {
-                if (_opaqueTexture == null)
-                {
-                    _opaqueTexture = new Texture2D(1, 1);
-                    _opaqueTexture.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.95f));
-                    _opaqueTexture.Apply();
-                }
-                return _opaqueTexture;
-            }
+            if (item?.LiquidContainer == null) return 0;
+            int total = 0;
+            foreach (ResourceType rt in Enum.GetValues(typeof(ResourceType)))
+                total += item.LiquidContainer.GetResourceAmount(rt);
+            return total;
         }
 
+        private void DropItem(ItemBehaviour item)
+        {
+            if (item == null || _hero == null) return;
+            try { _hero.Drop(item); _needsCacheUpdate = true; }
+            catch (Exception ex) { Debug.LogError($"Error dropping {item.Name}: {ex.Message}"); }
+        }
+
+        private void ConsumeItem(ItemBehaviour item)
+        {
+            if (item?.Consumable == null || _hero == null) return;
+            try { _hero.Action_ConsumeItem(item); _needsCacheUpdate = true; }
+            catch (Exception ex) { Debug.LogError($"Error consuming {item.Name}: {ex.Message}"); }
+        }
+
+        private void EquipItem(ItemBehaviour item)
+        {
+            if ((item?.Armor == null && item?.Weapon == null) || _hero == null) return;
+            try { _hero.Equip(item); _needsCacheUpdate = true; }
+            catch (Exception ex) { Debug.LogError($"Error equipping {item.Name}: {ex.Message}"); }
+        }
     }
 }

@@ -16,125 +16,61 @@ namespace Scripts.Models
         private int _windowID;
         private Dictionary<EquipmentSlot, HeroUI_EquipedItem> _equipedItems = new Dictionary<EquipmentSlot, HeroUI_EquipedItem>();
 
-        // requied rects
-        private Rect _characterWindowRect = new Rect(100, 100, 800, 800);
-        private Rect _characterStatRect = new Rect(5, 400, 200, 300);
+        private Rect _windowRect = new Rect(100, 100, 950, 720);
+        private Vector2 _equipmentScrollPos = Vector2.zero;
+        private bool _stylesInitialized = false;
 
-        private Dictionary<EquipmentSlot, Rect> _slotRects = new Dictionary<EquipmentSlot, Rect>();
+        // GUI Styles
+        private GUIStyle _windowStyle;
+        private GUIStyle _titleStyle;
+        private GUIStyle _subtitleStyle;
+        private GUIStyle _statLabelStyle;
+        private GUIStyle _statValueStyle;
+        private GUIStyle _slotStyle;
+        private GUIStyle _slotEmptyStyle;
+        private GUIStyle _tooltipStyle;
+        private GUIStyle _sectionStyle;
 
-        private GUIStyle _opaqueBox;
+        // Textures
+        private Texture2D _windowBgTexture;
+        private Texture2D _slotBgTexture;
+        private Texture2D _slotEmptyBgTexture;
+        private Texture2D _sectionBgTexture;
+        private Texture2D _tooltipBgTexture;
+        private Texture2D _barBgTexture;
+        private Texture2D _barFillTexture;
 
-        public GUIStyle OpaqueBox
-        {
-            get
-            {
-                if (_opaqueBox != null)
-                {
-                    return _opaqueBox;
-                }
-                _opaqueBox = new GUIStyle(GUI.skin.box);
-                _opaqueBox.normal.background = OpaqueTex;
-                _opaqueBox.alignment = TextAnchor.UpperLeft;
-                _opaqueBox.padding = new RectOffset(5, 5, 5, 5);
-                return _opaqueBox;
-            }
-        }
+        // Colors
+        private Color _windowBgColor = new Color(0.08f, 0.08f, 0.1f, 0.98f);
+        private Color _accentColor = new Color(0.85f, 0.65f, 0.25f, 1f);
+        private Color _slotEquippedColor = new Color(0.18f, 0.28f, 0.4f, 0.95f);
+        private Color _slotEmptyColor = new Color(0.12f, 0.12f, 0.15f, 0.9f);
+        private Color _sectionColor = new Color(0.1f, 0.1f, 0.12f, 0.95f);
+        private Color _healthColor = new Color(0.85f, 0.25f, 0.25f, 1f);
+        private Color _manaColor = new Color(0.25f, 0.45f, 0.9f, 1f);
+        private Color _armorColor = new Color(0.65f, 0.65f, 0.75f, 1f);
+        private Color _strColor = new Color(0.95f, 0.45f, 0.35f, 1f);
+        private Color _dexColor = new Color(0.35f, 0.95f, 0.45f, 1f);
+        private Color _intColor = new Color(0.45f, 0.65f, 0.98f, 1f);
+        private Color _positiveColor = new Color(0.3f, 0.9f, 0.45f, 1f);
+        private Color _weaponColor = new Color(1f, 0.4f, 0.4f, 1f);
 
+        // Layout constants
+        private const float STAT_PANEL_WIDTH = 280f;
+        private const float SLOT_WIDTH = 145f;
+        private const float SLOT_HEIGHT = 72f;
+        private const float SLOT_SPACING = 10f;
 
-        private GUIStyle _leftLabelStyle = null;
-
-        private GUIStyle LeftLabelStyle
-        {
-            get
-            {
-                if (_leftLabelStyle != null)
-                {
-                    return _leftLabelStyle;
-                }
-
-                _leftLabelStyle = new GUIStyle(GUI.skin.box);
-                _leftLabelStyle.alignment = TextAnchor.UpperLeft;
-                _leftLabelStyle.padding = new RectOffset(5, 5, 5, 5);
-
-                return _leftLabelStyle;
-
-            }
-
-        }
-
-        private Texture2D _durabilityGreenTex;
-        private Texture2D _durabilityYellowTex;
-        private Texture2D _durabilityOrangeTex;
-        private Texture2D _durabilityRedTex;
-        private Texture2D _durabilityBackgroundTex;
-
-        private Texture2D _opaqueTex;
-
-        public Texture2D OpaqueTex
-        {
-            get
-            {
-                if (_opaqueTex == null)
-                {
-                    _opaqueTex = new Texture2D(1, 1);
-                    _opaqueTex.SetPixel(0, 0, new Color(0f, 0f, 0f, 1f));
-                    _opaqueTex.Apply();
-                }
-                return _opaqueTex;
-            }
-        }
-
-
-
-
-
-        void InitDurabilityTextures()
-        {
-            if (_durabilityGreenTex == null)
-            {
-                _durabilityGreenTex = new Texture2D(1, 1);
-                _durabilityGreenTex.SetPixel(0, 0, Color.green);
-                _durabilityGreenTex.Apply();
-            }
-
-            if (_durabilityYellowTex == null)
-            {
-                _durabilityYellowTex = new Texture2D(1, 1);
-                _durabilityYellowTex.SetPixel(0, 0, Color.yellow);
-                _durabilityYellowTex.Apply();
-            }
-
-            if (_durabilityOrangeTex == null)
-            {
-                _durabilityOrangeTex = new Texture2D(1, 1);
-                _durabilityOrangeTex.SetPixel(0, 0, new Color(1f, 0.5f, 0f));
-                _durabilityOrangeTex.Apply();
-            }
-
-            if (_durabilityRedTex == null)
-            {
-                _durabilityRedTex = new Texture2D(1, 1);
-                _durabilityRedTex.SetPixel(0, 0, Color.red);
-                _durabilityRedTex.Apply();
-            }
-
-            if (_durabilityBackgroundTex == null)
-            {
-                _durabilityBackgroundTex = new Texture2D(1, 1);
-                _durabilityBackgroundTex.SetPixel(0, 0, new Color(0.3f, 0.3f, 0.3f, 0.8f));
-                _durabilityBackgroundTex.Apply();
-            }
-        }
-
+        // Hover tracking
+        private HeroUI_EquipedItem _hoveredItem = null;
 
         public void OnStart(Hero_Base hero, KeyCode toggleShowKey, int windowID)
         {
             _hero = hero;
             _toggleShowKey = toggleShowKey;
             _windowID = windowID;
-            InitializeSlotRects();
             InitializeEquippedItems();
-            InitDurabilityTextures();
+            InitializeTextures();
         }
 
         public void OnGUI()
@@ -149,18 +85,104 @@ namespace Scripts.Models
 
             if (_isShow)
             {
-                _characterWindowRect = GUI.Window(_windowID, _characterWindowRect, DrawHeroWindow, "PLAYER INFO");
+                if (!_stylesInitialized)
+                {
+                    InitializeStyles();
+                    _stylesInitialized = true;
+                }
+                
+                _hoveredItem = null;
+                _windowRect = GUI.Window(_windowID, _windowRect, DrawHeroWindow, "", _windowStyle);
             }
-
         }
 
         public void OnUpdate()
         {
-            UpdateEquippedItem();
-
+            if (_isShow)
+                UpdateEquippedItems();
         }
 
-        void InitializeEquippedItems()
+        private void InitializeTextures()
+        {
+            _windowBgTexture = CreateTexture(_windowBgColor);
+            _slotBgTexture = CreateTexture(_slotEquippedColor);
+            _slotEmptyBgTexture = CreateTexture(_slotEmptyColor);
+            _sectionBgTexture = CreateTexture(_sectionColor);
+            _tooltipBgTexture = CreateTexture(new Color(0.02f, 0.02f, 0.04f, 0.98f));
+            _barBgTexture = CreateTexture(new Color(0.15f, 0.15f, 0.18f, 0.9f));
+            _barFillTexture = CreateTexture(Color.white);
+        }
+
+        private void InitializeStyles()
+        {
+            // Window Style
+            _windowStyle = new GUIStyle(GUI.skin.window);
+            _windowStyle.normal.background = _windowBgTexture;
+            _windowStyle.onNormal.background = _windowBgTexture;
+            _windowStyle.focused.background = _windowBgTexture;
+            _windowStyle.onFocused.background = _windowBgTexture;
+            _windowStyle.active.background = _windowBgTexture;
+            _windowStyle.onActive.background = _windowBgTexture;
+
+            // Title Style
+            _titleStyle = new GUIStyle(GUI.skin.label);
+            _titleStyle.fontSize = 22;
+            _titleStyle.fontStyle = FontStyle.Bold;
+            _titleStyle.alignment = TextAnchor.MiddleCenter;
+            _titleStyle.normal.textColor = _accentColor;
+
+            // Subtitle Style
+            _subtitleStyle = new GUIStyle(GUI.skin.label);
+            _subtitleStyle.fontSize = 13;
+            _subtitleStyle.fontStyle = FontStyle.Bold;
+            _subtitleStyle.alignment = TextAnchor.MiddleLeft;
+            _subtitleStyle.normal.textColor = Color.white;
+
+            // Stat Label Style
+            _statLabelStyle = new GUIStyle(GUI.skin.label);
+            _statLabelStyle.fontSize = 11;
+            _statLabelStyle.alignment = TextAnchor.MiddleLeft;
+            _statLabelStyle.normal.textColor = new Color(0.75f, 0.75f, 0.75f);
+
+            // Stat Value Style
+            _statValueStyle = new GUIStyle(GUI.skin.label);
+            _statValueStyle.fontSize = 11;
+            _statValueStyle.fontStyle = FontStyle.Bold;
+            _statValueStyle.alignment = TextAnchor.MiddleRight;
+            _statValueStyle.normal.textColor = Color.white;
+
+            // Slot Style
+            _slotStyle = new GUIStyle(GUI.skin.box);
+            _slotStyle.normal.background = _slotBgTexture;
+
+            // Slot Empty Style
+            _slotEmptyStyle = new GUIStyle(GUI.skin.box);
+            _slotEmptyStyle.normal.background = _slotEmptyBgTexture;
+
+            // Tooltip Style
+            _tooltipStyle = new GUIStyle(GUI.skin.box);
+            _tooltipStyle.normal.background = _tooltipBgTexture;
+            _tooltipStyle.normal.textColor = Color.white;
+            _tooltipStyle.alignment = TextAnchor.UpperLeft;
+            _tooltipStyle.padding = new RectOffset(12, 12, 10, 10);
+            _tooltipStyle.fontSize = 11;
+            _tooltipStyle.wordWrap = true;
+
+            // Section Style
+            _sectionStyle = new GUIStyle(GUI.skin.box);
+            _sectionStyle.normal.background = _sectionBgTexture;
+            _sectionStyle.padding = new RectOffset(12, 12, 12, 12);
+        }
+
+        private Texture2D CreateTexture(Color color)
+        {
+            Texture2D tex = new Texture2D(1, 1);
+            tex.SetPixel(0, 0, color);
+            tex.Apply();
+            return tex;
+        }
+
+        private void InitializeEquippedItems()
         {
             foreach (var slot in Enum.GetValues(typeof(EquipmentSlot)).Cast<EquipmentSlot>())
             {
@@ -168,29 +190,21 @@ namespace Scripts.Models
             }
         }
 
-        void UpdateEquippedItem()
+        private void UpdateEquippedItems()
         {
+            if (_hero?.Character?.Equipment?._items == null) return;
+
             foreach (var equippedItem in _hero.Character.Equipment._items)
             {
-
                 if (equippedItem.Value == null || equippedItem.Value.Item == null)
                 {
                     _equipedItems[equippedItem.Key] = new HeroUI_EquipedItem("Empty", equippedItem.Key, 0, null);
                     continue;
                 }
 
-                //get item name
-                string itemName = equippedItem.Value.Item != null ? equippedItem.Value.Item.Name : "Empty";
+                string itemName = equippedItem.Value.Item?.Name ?? "Empty";
+                double itemDurability = equippedItem.Value?.Item?.Durability?.DurabilityPercentage ?? 0;
 
-                double itemDurability = 0;
-
-                if (equippedItem.Value?.Item?.Durability?.CurrentDurability != null)
-                {
-
-                    itemDurability = equippedItem.Value.Item.Durability.DurabilityPercentage;
-                }
-
-                //replace the inner value without doing a new allocation
                 _equipedItems[equippedItem.Key].Name = itemName;
                 _equipedItems[equippedItem.Key].Durability = itemDurability;
                 _equipedItems[equippedItem.Key].Behaviour = equippedItem.Value;
@@ -198,270 +212,380 @@ namespace Scripts.Models
             }
         }
 
-        void InitializeSlotRects()
+        private void DrawHeroWindow(int windowID)
         {
-            Int32 slotHeight = 80;
-            Int32 slotWidth = 150;
-            Int32 HeadX = (int)(_characterWindowRect.width / 3) + 70;
-            Int32 HeadY = 80;
-            Int32 slotSpacing = 10;
-
-            // Head (as defaut positionning) && Hair && Facial Hair
-            _slotRects[EquipmentSlot.Head] = new Rect(HeadX, HeadY, slotWidth, slotHeight);
-
-            Int32 HairX = HeadX - slotWidth - slotSpacing;
-            Int32 HairY = HeadY - slotHeight / 2;
-            _slotRects[EquipmentSlot.Hair] = new Rect(HairX, HairY, slotWidth, slotHeight);
-
-            Int32 FacialHairX = HeadX + slotWidth + slotSpacing;
-            Int32 FacialHairY = HeadY - slotHeight / 2;
-            _slotRects[EquipmentSlot.FacialHair] = new Rect(FacialHairX, FacialHairY, slotWidth, slotHeight);
-
-            Int32 LShoulderX = HeadX - slotWidth - slotSpacing;
-            Int32 LShoulderY = HeadY + slotHeight / 2 + slotSpacing;
-            _slotRects[EquipmentSlot.LeftShoulder] = new Rect(LShoulderX, LShoulderY, slotWidth, slotHeight);
-            Int32 RShoulderX = HeadX + slotWidth + slotSpacing;
-            Int32 RShoulderY = HeadY + slotHeight / 2 + slotSpacing;
-            _slotRects[EquipmentSlot.RightShoulder] = new Rect(RShoulderX, RShoulderY, slotWidth, slotHeight);
-
-
-
-
-            Int32 LArmX = LShoulderX;
-            Int32 LArmY = LShoulderY + slotHeight + slotSpacing;
-            _slotRects[EquipmentSlot.LeftArm] = new Rect(LArmX, LArmY, slotWidth, slotHeight);
-            Int32 RArmX = RShoulderX;
-            Int32 RArmY = RShoulderY + slotHeight + slotSpacing;
-            _slotRects[EquipmentSlot.RightArm] = new Rect(RArmX, RArmY, slotWidth, slotHeight);
-
-
-            Int32 LGlovesX = LArmX;
-            Int32 LGlovesY = LArmY + slotHeight + slotSpacing;
-            _slotRects[EquipmentSlot.LeftGlove] = new Rect(LGlovesX, LGlovesY, slotWidth, slotHeight);
-
-            Int32 RGlovesX = RArmX;
-            Int32 RGlovesY = RArmY + slotHeight + slotSpacing;
-            _slotRects[EquipmentSlot.RightGlove] = new Rect(RGlovesX, RGlovesY, slotWidth, slotHeight);
-
-
-
-            //Weapons && rings
-            Int32 RHandX = LGlovesX - slotWidth - slotSpacing;
-            Int32 RHandY = LGlovesY;
-            _slotRects[EquipmentSlot.RightHand] = new Rect(RHandX, RHandY, slotWidth, slotHeight);
-
-            Int32 LHandX = RHandX;
-            Int32 LHandY = RHandY - slotHeight - slotSpacing;
-            _slotRects[EquipmentSlot.LeftHand] = new Rect(LHandX, LHandY, slotWidth, slotHeight);
-
-            Int32 RingX = LHandX;
-            Int32 RingY = LHandY - slotHeight - slotSpacing;
-            _slotRects[EquipmentSlot.Ring] = new Rect(RingX, RingY, slotWidth, slotHeight);
-
-
-
-            Int32 ChestX = HeadX;
-            Int32 ChestY = HeadY + 1 * (slotHeight + slotSpacing) + slotSpacing;
-            _slotRects[EquipmentSlot.Chest] = new Rect(ChestX, ChestY, slotWidth, slotHeight);
-            Int32 LegsX = HeadX;
-            Int32 LegsY = HeadY + 2 * (slotHeight + slotSpacing) + slotSpacing;
-            _slotRects[EquipmentSlot.Legs] = new Rect(LegsX, LegsY, slotWidth, slotHeight);
-
-            // feets
-            Int32 LFeetX = HeadX - slotWidth / 2 - slotSpacing / 2;
-            Int32 LFeetY = HeadY + 4 * (slotHeight + slotSpacing) - slotSpacing;
-            _slotRects[EquipmentSlot.LeftFeet] = new Rect(LFeetX, LFeetY, slotWidth, slotHeight);
-            Int32 RFeetX = HeadX + slotWidth / 2 + slotSpacing / 2;
-            Int32 RFeetY = HeadY + 4 * (slotHeight + slotSpacing) - slotSpacing;
-            _slotRects[EquipmentSlot.RightFeet] = new Rect(RFeetX, RFeetY, slotWidth, slotHeight);
-
-        }
-
-        void DrawHeroWindow(int windowID)
-        {
-            HeroUI_EquipedItem hoveredItem = null;
-
-            foreach (var kvp in _slotRects)
+            try
             {
-                EquipmentSlot slot = kvp.Key;
-                Rect rect = kvp.Value;
+                GUILayout.BeginVertical();
 
-                HeroUI_EquipedItem item = _equipedItems.ContainsKey(slot) ? _equipedItems[slot] : null;
+                DrawHeader();
+                GUILayout.Space(12);
 
-                // Draw the slot background
-                Color slotColor = item != null && item.Name != "Empty" ? new Color(0.2f, 0.8f, 0.2f, 0.8f) : new Color(0.5f, 0.5f, 0.5f, 0.8f);
-                GUI.backgroundColor = slotColor;
-                GUI.Box(rect, "", GUI.skin.box);
-                GUI.backgroundColor = Color.white;
+                GUILayout.BeginHorizontal();
+                DrawStatsPanel();
+                GUILayout.Space(15);
+                DrawEquipmentPanel();
+                GUILayout.EndHorizontal();
 
-                // Draw item visual
-                if (item != null && !string.IsNullOrEmpty(item.Name) && item.Name != "Empty" && item.Behaviour != null)
-                {
-                    // Draw item name text
-                    GUI.Label(new Rect(rect.x + 5, rect.y + 10, rect.width - 10, 60), item.Name, GUI.skin.label);
+                GUILayout.EndVertical();
 
-                    // Draw durability bar over the slot
-                    if (item.Durability > 0)
-                    {
-                        DrawDurabilityBar(rect, (float)item.Durability);
-                    }
-                }
-                else
-                {
-                    // Draw empty slot indicator
-                    GUI.Label(new Rect(rect.x + 5, rect.y + rect.height / 2 - 10, rect.width - 10, 20), "Empty", GUI.skin.label);
-                }
-
-                // Handle mouse over for detailed stats
-                if (rect.Contains(Event.current.mousePosition))
-                {
-                    hoveredItem = item;
-                    
-                    
-                }
+                DrawHoveredTooltip();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"HeroUI Error: {ex.Message} {ex.StackTrace}");
             }
 
-
-
-
-            string charactereStatLabel = string.Empty;
-            charactereStatLabel += $"Level: {_hero.Character.Level.Level}\n";
-            charactereStatLabel += $"\nHealth: {_hero.Character.Health.CurrentHealth}/{_hero.Character.Health.MaxHealth}\n";
-            charactereStatLabel += $"\nArmor:{_hero.Character.Combat.Armor} ({_hero.EquipedItems_TotalArmor()})\n";
-            charactereStatLabel += $"\nSTR: {_hero.Character.Strength} ({_hero.Character.BaseStrength} + {_hero.Character.ItemStrengthBonus}) \n";
-            charactereStatLabel += $"\nDEX: {_hero.Character.Dexterity} ({_hero.Character.BaseDexterity} + {_hero.Character.ItemDexterityBonus}) \n";
-            charactereStatLabel += $"\nINT: {_hero.Character.Intelligence} ({_hero.Character.BaseIntelligence} + {_hero.Character.ItemIntelligenceBonus}) \n";
-           
-            GUI.Box(_characterStatRect, charactereStatLabel, LeftLabelStyle);
-
-
-            if (hoveredItem != null)
-            {
-                DrawItemTooltip(hoveredItem, hoveredItem.Slot, Event.current.mousePosition.x + 40, Event.current.mousePosition.y + 15);
-            }
-
-            GUI.DragWindow();
+            GUI.DragWindow(new Rect(0, 0, _windowRect.width, 30));
         }
 
-        void DrawDurabilityBar(Rect slotRect, float durabilityPercent)
+        private void DrawHeader()
         {
-            // Draw durability bar at the bottom of the slot
-            float barHeight = 4f;
-            float barWidth = slotRect.width - 20;
-            Rect barRect = new Rect(
-                slotRect.x + 10,
-                slotRect.y + slotRect.height - barHeight - 5,
-                barWidth,
-                barHeight
-            );
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label($"{_hero.name}", _titleStyle, GUILayout.Height(35));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
 
-            // Background bar
-            GUI.DrawTexture(barRect, _durabilityBackgroundTex);
+            // Separator line
+            Rect sepRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(3));
+            Color oldColor = GUI.color;
+            GUI.color = _accentColor;
+            GUI.DrawTexture(sepRect, _barFillTexture);
+            GUI.color = oldColor;
+        }
 
+        private void DrawStatsPanel()
+        {
+            GUILayout.BeginVertical(_sectionStyle, GUILayout.Width(STAT_PANEL_WIDTH), GUILayout.ExpandHeight(true));
 
+            // Character Info
+            DrawSectionHeader("CHARACTER");
+            
+            int level = _hero?.Character?.Level?.Level ?? 0;
+            string className = _hero?.Hero?.Class?.name ?? "Unknown";
+            
+            DrawStatRow("Level", $"{level}", _accentColor);
+            DrawStatRow("Class", className, Color.white);
+            GUILayout.Space(12);
 
-            // Foreground bar
-            Texture2D durabilityTex = null;
-            if (durabilityPercent * 100f > 75f) durabilityTex = _durabilityGreenTex;
-            else if (durabilityPercent * 100f > 50f) durabilityTex = _durabilityYellowTex;
-            else if (durabilityPercent * 100f > 25f) durabilityTex = _durabilityOrangeTex;
-            else durabilityTex = _durabilityRedTex;
+            // Resources
+            DrawSectionHeader("RESOURCES");
+            
+            int currentHealth = _hero?.Character?.Health?.CurrentHealth ?? 0;
+            int maxHealth = _hero?.Character?.Health?.MaxHealth ?? 1;
+            float currentMana = _hero?.Character?.Mana?.CurrentMana ?? 0;
+            float maxMana = _hero?.Character?.Mana?.MaxMana ?? 1;
+            
+            DrawResourceBar("Health", currentHealth, maxHealth, _healthColor);
+            GUILayout.Space(6);
+            DrawResourceBar("Mana", (int)currentMana, (int)maxMana, _manaColor);
+            GUILayout.Space(12);
 
-            GUI.DrawTexture(new Rect(barRect.x, barRect.y, barWidth * durabilityPercent, barHeight), durabilityTex);
+            // Combat Stats
+            DrawSectionHeader("COMBAT");
+            
+            int armor = _hero?.Character?.Combat?.Armor ?? 0;
+            int equipmentArmor = 0;
+            try { equipmentArmor = _hero?.EquipedItems_TotalArmor() ?? 0; } catch { }
+            
+            DrawStatRow("Armor", $"{armor}", _armorColor);
+            DrawStatRow("Equipment Bonus", $"+{equipmentArmor}", _positiveColor);
+            GUILayout.Space(12);
 
+            // Attributes
+            DrawSectionHeader("ATTRIBUTES");
+            
+            int str = _hero?.Character?.Strength ?? 0;
+            int baseStr = _hero?.Character?.BaseStrength ?? 0;
+            int bonusStr = _hero?.Character?.ItemStrengthBonus ?? 0;
+            
+            int dex = _hero?.Character?.Dexterity ?? 0;
+            int baseDex = _hero?.Character?.BaseDexterity ?? 0;
+            int bonusDex = _hero?.Character?.ItemDexterityBonus ?? 0;
+            
+            int intel = _hero?.Character?.Intelligence ?? 0;
+            int baseInt = _hero?.Character?.BaseIntelligence ?? 0;
+            int bonusInt = _hero?.Character?.ItemIntelligenceBonus ?? 0;
+            
+            DrawAttributeRow("Strength", str, baseStr, bonusStr, _strColor);
+            DrawAttributeRow("Dexterity", dex, baseDex, bonusDex, _dexColor);
+            DrawAttributeRow("Intelligence", intel, baseInt, bonusInt, _intColor);
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndVertical();
+        }
+
+        private void DrawSectionHeader(string title)
+        {
+            GUILayout.Label(title, _subtitleStyle, GUILayout.Height(22));
+            Rect sepRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(1));
+            GUI.color = new Color(0.35f, 0.35f, 0.4f);
+            GUI.DrawTexture(sepRect, _barFillTexture);
+            GUI.color = Color.white;
+            GUILayout.Space(6);
+        }
+
+        private void DrawResourceBar(string label, int current, int max, Color barColor)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label, _statLabelStyle, GUILayout.Width(55));
+            Color oldColor = GUI.color;
+            GUI.color = barColor;
+            GUILayout.Label($"{current}/{max}", _statValueStyle);
+            GUI.color = oldColor;
+            GUILayout.EndHorizontal();
+
+            // Progress bar
+            Rect barRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(10));
+            GUI.DrawTexture(barRect, _barBgTexture);
+
+            float pct = max > 0 ? (float)current / max : 0;
+            Rect fillRect = new Rect(barRect.x, barRect.y, barRect.width * pct, barRect.height);
+            GUI.color = barColor;
+            GUI.DrawTexture(fillRect, _barFillTexture);
             GUI.color = Color.white;
         }
 
-      
-
-        
-        void DrawItemTooltip(HeroUI_EquipedItem item, EquipmentSlot slot, float rectX, float rectY)
+        private void DrawStatRow(string label, string value, Color valueColor)
         {
-            
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label, _statLabelStyle, GUILayout.Width(110));
+            Color oldColor = GUI.color;
+            GUI.color = valueColor;
+            GUILayout.Label(value, _statValueStyle);
+            GUI.color = oldColor;
+            GUILayout.EndHorizontal();
+        }
 
-            if (item == null || item.Name == "Empty")
+        private void DrawAttributeRow(string label, int total, int baseVal, int bonus, Color color)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label, _statLabelStyle, GUILayout.Width(85));
+            
+            Color oldColor = GUI.color;
+            GUI.color = color;
+            GUILayout.Label($"{total}", _statValueStyle, GUILayout.Width(35));
+            
+            GUI.color = new Color(0.55f, 0.55f, 0.55f);
+            GUILayout.Label($"({baseVal} +", _statLabelStyle, GUILayout.Width(45));
+            
+            GUI.color = _positiveColor;
+            GUILayout.Label($"{bonus})", _statLabelStyle, GUILayout.Width(30));
+            GUI.color = oldColor;
+            
+            GUILayout.EndHorizontal();
+        }
+
+        private void DrawEquipmentPanel()
+        {
+            GUILayout.BeginVertical(_sectionStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+
+            DrawSectionHeader("EQUIPMENT");
+
+            _equipmentScrollPos = GUILayout.BeginScrollView(_equipmentScrollPos, GUILayout.ExpandHeight(true));
+            DrawEquipmentGrid();
+            GUILayout.EndScrollView();
+
+            GUILayout.EndVertical();
+        }
+
+        private void DrawEquipmentGrid()
+        {
+            // Row 1: Accessories top
+            DrawEquipmentRow(EquipmentSlot.Hair, "Hair", EquipmentSlot.Head, "Head", EquipmentSlot.FacialHair, "Facial");
+
+            // Row 2: Shoulders + Chest
+            DrawEquipmentRow(EquipmentSlot.LeftShoulder, "L.Shoulder", EquipmentSlot.Chest, "Chest", EquipmentSlot.RightShoulder, "R.Shoulder");
+
+            // Row 3: Arms + Ring
+            DrawEquipmentRow(EquipmentSlot.LeftArm, "L.Arm", EquipmentSlot.Ring, "Ring", EquipmentSlot.RightArm, "R.Arm");
+
+            // Row 4: Gloves + Legs
+            DrawEquipmentRow(EquipmentSlot.LeftGlove, "L.Glove", EquipmentSlot.Legs, "Legs", EquipmentSlot.RightGlove, "R.Glove");
+
+            // Row 5: Weapons
+            DrawEquipmentRowWithCenter(EquipmentSlot.LeftHand, "Main Hand", EquipmentSlot.RightHand, "Off Hand");
+
+            // Row 6: Feet
+            DrawEquipmentRowWithCenter(EquipmentSlot.LeftFeet, "L.Foot", EquipmentSlot.RightFeet, "R.Foot");
+        }
+
+        private void DrawEquipmentRow(EquipmentSlot left, string leftLabel, EquipmentSlot center, string centerLabel, EquipmentSlot right, string rightLabel)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            DrawEquipmentSlot(left, leftLabel);
+            GUILayout.Space(SLOT_SPACING);
+            DrawEquipmentSlot(center, centerLabel);
+            GUILayout.Space(SLOT_SPACING);
+            DrawEquipmentSlot(right, rightLabel);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(SLOT_SPACING);
+        }
+
+        private void DrawEquipmentRowWithCenter(EquipmentSlot left, string leftLabel, EquipmentSlot right, string rightLabel)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            DrawEquipmentSlot(left, leftLabel);
+            GUILayout.Space(SLOT_SPACING + SLOT_WIDTH + SLOT_SPACING);
+            DrawEquipmentSlot(right, rightLabel);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(SLOT_SPACING);
+        }
+
+        private void DrawEquipmentSlot(EquipmentSlot slot, string slotLabel)
+        {
+            var item = _equipedItems.ContainsKey(slot) ? _equipedItems[slot] : null;
+            bool isEmpty = item == null || item.Name == "Empty";
+            GUIStyle style = isEmpty ? _slotEmptyStyle : _slotStyle;
+
+            Rect slotRect = GUILayoutUtility.GetRect(SLOT_WIDTH, SLOT_HEIGHT);
+            GUI.Box(slotRect, "", style);
+
+            // Slot label at top
+            GUI.color = new Color(0.5f, 0.5f, 0.55f);
+            GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 3, slotRect.width - 12, 14), slotLabel, _statLabelStyle);
+            GUI.color = Color.white;
+
+            if (!isEmpty)
             {
-                string text = $"{slot}\n\nEmpty Slot";
-                //count max size
-                string[] lines = text.Split('\n');
-                int maxWidth = 0;
-                foreach (string line in lines)
+                // Item name
+                string displayName = TruncateString(item.Name, 15);
+                Color nameColor = item.Behaviour?.Item?.Weapon != null ? _weaponColor : _armorColor;
+                GUI.color = nameColor;
+                GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 20, slotRect.width - 12, 18), displayName, _statLabelStyle);
+                GUI.color = Color.white;
+
+                // Stats preview
+                string statPreview = GetItemStatPreview(item);
+                if (!string.IsNullOrEmpty(statPreview))
                 {
-                    int lineWidth  = line.Length * 8; // Approximate character width
-                    if (lineWidth > maxWidth)
-                    {
-                        maxWidth = lineWidth;
-                    }
+                    GUI.color = _accentColor;
+                    GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 38, slotRect.width - 12, 16), statPreview, _statLabelStyle);
+                    GUI.color = Color.white;
                 }
 
-                GUI.Box(new Rect(rectX, rectY, maxWidth, 150), text, OpaqueBox);
-                return;
+                // Durability bar
+                if (item.Durability > 0)
+                {
+                    DrawSlotDurabilityBar(slotRect, (float)item.Durability);
+                }
+            }
+            else
+            {
+                GUI.color = new Color(0.4f, 0.4f, 0.45f);
+                GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 28, slotRect.width - 12, 18), "Empty", _statLabelStyle);
+                GUI.color = Color.white;
             }
 
-            string tooltipText = $"{item.Name}\n";
-            tooltipText += $"Slot: {slot}\n";
-            tooltipText += "─────────────────────\n";
+            // Hover detection
+            if (slotRect.Contains(Event.current.mousePosition))
+            {
+                _hoveredItem = item;
+            }
+        }
+
+        private string GetItemStatPreview(HeroUI_EquipedItem item)
+        {
+            if (item?.Behaviour?.Item == null) return "";
+
+            if (item.Behaviour.Item.Weapon != null)
+                return $"DPS: {item.Behaviour.Item.Weapon.DamagePerSecond:F1}";
+            if (item.Behaviour.Item.Armor != null)
+                return $"Armor: {item.Behaviour.Item.Armor.Armor}";
+
+            return "";
+        }
+
+        private void DrawSlotDurabilityBar(Rect slotRect, float durabilityPct)
+        {
+            float barHeight = 5f;
+            Rect barRect = new Rect(slotRect.x + 6, slotRect.y + slotRect.height - barHeight - 5, slotRect.width - 12, barHeight);
+
+            GUI.DrawTexture(barRect, _barBgTexture);
+
+            Color fillColor = durabilityPct > 0.75f ? _positiveColor :
+                              durabilityPct > 0.5f ? new Color(0.95f, 0.85f, 0.25f) :
+                              durabilityPct > 0.25f ? new Color(0.95f, 0.55f, 0.15f) : _healthColor;
+
+            Rect fillRect = new Rect(barRect.x, barRect.y, barRect.width * durabilityPct, barHeight);
+            GUI.color = fillColor;
+            GUI.DrawTexture(fillRect, _barFillTexture);
+            GUI.color = Color.white;
+        }
+
+        private void DrawHoveredTooltip()
+        {
+            if (_hoveredItem == null) return;
+
+            Vector2 mousePos = Event.current.mousePosition;
+            float tooltipWidth = 200f;
+            float tooltipX = mousePos.x + 20;
+            float tooltipY = mousePos.y + 15;
+
+            if (tooltipX + tooltipWidth > _windowRect.width - 20)
+                tooltipX = mousePos.x - tooltipWidth - 15;
+
+            string content = BuildTooltipContent(_hoveredItem);
+            int lineCount = content.Split('\n').Length;
+            float tooltipHeight = Mathf.Max(80, lineCount * 15 + 25);
+
+            if (tooltipY + tooltipHeight > _windowRect.height - 20)
+                tooltipY = _windowRect.height - tooltipHeight - 20;
+
+            GUI.Box(new Rect(tooltipX, tooltipY, tooltipWidth, tooltipHeight), content, _tooltipStyle);
+        }
+
+        private string BuildTooltipContent(HeroUI_EquipedItem item)
+        {
+            if (item == null || item.Name == "Empty")
+                return $"{item?.Slot}\n\nEmpty Slot";
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(item.Name);
+            sb.AppendLine($"Slot: {item.Slot}");
+            sb.AppendLine("────────────────");
+
+            if (item.Behaviour?.Item != null)
+            {
+                var itemData = item.Behaviour.Item;
+
+                if (itemData.Weapon != null)
+                    sb.AppendLine($"DPS: {itemData.Weapon.DamagePerSecond:F1}");
+
+                if (itemData.Armor != null)
+                    sb.AppendLine($"Armor: {itemData.Armor.Armor}");
+
+                if (itemData.BonusStrength > 0)
+                    sb.AppendLine($"+{itemData.BonusStrength} Strength");
+
+                if (itemData.BonusDexterity > 0)
+                    sb.AppendLine($"+{itemData.BonusDexterity} Dexterity");
+
+                if (itemData.BonusIntelligence > 0)
+                    sb.AppendLine($"+{itemData.BonusIntelligence} Intelligence");
+
+                if (itemData.Level?.Level > 0)
+                    sb.AppendLine($"Item Level: {itemData.Level.Level}");
+            }
 
             if (item.Durability > 0)
             {
-                tooltipText += $"Durability: {(item.Durability * 100):F1}%\n";
+                float pct = (float)item.Durability * 100f;
+                sb.AppendLine($"Durability: {pct:F0}%");
             }
 
-            if (item.Behaviour != null && item.Behaviour.Item != null)
-            {
-                if (item.Behaviour.Item.Armor != null)
-                {
-                    tooltipText += $"Defense: {item.Behaviour.Item.Armor.Armor}\n";
-                }
-
-                if (item.Behaviour.Item.Weapon != null)
-                {
-                    tooltipText += $"DPS: {Math.Round(item.Behaviour.Item.Weapon.DamagePerSecond, 2)}\n";
-                }
-
-                // Add stat bonuses
-                string statBonuses = "";
-                if (item.Behaviour.Item.BonusDexterity > 0)
-                {
-                    statBonuses += $"DEX +{item.Behaviour.Item.BonusDexterity} ";
-                }
-                if (item.Behaviour.Item.BonusStrength > 0)
-                {
-                    statBonuses += $"STR +{item.Behaviour.Item.BonusStrength}";
-                }
-
-                if (!string.IsNullOrEmpty(statBonuses))
-                {
-                    tooltipText += $"Stats: {statBonuses.Trim()}\n";
-                }
-
-                if (item.Behaviour.Item.Level != null && item.Behaviour.Item.Level.Level > 0)
-                {
-                    tooltipText += $"Level: {item.Behaviour.Item.Level.Level}\n";
-                }
-            }
-
-           tooltipText = tooltipText.TrimEnd() + "\n";
-
-            GUI.Box(new Rect(rectX, rectY, GetWitdhOfLongestLine(tooltipText), 150), tooltipText, OpaqueBox);
-            
+            return sb.ToString().TrimEnd();
         }
 
-        private int GetWitdhOfLongestLine(string text)
+        private string TruncateString(string str, int maxLength)
         {
-            string[] lines = text.Split('\n');
-            int maxWidth = 0;
-            foreach (string line in lines)
-            {
-                int lineWidth = line.Length * 8; // Approximate character width
-                if (lineWidth > maxWidth)
-                {
-                    maxWidth = lineWidth;
-                }
-            }
-            return maxWidth;
+            if (string.IsNullOrEmpty(str)) return str;
+            return str.Length <= maxLength ? str : str.Substring(0, maxLength - 2) + "..";
         }
-
-
     }
 }

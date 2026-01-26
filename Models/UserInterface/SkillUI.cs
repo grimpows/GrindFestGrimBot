@@ -79,7 +79,13 @@ namespace Scripts.Models
         private GUIStyle GetWindowStyle()
         {
             GUIStyle windowStyle = new GUIStyle(GUI.skin.window);
-            windowStyle.normal.background = GetBackgroundTexture();
+            Texture2D bgTexture = GetBackgroundTexture();
+            windowStyle.normal.background = bgTexture;
+            windowStyle.onNormal.background = bgTexture;
+            windowStyle.focused.background = bgTexture;
+            windowStyle.onFocused.background = bgTexture;
+            windowStyle.active.background = bgTexture;
+            windowStyle.onActive.background = bgTexture;
             return windowStyle;
         }
 
