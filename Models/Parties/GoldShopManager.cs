@@ -104,5 +104,10 @@ namespace Scripts.Models
             }
             return maxLevel;
         }
+
+        public bool CanAffordItem(GoldShopItem item)
+        {
+            return Party.Gold >= item.GoldPrice && Party.Souls >= item.SoulPrice && Party.Gems >= item.GemPrice;
+        }
     }
 }

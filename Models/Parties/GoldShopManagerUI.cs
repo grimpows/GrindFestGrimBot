@@ -30,6 +30,7 @@ namespace Scripts.Models
         private GUIStyle _toggleOffStyle;
         private GUIStyle _buttonStyle;
         private GUIStyle _resourceBoxStyle;
+        private GUIStyle _buyButtonStyle;
 
         // Textures
         private Texture2D _windowBgTexture;
@@ -152,6 +153,18 @@ namespace Scripts.Models
             _resourceBoxStyle = new GUIStyle(GUI.skin.box);
             _resourceBoxStyle.normal.background = _cardBgTexture;
             _resourceBoxStyle.padding = new RectOffset(8, 8, 5, 5);
+
+
+            // Ressource Buy Button Style, in gold base color and white text
+            _buyButtonStyle = new GUIStyle(GUI.skin.button);
+            _buyButtonStyle.fontSize = 12;
+            _buyButtonStyle.fontStyle = FontStyle.Bold;
+            _buttonStyle.normal.textColor = Color.white;
+            _buttonStyle.hover.textColor = _goldColor;
+
+
+
+
         }
 
         private Texture2D CreateTexture(Color color)
@@ -328,6 +341,8 @@ namespace Scripts.Models
 
         void DrawShopItem(string itemKey, GoldShopItem item, ref bool isEnabled)
         {
+            if (item == null) return;
+
             GUILayout.BeginHorizontal(_itemCardStyle, GUILayout.Height(50));
 
             // Toggle button
@@ -371,6 +386,28 @@ namespace Scripts.Models
             GUILayout.EndHorizontal();
             
             GUILayout.EndVertical();
+
+            GUILayout.Space(10);
+
+            // Buy button
+            var oldBackgroundColor = GUI.backgroundColor;
+            GUI.backgroundColor = _goldColor;
+            bool isAffordable = _goldShopManager.CanAffordItem(item);
+
+            GUI.enabled = isAffordable;
+            if (GUILayout.Button("Buy", _buttonStyle, GUILayout.Width(50), GUILayout.Height(35)))
+            {
+                try
+                {
+                    _goldShopManager.Party?.BuyFromGoldShop(item.Name);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Error buying item {itemKey}: {ex.Message}");
+                }
+            }
+            GUI.backgroundColor = oldBackgroundColor;
+            GUI.enabled = true;
 
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
