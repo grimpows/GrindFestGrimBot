@@ -476,5 +476,9 @@ namespace Scripts.Model
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
+
+        public bool IsVisible => _isShow;
+        public void SetVisible(bool visible) => _isShow = visible;
+        public void ToggleVisible() => _isShow = !_isShow;
     }
 }

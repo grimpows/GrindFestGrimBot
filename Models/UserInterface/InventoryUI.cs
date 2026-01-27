@@ -848,5 +848,9 @@ namespace Scripts.Models
         private void DropItem(ItemBehaviour item) { if (item != null && _hero != null) try { _hero.Drop(item); _needsCacheUpdate = true; } catch { } }
         private void ConsumeItem(ItemBehaviour item) { if (item?.Consumable != null && _hero != null) try { _hero.Action_ConsumeItem(item); _needsCacheUpdate = true; } catch { } }
         private void EquipItem(ItemBehaviour item) { if ((item?.Armor != null || item?.Weapon != null) && _hero != null) try { _hero.Equip(item); _needsCacheUpdate = true; } catch { } }
+
+        public bool IsVisible => _isShow;
+        public void SetVisible(bool visible) => _isShow = visible;
+        public void ToggleVisible() => _isShow = !_isShow;
     }
 }

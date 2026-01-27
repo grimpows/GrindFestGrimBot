@@ -17,11 +17,12 @@ namespace Scripts.Models
         private MinimapUI _minimapUI = new MinimapUI();
         private InventoryUI _inventoryUI = new InventoryUI();
         private SkillUI _skillUI = new SkillUI();
+        private QuickAccessUI _quickAccessUI = new QuickAccessUI();
 
 
         public void Start()
         {
-            _heroUI.OnStart(this, KeyCode.P, WindowsConstants.HERO_WINDOW_ID);
+            _heroUI.OnStart(this, KeyCode.C, WindowsConstants.HERO_WINDOW_ID);
             _minimapUI.OnStart(this, KeyCode.M, WindowsConstants.MINIMAP_WINDOW_ID);
             _inventoryUI.OnStart(this, KeyCode.I, WindowsConstants.INVENTORY_WINDOW_ID);
             _skillUI.OnStart(this, KeyCode.S, WindowsConstants.SKILL_UI_ID);
@@ -30,7 +31,9 @@ namespace Scripts.Models
 
             _bot.OnStart(this, KeyCode.B, WindowsConstants.BOT_WINDOW_ID);
 
-            
+
+            // Initialize quick access buttons
+            _quickAccessUI.OnStart(_heroUI, _inventoryUI, _skillUI, _bot);
         }
 
 
@@ -42,6 +45,10 @@ namespace Scripts.Models
             _skillUI.OnGUI();
 
             _bot.OnGUI();
+
+
+            // Draw quick access buttons
+            _quickAccessUI.OnGUI();
         }
 
         public void Update()

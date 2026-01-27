@@ -48,6 +48,11 @@ namespace Scripts.Models
         private AutomaticHero _hero;
         private BotUI? _botUI = null;
 
+        // Public access to BotUI visibility
+        public bool IsUIVisible => _botUI?.IsVisible ?? false;
+        public void SetUIVisible(bool visible) => _botUI?.SetVisible(visible);
+        public void ToggleUIVisible() => _botUI?.ToggleVisible();
+
         public void OnStart(AutomaticHero hero, KeyCode toggleShowUIKey, int windowID)
         {
             if (_hero == null)

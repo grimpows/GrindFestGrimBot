@@ -75,6 +75,10 @@ namespace Scripts.Models
         private HeroUI_EquipedItem _hoveredItem = null;
         private EquipmentSlot? _hoveredSlot = null;
 
+        public bool IsVisible => _isShow;
+        public void SetVisible(bool visible) => _isShow = visible;
+        public void ToggleVisible() => _isShow = !_isShow;
+
         public void OnStart(Hero_Base hero, KeyCode toggleShowKey, int windowID)
         {
             _hero = hero;

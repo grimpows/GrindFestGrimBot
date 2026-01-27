@@ -351,5 +351,9 @@ namespace Scripts.Models
             texture.Apply();
             return texture;
         }
+
+        public bool IsVisible => _isShow;
+        public void SetVisible(bool visible) => _isShow = visible;
+        public void ToggleVisible() => _isShow = !_isShow;
     }
 }
