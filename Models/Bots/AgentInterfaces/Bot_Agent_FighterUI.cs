@@ -304,7 +304,7 @@ namespace Scripts.Models
             {
                 foreach (var monster in _fightingAgent.IgnoredMonsters.Take(5))
                 {
-                    GUILayout.Label($"  • {monster.name}", _listItemStyle);
+                    GUILayout.Label($"  • {monster?.name}", _listItemStyle);
                 }
 
                 if (_fightingAgent.IgnoredMonsters.Count > 5)

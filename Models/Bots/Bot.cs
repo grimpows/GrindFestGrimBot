@@ -20,6 +20,11 @@ namespace Scripts.Models
 
         public DateTime BestInSlotTimer = DateTime.MinValue;
 
+        
+        public float StuckDistanceThreshold = 2f;
+        public float StuckTimeThresholdSeconds = 3f;
+        public float UnstickModeDurationSeconds = 30f;
+
         private bool _isOnUnstickMode = false;
         public bool IsOnUnstickMode
         {
@@ -134,7 +139,7 @@ namespace Scripts.Models
             if (IsOnUnstickMode)
             {
                 _hero.RunAroundInArea();
-                if ((DateTime.Now - UnstickStartTime).TotalSeconds > 30)
+                if ((DateTime.Now - UnstickStartTime).TotalSeconds > UnstickModeDurationSeconds)
                 {
                     IsOnUnstickMode = false;
 
@@ -163,14 +168,14 @@ namespace Scripts.Models
                 return;
             }
 
-            if (Vector3.Distance(LastHeroPosition, _hero.Character.transform.position) > 1f)
+            if (Vector3.Distance(LastHeroPosition, _hero.Character.transform.position) > StuckDistanceThreshold)
             {
                 LastHeroPosition = _hero.Character.transform.position;
                 LastHeroPositionTime = DateTime.Now;
             }
 
 
-            if ((DateTime.Now - LastHeroPositionTime).TotalSeconds > 5)
+            if ((DateTime.Now - LastHeroPositionTime).TotalSeconds > StuckTimeThresholdSeconds)
             {
                 //_hero.RunAroundInArea();
                 IsOnUnstickMode = true;
