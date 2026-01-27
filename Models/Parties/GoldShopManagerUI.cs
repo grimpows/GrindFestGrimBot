@@ -163,7 +163,7 @@ namespace Scripts.Models
         void DrawShopButton()
         {
             float screenHeight = Screen.height;
-            float buttonX = 10;
+            float buttonX = 100;
             float buttonY = screenHeight - SHOP_BUTTON_SIZE - 10;
 
             Rect buttonRect = new Rect(buttonX, buttonY, SHOP_BUTTON_SIZE, SHOP_BUTTON_SIZE);
