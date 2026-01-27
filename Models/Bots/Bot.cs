@@ -18,6 +18,8 @@ namespace Scripts.Models
         public Vector3 LastHeroPosition = Vector3.zero;
         public DateTime LastHeroPositionTime = DateTime.MinValue;
 
+        public DateTime BestInSlotTimer = DateTime.MinValue;
+
         private bool _isOnUnstickMode = false;
         public bool IsOnUnstickMode
         {
@@ -114,7 +116,15 @@ namespace Scripts.Models
                 return;
             }
 
+            if ((DateTime.Now - BestInSlotTimer).TotalSeconds > 0.5)
+            {
+                BestInSlotTimer = DateTime.Now;
+                _hero.Equip_BestInSlot();
+            }
+
             _hero.Action_UpgradeStats();
+
+            
 
             if (IsOnUnstickMode)
             {
@@ -147,11 +157,6 @@ namespace Scripts.Models
                 this.IDontCareAboutStick();
                 return;
             }
-
-            _hero.Equip_BestInSlot();
-
-
-
 
             if (Vector3.Distance(LastHeroPosition, _hero.Character.transform.position) > 1f)
             {

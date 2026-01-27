@@ -567,7 +567,7 @@ namespace Scripts.Models
             GUILayout.BeginHorizontal();
             
             GUI.backgroundColor = _dangerColor;
-            if (GUILayout.Button("Drop All Filtered Items", GUILayout.Height(32), GUILayout.Width(200)))
+            if (GUILayout.Button("Drop Current Tabs", GUILayout.Height(32), GUILayout.Width(200)))
             {
                 foreach (var item in _filteredItemsCache.ToList())
                 {

@@ -233,8 +233,10 @@ namespace Scripts.Models
             GUILayout.Space(8);
 
             GUILayout.BeginHorizontal();
+
             
-            if (_hero.SkillPoints > 0)
+
+            if (skill.CheckSkillRequirement(skill.Level+1, _hero.Hero, false))
             {
                 GUI.backgroundColor = _positiveColor;
                 if (GUILayout.Button("Upgrade", GUILayout.Height(25)))
