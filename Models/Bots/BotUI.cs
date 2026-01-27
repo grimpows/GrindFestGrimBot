@@ -17,7 +17,7 @@ namespace Scripts.Model
         private bool _isShow = false;
         private int _windowID;
 
-        private Bot_Agent_FigherUI _fightingAgentUI;
+        private Bot_Agent_FighterUI _fightingAgentUI;
         private Bot_Agent_LooterUI _pickUpAgentUI;
         private Bot_Agent_ConsumerUI _consumerAgentUI;
 
@@ -44,7 +44,7 @@ namespace Scripts.Model
             _toggleShowKey = toggleShowKey;
             _windowID = windowID;
 
-            _fightingAgentUI = new Bot_Agent_FigherUI(bot.FightingAgent);
+            _fightingAgentUI = new Bot_Agent_FighterUI(bot.FightingAgent);
             _pickUpAgentUI = new Bot_Agent_LooterUI(bot.PickUpAgent);
             _consumerAgentUI = new Bot_Agent_ConsumerUI(bot.ConsumerAgent);
         }

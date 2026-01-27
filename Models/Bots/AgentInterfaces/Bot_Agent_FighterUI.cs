@@ -9,9 +9,9 @@ using GrindFest;
 
 namespace Scripts.Models
 {
-    internal class Bot_Agent_LooterUI
+    internal class Bot_Agent_FighterUI
     {
-        private Bot_Agent_Looter _pickUpAgent;
+        private Bot_Agent_Fighter _fightingAgent;
         private bool _stylesInitialized = false;
 
         // GUI Styles
@@ -21,30 +21,31 @@ namespace Scripts.Models
         private GUIStyle _valueStyle;
         private GUIStyle _inputStyle;
         private GUIStyle _buttonStyle;
-        private GUIStyle _toggleOnStyle;
-        private GUIStyle _toggleOffStyle;
+        private GUIStyle _cardStyle;
         private GUIStyle _listItemStyle;
 
         // Textures
         private Texture2D _sectionBgTexture;
+        private Texture2D _cardBgTexture;
         private Texture2D _inputBgTexture;
-        private Texture2D _toggleOnTexture;
-        private Texture2D _toggleOffTexture;
         private Texture2D _barFillTexture;
+        private Texture2D _healthBarBgTexture;
 
         // Colors
         private Color _sectionColor = new Color(0.1f, 0.1f, 0.12f, 0.95f);
+        private Color _cardColor = new Color(0.15f, 0.15f, 0.18f, 0.95f);
         private Color _accentColor = new Color(0.95f, 0.75f, 0.3f, 1f);
+        private Color _healthColor = new Color(0.9f, 0.3f, 0.3f, 1f);
         private Color _positiveColor = new Color(0.4f, 1f, 0.55f, 1f);
         private Color _warningColor = new Color(1f, 0.7f, 0.3f, 1f);
         private Color _dangerColor = new Color(1f, 0.4f, 0.4f, 1f);
-        private Color _infoColor = new Color(0.4f, 0.7f, 1f, 1f);
+        private Color _combatColor = new Color(1f, 0.5f, 0.3f, 1f);
         private Color _textLightColor = new Color(0.95f, 0.95f, 0.95f, 1f);
         private Color _textMutedColor = new Color(0.65f, 0.65f, 0.7f, 1f);
 
-        public Bot_Agent_LooterUI(Bot_Agent_Looter pickUpAgent)
+        public Bot_Agent_FighterUI(Bot_Agent_Fighter fightingAgent)
         {
-            _pickUpAgent = pickUpAgent;
+            _fightingAgent = fightingAgent;
         }
 
         private void InitializeStyles()
@@ -52,10 +53,10 @@ namespace Scripts.Models
             if (_stylesInitialized) return;
 
             _sectionBgTexture = CreateTexture(_sectionColor);
+            _cardBgTexture = CreateTexture(_cardColor);
             _inputBgTexture = CreateTexture(new Color(0.15f, 0.15f, 0.18f, 0.95f));
-            _toggleOnTexture = CreateTexture(new Color(0.2f, 0.6f, 0.3f, 0.95f));
-            _toggleOffTexture = CreateTexture(new Color(0.25f, 0.25f, 0.3f, 0.9f));
             _barFillTexture = CreateTexture(Color.white);
+            _healthBarBgTexture = CreateTexture(new Color(0.2f, 0.2f, 0.22f, 0.9f));
 
             _sectionStyle = new GUIStyle(GUI.skin.box);
             _sectionStyle.normal.background = _sectionBgTexture;
@@ -85,16 +86,9 @@ namespace Scripts.Models
             _buttonStyle.fontSize = 10;
             _buttonStyle.fontStyle = FontStyle.Bold;
 
-            _toggleOnStyle = new GUIStyle(GUI.skin.button);
-            _toggleOnStyle.normal.background = _toggleOnTexture;
-            _toggleOnStyle.normal.textColor = _textLightColor;
-            _toggleOnStyle.fontStyle = FontStyle.Bold;
-            _toggleOnStyle.fontSize = 10;
-
-            _toggleOffStyle = new GUIStyle(GUI.skin.button);
-            _toggleOffStyle.normal.background = _toggleOffTexture;
-            _toggleOffStyle.normal.textColor = _textMutedColor;
-            _toggleOffStyle.fontSize = 10;
+            _cardStyle = new GUIStyle(GUI.skin.box);
+            _cardStyle.normal.background = _cardBgTexture;
+            _cardStyle.padding = new RectOffset(10, 10, 8, 8);
 
             _listItemStyle = new GUIStyle(GUI.skin.label);
             _listItemStyle.fontSize = 10;
@@ -111,9 +105,9 @@ namespace Scripts.Models
             return tex;
         }
 
-        public void DrawPickUpAgentPanel(Rect contentArea)
+        public void DrawFightingAgentPanel(Rect contentArea)
         {
-            if (_pickUpAgent == null) return;
+            if (_fightingAgent == null) return;
 
             InitializeStyles();
 
@@ -121,20 +115,20 @@ namespace Scripts.Models
             GUILayout.BeginVertical(_sectionStyle);
 
             // Header
-            DrawSectionHeader("LOOTER AGENT");
+            DrawSectionHeader("FIGHTER AGENT");
             GUILayout.Space(8);
 
             // Stats Row
             GUILayout.BeginHorizontal();
-            DrawStatBox("Looted", _pickUpAgent.LootedItemCount.ToString(), _positiveColor);
+            DrawStatBox("Kills", _fightingAgent.KillCount.ToString(), _positiveColor);
             GUILayout.Space(8);
-            DrawStatBox("Scanned", _pickUpAgent.ScannedItems.Count.ToString(), _infoColor);
+            DrawStatBox("Ignored", _fightingAgent.IgnoredMonsters.Count.ToString(), _warningColor);
             GUILayout.Space(8);
-            DrawStatBox("Ignored", _pickUpAgent.IgnoredItems.Count.ToString(), _warningColor);
+            DrawStatBox("Range", $"{_fightingAgent.MaxDistance:F0}m", _accentColor);
             GUILayout.EndHorizontal();
             GUILayout.Space(12);
 
-            // Target Item
+            // Target Monster Card
             DrawTargetSection();
             GUILayout.Space(10);
 
@@ -142,8 +136,8 @@ namespace Scripts.Models
             DrawSettingsSection();
             GUILayout.Space(10);
 
-            // Ignored Items List
-            DrawIgnoredItemsSection();
+            // Ignored Monsters List
+            DrawIgnoredMonstersSection();
 
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
@@ -163,56 +157,98 @@ namespace Scripts.Models
         {
             GUILayout.BeginVertical(GUILayout.Width(80));
             GUILayout.Label(label, _labelStyle);
-            
+
             GUIStyle valStyle = new GUIStyle(_valueStyle);
             valStyle.fontSize = 14;
             valStyle.normal.textColor = valueColor;
             GUILayout.Label(value, valStyle);
-            
+
             GUILayout.EndVertical();
         }
 
         private void DrawTargetSection()
         {
-            GUILayout.BeginVertical();
-            GUILayout.Label("Current Target", _titleStyle);
-            GUILayout.Space(4);
+            GUILayout.BeginVertical(_cardStyle);
 
             GUILayout.BeginHorizontal();
-            
-            string targetName = _pickUpAgent.TargetedItem != null ? _pickUpAgent.TargetedItem.name : "None";
-            Color targetColor = _pickUpAgent.TargetedItem != null ? _positiveColor : _textMutedColor;
-            
-            GUIStyle targetStyle = new GUIStyle(_valueStyle);
-            targetStyle.normal.textColor = targetColor;
-            GUILayout.Label(targetName, targetStyle, GUILayout.ExpandWidth(true));
+            GUI.color = _combatColor;
+            GUILayout.Label("?", GUILayout.Width(20));
+            GUI.color = Color.white;
+            GUILayout.Label("Current Target", _titleStyle);
+            GUILayout.FlexibleSpace();
 
-            if (_pickUpAgent.TargetedItem != null)
+            if (_fightingAgent.TargetedMonster != null)
             {
                 GUI.backgroundColor = _dangerColor;
-                if (GUILayout.Button("Reset", _buttonStyle, GUILayout.Width(60), GUILayout.Height(20)))
+                if (GUILayout.Button("Reset", _buttonStyle, GUILayout.Width(55), GUILayout.Height(18)))
                 {
-                    _pickUpAgent.TargetedItem = null;
+                    _fightingAgent.TargetedMonster = null;
                 }
                 GUI.backgroundColor = Color.white;
             }
-
             GUILayout.EndHorizontal();
+            GUILayout.Space(6);
 
-            // Last scan time
-            TimeSpan timeSinceLastScan = DateTime.Now - _pickUpAgent.LastScanTime;
+            // Target name
+            string targetName = _fightingAgent.TargetedMonster != null ? _fightingAgent.TargetedMonster.name : "None";
+            Color targetColor = _fightingAgent.TargetedMonster != null ? _combatColor : _textMutedColor;
+
+            GUIStyle nameStyle = new GUIStyle(_valueStyle);
+            nameStyle.fontSize = 12;
+            nameStyle.normal.textColor = targetColor;
+            GUILayout.Label(targetName, nameStyle);
+
+            // Target health bar
+            if (_fightingAgent.TargetedMonster?.Health != null)
+            {
+                GUILayout.Space(6);
+                DrawHealthBar(_fightingAgent.TargetedMonster.Health.CurrentHealth, _fightingAgent.TargetedMonster.Health.MaxHealth);
+            }
+
+            // Last health change
+            if (_fightingAgent.LastTargetMonsterHealthChanged.HasValue)
+            {
+                TimeSpan timeSinceChange = DateTime.Now - _fightingAgent.LastTargetMonsterHealthChanged.Value;
+                
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Last Hit:", _labelStyle, GUILayout.Width(60));
+
+                Color hitColor = timeSinceChange.TotalSeconds < 3 ? _positiveColor : _textMutedColor;
+                GUIStyle hitStyle = new GUIStyle(_valueStyle);
+                hitStyle.normal.textColor = hitColor;
+                GUILayout.Label($"{timeSinceChange.TotalSeconds:F1}s ago", hitStyle);
+
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.EndVertical();
+        }
+
+        private void DrawHealthBar(int current, int max)
+        {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Last Scan:", _labelStyle, GUILayout.Width(70));
-            
-            Color scanColor = timeSinceLastScan.TotalSeconds < 5 ? _positiveColor : _textMutedColor;
-            GUIStyle scanStyle = new GUIStyle(_valueStyle);
-            scanStyle.normal.textColor = scanColor;
-            GUILayout.Label($"{timeSinceLastScan.TotalSeconds:F1}s ago", scanStyle);
-            
+            GUILayout.Label("HP:", _labelStyle, GUILayout.Width(25));
+
+            // Health values
+            float pct = max > 0 ? (float)current / max : 0;
+            Color hpColor = pct > 0.5f ? _positiveColor : pct > 0.25f ? _warningColor : _dangerColor;
+
+            GUIStyle hpStyle = new GUIStyle(_valueStyle);
+            hpStyle.normal.textColor = hpColor;
+            GUILayout.Label($"{current}/{max}", hpStyle, GUILayout.Width(80));
+
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            GUILayout.EndVertical();
+            // Health bar
+            Rect barRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(8));
+            GUI.DrawTexture(barRect, _healthBarBgTexture);
+
+            Rect fillRect = new Rect(barRect.x, barRect.y, barRect.width * pct, barRect.height);
+            GUI.color = hpColor;
+            GUI.DrawTexture(fillRect, _barFillTexture);
+            GUI.color = Color.white;
         }
 
         private void DrawSettingsSection()
@@ -220,84 +256,67 @@ namespace Scripts.Models
             GUILayout.Label("Settings", _titleStyle);
             GUILayout.Space(4);
 
-            // Scan Frequency
+            // Max Distance
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Scan Frequency:", _labelStyle, GUILayout.Width(110));
-            string scanFreqStr = GUILayout.TextField(_pickUpAgent.ScanFrequency.ToString(), _inputStyle, GUILayout.Width(50));
-            if (int.TryParse(scanFreqStr, out int newScanFreq) && newScanFreq > 0)
+            GUILayout.Label("Max Distance:", _labelStyle, GUILayout.Width(100));
+            string maxDistStr = GUILayout.TextField(_fightingAgent.MaxDistance.ToString("F0"), _inputStyle, GUILayout.Width(50));
+            if (float.TryParse(maxDistStr, out float newMaxDist) && newMaxDist > 0)
             {
-                _pickUpAgent.ScanFrequency = newScanFreq;
+                _fightingAgent.MaxDistance = newMaxDist;
             }
-            GUILayout.Label("sec", _labelStyle, GUILayout.Width(30));
+            GUILayout.Label("units", _labelStyle, GUILayout.Width(35));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Space(4);
 
             // Target Timeout
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Target Timeout:", _labelStyle, GUILayout.Width(110));
-            string timeoutStr = GUILayout.TextField(_pickUpAgent.TargetItemTimeout.ToString(), _inputStyle, GUILayout.Width(50));
+            GUILayout.Label("Target Timeout:", _labelStyle, GUILayout.Width(100));
+            string timeoutStr = GUILayout.TextField(_fightingAgent.TargetMonsterTimeout.ToString(), _inputStyle, GUILayout.Width(50));
             if (int.TryParse(timeoutStr, out int newTimeout) && newTimeout > 0)
             {
-                _pickUpAgent.TargetItemTimeout = newTimeout;
+                _fightingAgent.TargetMonsterTimeout = newTimeout;
             }
-            GUILayout.Label("sec", _labelStyle, GUILayout.Width(30));
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-            GUILayout.Space(4);
-
-            // Force Rescan Toggle
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Force Rescan:", _labelStyle, GUILayout.Width(110));
-            
-            GUIStyle toggleStyle = _pickUpAgent.ForceRescan ? _toggleOnStyle : _toggleOffStyle;
-            GUI.backgroundColor = _pickUpAgent.ForceRescan ? _positiveColor : _textMutedColor;
-            
-            if (GUILayout.Button(_pickUpAgent.ForceRescan ? "ON" : "OFF", toggleStyle, GUILayout.Width(50), GUILayout.Height(20)))
-            {
-                _pickUpAgent.ForceRescan = !_pickUpAgent.ForceRescan;
-            }
-            GUI.backgroundColor = Color.white;
-            
+            GUILayout.Label("sec", _labelStyle, GUILayout.Width(35));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
 
-        private void DrawIgnoredItemsSection()
+        private void DrawIgnoredMonstersSection()
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"Ignored Items ({_pickUpAgent.IgnoredItems.Count})", _titleStyle);
+            GUILayout.Label($"Ignored Monsters ({_fightingAgent.IgnoredMonsters.Count})", _titleStyle);
             GUILayout.FlexibleSpace();
-            
-            if (_pickUpAgent.IgnoredItems.Count > 0)
+
+            if (_fightingAgent.IgnoredMonsters.Count > 0)
             {
                 GUI.backgroundColor = _warningColor;
                 if (GUILayout.Button("Clear All", _buttonStyle, GUILayout.Width(70), GUILayout.Height(18)))
                 {
-                    _pickUpAgent.IgnoredItems.Clear();
+                    _fightingAgent.IgnoredMonsters.Clear();
                 }
                 GUI.backgroundColor = Color.white;
             }
             GUILayout.EndHorizontal();
             GUILayout.Space(4);
 
-            if (_pickUpAgent.IgnoredItems.Count > 0)
+            if (_fightingAgent.IgnoredMonsters.Count > 0)
             {
-                foreach (var item in _pickUpAgent.IgnoredItems.Take(5))
+                foreach (var monster in _fightingAgent.IgnoredMonsters.Take(5))
                 {
-                    GUILayout.Label($"  • {item.name}", _listItemStyle);
+                    GUILayout.Label($"  • {monster.name}", _listItemStyle);
                 }
-                
-                if (_pickUpAgent.IgnoredItems.Count > 5)
+
+                if (_fightingAgent.IgnoredMonsters.Count > 5)
                 {
                     GUIStyle moreStyle = new GUIStyle(_listItemStyle);
                     moreStyle.fontStyle = FontStyle.Italic;
-                    GUILayout.Label($"  ... +{_pickUpAgent.IgnoredItems.Count - 5} more", moreStyle);
+                    GUILayout.Label($"  ... +{_fightingAgent.IgnoredMonsters.Count - 5} more", moreStyle);
                 }
             }
             else
             {
-                GUILayout.Label("  No ignored items", _listItemStyle);
+                GUILayout.Label("  No ignored monsters", _listItemStyle);
             }
         }
     }

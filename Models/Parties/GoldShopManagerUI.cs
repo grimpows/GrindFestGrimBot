@@ -14,17 +14,43 @@ namespace Scripts.Models
         private KeyCode _toggleShowKey;
         private bool _isShow = false;
         private Vector2 _scrollPosition = Vector2.zero;
+        private bool _stylesInitialized = false;
 
-        // requied rects
-        private Rect _goldShopManagerUIRect = new Rect(100, 100, 800, 800);
+        private Rect _windowRect = new Rect(100, 100, 650, 600);
         private const int SHOP_BUTTON_SIZE = 50;
 
-        private const int HEADER_HEIGHT = 30;
-        private const int BUTTON_HEIGHT = 25;
-        private const int ITEM_HEIGHT = 60;
-        private const int ITEM_PADDING = 5;
+        // GUI Styles
+        private GUIStyle _windowStyle;
+        private GUIStyle _titleStyle;
+        private GUIStyle _subtitleStyle;
+        private GUIStyle _labelStyle;
+        private GUIStyle _valueStyle;
+        private GUIStyle _itemCardStyle;
+        private GUIStyle _toggleOnStyle;
+        private GUIStyle _toggleOffStyle;
+        private GUIStyle _buttonStyle;
+        private GUIStyle _resourceBoxStyle;
 
-        public GoldShopManagerUI(GoldShopManager goldShopManager,KeyCode toggleShowKey)
+        // Textures
+        private Texture2D _windowBgTexture;
+        private Texture2D _cardBgTexture;
+        private Texture2D _toggleOnTexture;
+        private Texture2D _toggleOffTexture;
+        private Texture2D _barFillTexture;
+
+        // Colors
+        private Color _windowBgColor = new Color(0.08f, 0.08f, 0.1f, 0.98f);
+        private Color _cardColor = new Color(0.12f, 0.12f, 0.15f, 0.95f);
+        private Color _accentColor = new Color(0.95f, 0.75f, 0.3f, 1f);
+        private Color _goldColor = new Color(1f, 0.85f, 0.3f, 1f);
+        private Color _soulColor = new Color(0.6f, 0.4f, 1f, 1f);
+        private Color _gemColor = new Color(0.3f, 0.9f, 0.7f, 1f);
+        private Color _positiveColor = new Color(0.4f, 1f, 0.55f, 1f);
+        private Color _negativeColor = new Color(1f, 0.4f, 0.4f, 1f);
+        private Color _textLightColor = new Color(0.95f, 0.95f, 0.95f, 1f);
+        private Color _textMutedColor = new Color(0.6f, 0.6f, 0.65f, 1f);
+
+        public GoldShopManagerUI(GoldShopManager goldShopManager, KeyCode toggleShowKey)
         {
             _toggleShowKey = toggleShowKey;
             _goldShopManager = goldShopManager;
@@ -44,8 +70,94 @@ namespace Scripts.Models
 
             if (_isShow)
             {
-                _goldShopManagerUIRect = GUI.Window(WindowsConstants.GOLD_SHOP_MANAGER_UI_ID, _goldShopManagerUIRect, DrawGoldShopManagerUI, "Gold Shop Manager");
+                if (!_stylesInitialized)
+                {
+                    InitializeStyles();
+                    _stylesInitialized = true;
+                }
+                _windowRect = GUI.Window(WindowsConstants.GOLD_SHOP_MANAGER_UI_ID, _windowRect, DrawWindow, "", _windowStyle);
             }
+        }
+
+        private void InitializeStyles()
+        {
+            // Textures
+            _windowBgTexture = CreateTexture(_windowBgColor);
+            _cardBgTexture = CreateTexture(_cardColor);
+            _toggleOnTexture = CreateTexture(new Color(0.2f, 0.6f, 0.3f, 0.95f));
+            _toggleOffTexture = CreateTexture(new Color(0.25f, 0.25f, 0.3f, 0.9f));
+            _barFillTexture = CreateTexture(Color.white);
+
+            // Window Style
+            _windowStyle = new GUIStyle(GUI.skin.window);
+            _windowStyle.normal.background = _windowBgTexture;
+            _windowStyle.onNormal.background = _windowBgTexture;
+            _windowStyle.focused.background = _windowBgTexture;
+            _windowStyle.onFocused.background = _windowBgTexture;
+            _windowStyle.active.background = _windowBgTexture;
+            _windowStyle.onActive.background = _windowBgTexture;
+
+            // Title Style
+            _titleStyle = new GUIStyle(GUI.skin.label);
+            _titleStyle.fontSize = 18;
+            _titleStyle.fontStyle = FontStyle.Bold;
+            _titleStyle.alignment = TextAnchor.MiddleCenter;
+            _titleStyle.normal.textColor = _accentColor;
+
+            // Subtitle Style
+            _subtitleStyle = new GUIStyle(GUI.skin.label);
+            _subtitleStyle.fontSize = 13;
+            _subtitleStyle.fontStyle = FontStyle.Bold;
+            _subtitleStyle.alignment = TextAnchor.MiddleLeft;
+            _subtitleStyle.normal.textColor = _textLightColor;
+
+            // Label Style
+            _labelStyle = new GUIStyle(GUI.skin.label);
+            _labelStyle.fontSize = 11;
+            _labelStyle.alignment = TextAnchor.MiddleLeft;
+            _labelStyle.normal.textColor = _textMutedColor;
+
+            // Value Style
+            _valueStyle = new GUIStyle(GUI.skin.label);
+            _valueStyle.fontSize = 11;
+            _valueStyle.fontStyle = FontStyle.Bold;
+            _valueStyle.alignment = TextAnchor.MiddleRight;
+            _valueStyle.normal.textColor = _textLightColor;
+
+            // Item Card Style
+            _itemCardStyle = new GUIStyle(GUI.skin.box);
+            _itemCardStyle.normal.background = _cardBgTexture;
+            _itemCardStyle.padding = new RectOffset(10, 10, 8, 8);
+
+            // Toggle Styles
+            _toggleOnStyle = new GUIStyle(GUI.skin.button);
+            _toggleOnStyle.normal.background = _toggleOnTexture;
+            _toggleOnStyle.normal.textColor = _textLightColor;
+            _toggleOnStyle.fontStyle = FontStyle.Bold;
+            _toggleOnStyle.fontSize = 10;
+
+            _toggleOffStyle = new GUIStyle(GUI.skin.button);
+            _toggleOffStyle.normal.background = _toggleOffTexture;
+            _toggleOffStyle.normal.textColor = _textMutedColor;
+            _toggleOffStyle.fontSize = 10;
+
+            // Button Style
+            _buttonStyle = new GUIStyle(GUI.skin.button);
+            _buttonStyle.fontSize = 11;
+            _buttonStyle.fontStyle = FontStyle.Bold;
+
+            // Resource Box Style
+            _resourceBoxStyle = new GUIStyle(GUI.skin.box);
+            _resourceBoxStyle.normal.background = _cardBgTexture;
+            _resourceBoxStyle.padding = new RectOffset(8, 8, 5, 5);
+        }
+
+        private Texture2D CreateTexture(Color color)
+        {
+            Texture2D tex = new Texture2D(1, 1);
+            tex.SetPixel(0, 0, color);
+            tex.Apply();
+            return tex;
         }
 
         void DrawShopButton()
@@ -54,145 +166,210 @@ namespace Scripts.Models
             float buttonX = 10;
             float buttonY = screenHeight - SHOP_BUTTON_SIZE - 10;
 
-            GUILayout.BeginArea(new Rect(buttonX, buttonY, SHOP_BUTTON_SIZE, SHOP_BUTTON_SIZE));
+            Rect buttonRect = new Rect(buttonX, buttonY, SHOP_BUTTON_SIZE, SHOP_BUTTON_SIZE);
 
             Color originalBgColor = GUI.backgroundColor;
-            Color originalTextColor = GUI.contentColor;
+            GUI.backgroundColor = _isShow ? _positiveColor : _goldColor;
 
-            if (_isShow)
-            {
-                GUI.backgroundColor = new Color(0.15f, 0.7f, 0.15f);
-            }
-            else
-            {
-                GUI.backgroundColor = new Color(0.7f, 0.15f, 0.15f);
-            }
+            GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+            buttonStyle.fontSize = 22;
+            buttonStyle.fontStyle = FontStyle.Bold;
+            buttonStyle.normal.textColor = Color.white;
 
-            GUI.contentColor = Color.white;
-
-            GUIStyle squareButtonStyle = new GUIStyle(GUI.skin.button)
-            {
-                fontSize = 18,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleCenter
-            };
-
-            if (GUILayout.Button("$", squareButtonStyle, GUILayout.Width(SHOP_BUTTON_SIZE), GUILayout.Height(SHOP_BUTTON_SIZE)))
+            if (GUI.Button(buttonRect, "$", buttonStyle))
             {
                 _isShow = !_isShow;
             }
 
             GUI.backgroundColor = originalBgColor;
-            GUI.contentColor = originalTextColor;
-
-            GUILayout.EndArea();
         }
 
-        void DrawGoldShopManagerUI(int windowID)
+        void DrawWindow(int windowID)
         {
             GUILayout.BeginVertical();
 
-            DrawHeaderWithToggleButton();
+            DrawHeader();
+            GUILayout.Space(10);
 
-            DrawEnableToggle();
+            DrawResourcesPanel();
+            GUILayout.Space(10);
+
+            DrawAutoBuyToggle();
+            GUILayout.Space(10);
 
             DrawItemsList();
 
             GUILayout.EndVertical();
 
-            GUI.DragWindow(new Rect(0, 0, _goldShopManagerUIRect.width, HEADER_HEIGHT));
+            GUI.DragWindow(new Rect(0, 0, _windowRect.width, 30));
         }
 
-        void DrawHeaderWithToggleButton()
+        void DrawHeader()
         {
-            GUILayout.BeginHorizontal(GUI.skin.box);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("GOLD SHOP", _titleStyle, GUILayout.Height(30));
+            GUILayout.FlexibleSpace();
 
-            GUILayout.Label("Gold Shop Manager", GUILayout.ExpandWidth(true));
-
-            Color originalBgColor = GUI.backgroundColor;
-            GUI.backgroundColor = new Color(1f, 0.5f, 0.2f);
-
-            if (GUILayout.Button("Close", GUILayout.Width(80), GUILayout.Height(BUTTON_HEIGHT)))
+            GUI.backgroundColor = _negativeColor;
+            if (GUILayout.Button("X", _buttonStyle, GUILayout.Width(30), GUILayout.Height(25)))
             {
                 _isShow = false;
             }
-
-            GUI.backgroundColor = originalBgColor;
+            GUI.backgroundColor = Color.white;
 
             GUILayout.EndHorizontal();
 
-            GUILayout.Space(5);
+            // Separator
+            Rect sepRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(2));
+            GUI.color = _accentColor;
+            GUI.DrawTexture(sepRect, _barFillTexture);
+            GUI.color = Color.white;
         }
 
-        void DrawEnableToggle()
+        void DrawResourcesPanel()
         {
-            GUILayout.BeginHorizontal(GUI.skin.box);
+            var actualGold = _goldShopManager.Party?.Gold ?? 0;
+            var actualSouls = _goldShopManager.Party?.Souls ?? 0;
+            var actualGems = _goldShopManager.Party?.Gems ?? 0;
 
-            var actualGold = _goldShopManager.Party?.Gold;
-            var actualSouls = _goldShopManager.Party?.Souls;
-            var actualGems = _goldShopManager.Party?.Gems;
-            
+            GUILayout.BeginHorizontal();
 
-            _goldShopManager.IsEnabled = GUILayout.Toggle(_goldShopManager.IsEnabled, "Enable Auto Buy", GUILayout.Width(150));
+            // Gold
+            DrawResourceBox("Gold", actualGold.ToString(), _goldColor);
+            GUILayout.Space(10);
 
-            GUILayout.FlexibleSpace();
+            // Souls
+            DrawResourceBox("Souls", actualSouls.ToString(), _soulColor);
+            GUILayout.Space(10);
+
+            // Gems
+            DrawResourceBox("Gems", actualGems.ToString(), _gemColor);
+
             GUILayout.EndHorizontal();
+        }
 
-            GUILayout.Space(5);
+        void DrawResourceBox(string label, string value, Color color)
+        {
+            GUILayout.BeginVertical(_resourceBoxStyle, GUILayout.ExpandWidth(true), GUILayout.Height(50));
+            
+            GUILayout.Label(label, _labelStyle);
+            
+            GUIStyle valueStyle = new GUIStyle(_valueStyle);
+            valueStyle.fontSize = 16;
+            valueStyle.alignment = TextAnchor.MiddleCenter;
+            valueStyle.normal.textColor = color;
+            
+            GUILayout.Label(value, valueStyle);
+            
+            GUILayout.EndVertical();
+        }
 
-            GUILayout.Label($"Current Resources: {actualGold} Gold, {actualSouls} Souls, {actualGems} Gems", GUI.skin.box);
+        void DrawAutoBuyToggle()
+        {
+            GUILayout.BeginHorizontal(_itemCardStyle);
 
-            GUILayout.Space(5);
+            GUILayout.Label("Auto Buy", _subtitleStyle, GUILayout.Width(100));
+            GUILayout.FlexibleSpace();
+
+            GUIStyle toggleStyle = _goldShopManager.IsEnabled ? _toggleOnStyle : _toggleOffStyle;
+            string toggleText = _goldShopManager.IsEnabled ? "ENABLED" : "DISABLED";
+            
+            GUI.backgroundColor = _goldShopManager.IsEnabled ? _positiveColor : _textMutedColor;
+            if (GUILayout.Button(toggleText, toggleStyle, GUILayout.Width(100), GUILayout.Height(25)))
+            {
+                _goldShopManager.IsEnabled = !_goldShopManager.IsEnabled;
+            }
+            GUI.backgroundColor = Color.white;
+
+            GUILayout.EndHorizontal();
         }
 
         void DrawItemsList()
         {
-            GUILayout.Label("Gold Shop Items", GUI.skin.box);
+            GUILayout.Label("SHOP ITEMS", _subtitleStyle, GUILayout.Height(25));
+
+            // Separator
+            Rect sepRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(1));
+            GUI.color = new Color(0.3f, 0.3f, 0.35f);
+            GUI.DrawTexture(sepRect, _barFillTexture);
+            GUI.color = Color.white;
+            GUILayout.Space(8);
 
             if (_goldShopManager.AutoBuyGoldShopItemSelection == null || _goldShopManager.AutoBuyGoldShopItemSelection.Count == 0)
             {
-                GUILayout.Label("No items available");
+                GUILayout.Label("No items available", _labelStyle);
                 return;
             }
 
-            float scrollViewHeight = _goldShopManagerUIRect.height - HEADER_HEIGHT - 150;
-
+            float scrollViewHeight = _windowRect.height - 250;
             _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(scrollViewHeight));
+
+            var goldShopItems = _goldShopManager?.Party?.GetGoldShopItems();
 
             foreach (var itemKey in _goldShopManager.AutoBuyGoldShopItemSelection.Keys.ToList())
             {
                 bool isEnabled = _goldShopManager.AutoBuyGoldShopItemSelection[itemKey];
-
-                var goldShopItems = _goldShopManager?.Party?.GetGoldShopItems();
                 var item = goldShopItems?.FirstOrDefault(i => i.Name == itemKey);
 
-                string itemName = $"{itemKey} ({item.GoldPrice} Gold, {item.SoulPrice} Souls, {item.GemPrice} Gems)";
-
-                DrawGoldShopItem(itemName, ref isEnabled);
-
-                _goldShopManager.AutoBuyGoldShopItemSelection[itemKey] = isEnabled;
+                if (item != null)
+                {
+                    DrawShopItem(itemKey, item, ref isEnabled);
+                    _goldShopManager.AutoBuyGoldShopItemSelection[itemKey] = isEnabled;
+                }
             }
 
             GUILayout.EndScrollView();
         }
 
-        void DrawGoldShopItem(string itemName, ref bool isEnabled)
+        void DrawShopItem(string itemKey, GoldShopItem item, ref bool isEnabled)
         {
-            GUILayout.BeginHorizontal(GUI.skin.box);
+            GUILayout.BeginHorizontal(_itemCardStyle, GUILayout.Height(50));
 
-            Color toggleColor = isEnabled ? new Color(0.2f, 0.8f, 0.2f) : new Color(0.6f, 0.6f, 0.6f);
-            Color originalBgColor = GUI.backgroundColor;
-            GUI.backgroundColor = toggleColor;
+            // Toggle button
+            GUI.backgroundColor = isEnabled ? _positiveColor : _textMutedColor;
+            GUIStyle toggleBtnStyle = isEnabled ? _toggleOnStyle : _toggleOffStyle;
+            
+            if (GUILayout.Button(isEnabled ? "ON" : "OFF", toggleBtnStyle, GUILayout.Width(45), GUILayout.Height(35)))
+            {
+                isEnabled = !isEnabled;
+            }
+            GUI.backgroundColor = Color.white;
 
-            isEnabled = GUILayout.Toggle(isEnabled, "", GUILayout.Width(25), GUILayout.Height(25));
+            GUILayout.Space(10);
 
-            GUI.backgroundColor = originalBgColor;
-
-            GUILayout.Label($"{itemName}", GUI.skin.button, GUILayout.ExpandWidth(true), GUILayout.Height(25));
+            // Item info
+            GUILayout.BeginVertical();
+            
+            GUILayout.Label(itemKey, _subtitleStyle);
+            
+            GUILayout.BeginHorizontal();
+            
+            // Prices with colors
+            if (item.GoldPrice > 0)
+            {
+                GUI.color = _goldColor;
+                GUILayout.Label($"{item.GoldPrice}g", _labelStyle, GUILayout.Width(60));
+            }
+            if (item.SoulPrice > 0)
+            {
+                GUI.color = _soulColor;
+                GUILayout.Label($"{item.SoulPrice}s", _labelStyle, GUILayout.Width(60));
+            }
+            if (item.GemPrice > 0)
+            {
+                GUI.color = _gemColor;
+                GUILayout.Label($"{item.GemPrice}gem", _labelStyle, GUILayout.Width(60));
+            }
+            GUI.color = Color.white;
+            
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            
+            GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
-
-            GUILayout.Space(ITEM_PADDING);
+            GUILayout.Space(5);
         }
     }
 }
