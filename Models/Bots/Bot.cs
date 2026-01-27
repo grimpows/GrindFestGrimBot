@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Scripts.Models
 {
@@ -14,6 +15,7 @@ namespace Scripts.Models
         public Bot_Agent_Looter PickUpAgent = null;
         public Bot_Agent_Fighter FightingAgent = null;
         public Bot_Agent_Consumer ConsumerAgent = null;
+        public Bot_Agent_Traveler TravelerAgent = null;
 
         public Vector3 LastHeroPosition = Vector3.zero;
         public DateTime LastHeroPositionTime = DateTime.MinValue;
@@ -101,6 +103,13 @@ namespace Scripts.Models
 
         public void OnUpdate()
         {
+
+        
+
+            
+
+
+
             if (LastHeroPosition == Vector3.zero)
             {
                 LastHeroPosition = _hero.Character.transform.position;

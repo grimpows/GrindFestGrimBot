@@ -21,6 +21,7 @@ namespace Scripts.Model
         private Bot_Agent_FighterUI _fightingAgentUI;
         private Bot_Agent_LooterUI _pickUpAgentUI;
         private Bot_Agent_ConsumerUI _consumerAgentUI;
+        private Bot_Agent_TravelerUI _travelerAgentUI;
 
         private Rect _botWindowRect = new Rect(100, 100, 750, 650);
 
@@ -69,7 +70,8 @@ namespace Scripts.Model
             Global,
             FightingAgent,
             PickUpAgent,
-            ConsumerAgent
+            ConsumerAgent,
+            TravelerAgent
         }
 
         public BotUI(Bot bot, AutomaticHero hero, KeyCode toggleShowKey, int windowID)
@@ -82,6 +84,7 @@ namespace Scripts.Model
             _fightingAgentUI = new Bot_Agent_FighterUI(bot.FightingAgent);
             _pickUpAgentUI = new Bot_Agent_LooterUI(bot.PickUpAgent);
             _consumerAgentUI = new Bot_Agent_ConsumerUI(bot.ConsumerAgent);
+            _travelerAgentUI = new Bot_Agent_TravelerUI(bot.TravelerAgent);
         }
 
         private void InitializeStyles()
@@ -232,6 +235,9 @@ namespace Scripts.Model
                 case BotTab.ConsumerAgent:
                     _consumerAgentUI.DrawConsumerAgentPanel(contentArea);
                     break;
+                case BotTab.TravelerAgent:
+                    _travelerAgentUI.DrawTravelerAgentPanel(contentArea);
+                    break;
             }
 
             GUILayout.EndVertical();
@@ -253,7 +259,7 @@ namespace Scripts.Model
             closeStyle.fontStyle = FontStyle.Bold;
             closeStyle.normal.textColor = Color.white;
             closeStyle.hover.textColor = Color.white;
-            
+
             if (GUILayout.Button("X", closeStyle, GUILayout.Width(28), GUILayout.Height(28)))
             {
                 _isShow = false;
@@ -280,6 +286,8 @@ namespace Scripts.Model
             DrawTab("Looter", BotTab.PickUpAgent, "◆");
             GUILayout.Space(4);
             DrawTab("Consumer", BotTab.ConsumerAgent, "♥");
+            GUILayout.Space(4);
+            DrawTab("Traveler", BotTab.TravelerAgent, "✈");
 
             GUILayout.EndHorizontal();
         }
