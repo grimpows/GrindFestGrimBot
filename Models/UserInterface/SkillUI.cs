@@ -21,7 +21,7 @@ namespace Scripts.Models
         
         private List<SkillBehaviour> _skillsList = new List<SkillBehaviour>();
         private const float SKILL_CARD_WIDTH = 280f;
-        private const float SKILL_CARD_HEIGHT = 320f;
+        private const float SKILL_CARD_HEIGHT = 340f;
         private const float SKILL_CARD_PADDING = 15f;
 
         // GUI Styles
@@ -29,6 +29,8 @@ namespace Scripts.Models
         private GUIStyle _titleStyle;
         private GUIStyle _statLabelStyle;
         private GUIStyle _descriptionStyle;
+        private GUIStyle _reqMetStyle;
+        private GUIStyle _reqNotMetStyle;
 
         // Textures
         private Texture2D _panelBackgroundTexture;
@@ -36,8 +38,10 @@ namespace Scripts.Models
         // Colors
         private Color _headerColor = new Color(0.15f, 0.15f, 0.2f, 0.95f);
         private Color _cardColor = new Color(0.2f, 0.2f, 0.25f, 0.9f);
-        private Color _accentColor = new Color(0.8f, 0.6f, 0.2f, 1f);
-        private Color _positiveColor = new Color(0.2f, 0.8f, 0.4f, 1f);
+        private Color _accentColor = new Color(0.95f, 0.75f, 0.3f, 1f);
+        private Color _positiveColor = new Color(0.4f, 1f, 0.55f, 1f);
+        private Color _negativeColor = new Color(1f, 0.4f, 0.4f, 1f);
+        private Color _textLightColor = new Color(0.95f, 0.95f, 0.95f, 1f);
 
         public void OnGUI()
         {
@@ -106,7 +110,7 @@ namespace Scripts.Models
             {
                 fontSize = 11,
                 alignment = TextAnchor.UpperLeft,
-                normal = { textColor = Color.white },
+                normal = { textColor = _textLightColor },
                 wordWrap = true
             };
 
@@ -116,6 +120,22 @@ namespace Scripts.Models
                 alignment = TextAnchor.UpperLeft,
                 normal = { textColor = new Color(0.8f, 0.8f, 0.8f) },
                 wordWrap = true
+            };
+
+            _reqMetStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 10,
+                alignment = TextAnchor.MiddleLeft,
+                normal = { textColor = _positiveColor },
+                fontStyle = FontStyle.Bold
+            };
+
+            _reqNotMetStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 10,
+                alignment = TextAnchor.MiddleLeft,
+                normal = { textColor = _negativeColor },
+                fontStyle = FontStyle.Bold
             };
 
             _skillCardStyle = new GUIStyle(GUI.skin.box)
@@ -220,10 +240,31 @@ namespace Scripts.Models
             GUILayout.Label($"Level: {skill.Level}", _statLabelStyle, GUILayout.Height(20));
             GUILayout.Label($"Command: {skill.Command}", _statLabelStyle, GUILayout.Height(20));
             GUILayout.Label($"Range: {skill.Range}m", _statLabelStyle, GUILayout.Height(20));
+            
+            // Requirements for next level with color coding
+            int nextLevel = skill.Level + 1;
+            int reqStr = skill.GetRequiredStrength(nextLevel);
+            int reqDex = skill.GetRequiredDexterity(nextLevel);
+            int reqInt = skill.GetRequiredIntelligence(nextLevel);
+            
+            int heroStr = _hero?.Character?.Strength ?? 0;
+            int heroDex = _hero?.Character?.Dexterity ?? 0;
+            int heroInt = _hero?.Character?.Intelligence ?? 0;
+
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"STR : {skill.GetRequiredStrength(skill.Level + 1)}", _statLabelStyle, GUILayout.Height(20));
-            GUILayout.Label($"DEX : {skill.GetRequiredDexterity(skill.Level + 1)}", _statLabelStyle, GUILayout.Height(20));
-            GUILayout.Label($"INT : {skill.GetRequiredIntelligence(skill.Level + 1)}", _statLabelStyle, GUILayout.Height(20));
+            
+            // STR requirement
+            GUIStyle strStyle = heroStr >= reqStr ? _reqMetStyle : _reqNotMetStyle;
+            GUILayout.Label($"STR: {reqStr}", strStyle, GUILayout.Height(20), GUILayout.Width(75));
+            
+            // DEX requirement
+            GUIStyle dexStyle = heroDex >= reqDex ? _reqMetStyle : _reqNotMetStyle;
+            GUILayout.Label($"DEX: {reqDex}", dexStyle, GUILayout.Height(20), GUILayout.Width(75));
+            
+            // INT requirement
+            GUIStyle intStyle = heroInt >= reqInt ? _reqMetStyle : _reqNotMetStyle;
+            GUILayout.Label($"INT: {reqInt}", intStyle, GUILayout.Height(20), GUILayout.Width(75));
+            
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
@@ -234,9 +275,7 @@ namespace Scripts.Models
 
             GUILayout.BeginHorizontal();
 
-            
-
-            if (skill.CheckSkillRequirement(skill.Level+1, _hero.Hero, false))
+            if (skill.CheckSkillRequirement(nextLevel, _hero.Hero, false))
             {
                 GUI.backgroundColor = _positiveColor;
                 if (GUILayout.Button("Upgrade", GUILayout.Height(25)))

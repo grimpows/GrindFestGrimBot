@@ -63,7 +63,7 @@ namespace Scripts.Models
         private Color _positiveColor = new Color(0.4f, 1f, 0.55f, 1f);
         private Color _weaponColor = new Color(1f, 0.5f, 0.5f, 1f);
         private Color _textLightColor = new Color(0.95f, 0.95f, 0.95f, 1f);
-        private Color _textMutedColor = new Color(0.6f, 0.6f, 0.65f, 1f);
+        private Color _textMutedColor = new Color(0.75f, 0.75f, 0.8f, 1f);
 
         // Layout constants
         private const float STAT_PANEL_WIDTH = 280f;
@@ -410,13 +410,17 @@ namespace Scripts.Models
             GUI.color = color;
             GUILayout.Label($"{total}", _statValueStyle, GUILayout.Width(35));
             
-            GUI.color = _textMutedColor;
-            GUILayout.Label($"({baseVal} +", _statLabelStyle, GUILayout.Width(45));
+            // Base value - more visible gray
+            GUIStyle baseStyle = new GUIStyle(_statLabelStyle);
+            baseStyle.normal.textColor = new Color(0.6f, 0.6f, 0.65f);
+            GUILayout.Label($"({baseVal} +", baseStyle, GUILayout.Width(45));
             
-            GUI.color = _positiveColor;
-            GUILayout.Label($"{bonus})", _statLabelStyle, GUILayout.Width(30));
+            // Bonus value - green
+            GUIStyle bonusStyle = new GUIStyle(_statLabelStyle);
+            bonusStyle.normal.textColor = _positiveColor;
+            GUILayout.Label($"{bonus})", bonusStyle, GUILayout.Width(30));
+            
             GUI.color = oldColor;
-            
             GUILayout.EndHorizontal();
         }
 
@@ -486,37 +490,35 @@ namespace Scripts.Models
             {
                 Color oldColor = GUI.color;
                 GUI.color = _accentColor;
-                
-                // Top border
                 GUI.DrawTexture(new Rect(slotRect.x, slotRect.y, slotRect.width, 2), _barFillTexture);
-                // Bottom border
                 GUI.DrawTexture(new Rect(slotRect.x, slotRect.y + slotRect.height - 2, slotRect.width, 2), _barFillTexture);
-                // Left border
                 GUI.DrawTexture(new Rect(slotRect.x, slotRect.y, 2, slotRect.height), _barFillTexture);
-                // Right border
                 GUI.DrawTexture(new Rect(slotRect.x + slotRect.width - 2, slotRect.y, 2, slotRect.height), _barFillTexture);
-                
                 GUI.color = oldColor;
             }
 
-            // Slot label at top
-            GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 3, slotRect.width - 12, 14), slotLabel, _slotLabelStyle);
+            // Slot label at top - more visible
+            GUIStyle slotNameStyle = new GUIStyle(_slotLabelStyle);
+            slotNameStyle.normal.textColor = new Color(0.65f, 0.7f, 0.8f, 1f);
+            slotNameStyle.fontSize = 9;
+            GUI.Label(new Rect(slotRect.x + 5, slotRect.y + 2, slotRect.width - 10, 14), slotLabel, slotNameStyle);
 
             if (!isEmpty)
             {
                 // Item name with proper color
-                string displayName = TruncateString(item.Name, 15);
+                string displayName = TruncateString(item.Name, 16);
                 Color nameColor = item.Behaviour?.Item?.Weapon != null ? _weaponColor : _armorColor;
                 
                 GUIStyle nameStyle = new GUIStyle(_slotItemNameStyle);
                 nameStyle.normal.textColor = nameColor;
-                GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 18, slotRect.width - 12, 18), displayName, nameStyle);
+                nameStyle.fontSize = 10;
+                GUI.Label(new Rect(slotRect.x + 5, slotRect.y + 16, slotRect.width - 10, 18), displayName, nameStyle);
 
                 // Stats preview
                 string statPreview = GetItemStatPreview(item);
                 if (!string.IsNullOrEmpty(statPreview))
                 {
-                    GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 38, slotRect.width - 12, 16), statPreview, _slotStatStyle);
+                    GUI.Label(new Rect(slotRect.x + 5, slotRect.y + 34, slotRect.width - 10, 16), statPreview, _slotStatStyle);
                 }
 
                 // Durability bar
@@ -528,8 +530,9 @@ namespace Scripts.Models
             else
             {
                 GUIStyle emptyStyle = new GUIStyle(_slotItemNameStyle);
-                emptyStyle.normal.textColor = new Color(0.35f, 0.35f, 0.4f);
-                GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 28, slotRect.width - 12, 18), "Empty", emptyStyle);
+                emptyStyle.normal.textColor = new Color(0.4f, 0.4f, 0.45f);
+                emptyStyle.fontSize = 10;
+                GUI.Label(new Rect(slotRect.x + 5, slotRect.y + 26, slotRect.width - 10, 18), "Empty", emptyStyle);
             }
 
             // Hover detection
