@@ -28,13 +28,20 @@ namespace Scripts.Models
         private GUIStyle _statValueStyle;
         private GUIStyle _slotStyle;
         private GUIStyle _slotEmptyStyle;
+        private GUIStyle _slotHoverStyle;
         private GUIStyle _tooltipStyle;
+        private GUIStyle _tooltipTitleStyle;
+        private GUIStyle _tooltipStatStyle;
         private GUIStyle _sectionStyle;
+        private GUIStyle _slotLabelStyle;
+        private GUIStyle _slotItemNameStyle;
+        private GUIStyle _slotStatStyle;
 
         // Textures
         private Texture2D _windowBgTexture;
         private Texture2D _slotBgTexture;
         private Texture2D _slotEmptyBgTexture;
+        private Texture2D _slotHoverBgTexture;
         private Texture2D _sectionBgTexture;
         private Texture2D _tooltipBgTexture;
         private Texture2D _barBgTexture;
@@ -42,18 +49,21 @@ namespace Scripts.Models
 
         // Colors
         private Color _windowBgColor = new Color(0.08f, 0.08f, 0.1f, 0.98f);
-        private Color _accentColor = new Color(0.85f, 0.65f, 0.25f, 1f);
-        private Color _slotEquippedColor = new Color(0.18f, 0.28f, 0.4f, 0.95f);
-        private Color _slotEmptyColor = new Color(0.12f, 0.12f, 0.15f, 0.9f);
-        private Color _sectionColor = new Color(0.1f, 0.1f, 0.12f, 0.95f);
-        private Color _healthColor = new Color(0.85f, 0.25f, 0.25f, 1f);
-        private Color _manaColor = new Color(0.25f, 0.45f, 0.9f, 1f);
-        private Color _armorColor = new Color(0.65f, 0.65f, 0.75f, 1f);
-        private Color _strColor = new Color(0.95f, 0.45f, 0.35f, 1f);
-        private Color _dexColor = new Color(0.35f, 0.95f, 0.45f, 1f);
-        private Color _intColor = new Color(0.45f, 0.65f, 0.98f, 1f);
-        private Color _positiveColor = new Color(0.3f, 0.9f, 0.45f, 1f);
-        private Color _weaponColor = new Color(1f, 0.4f, 0.4f, 1f);
+        private Color _accentColor = new Color(0.95f, 0.75f, 0.3f, 1f);
+        private Color _slotEquippedColor = new Color(0.15f, 0.22f, 0.32f, 0.98f);
+        private Color _slotEmptyColor = new Color(0.1f, 0.1f, 0.12f, 0.95f);
+        private Color _slotHoverColor = new Color(0.22f, 0.32f, 0.45f, 0.98f);
+        private Color _sectionColor = new Color(0.08f, 0.08f, 0.1f, 0.95f);
+        private Color _healthColor = new Color(0.9f, 0.3f, 0.3f, 1f);
+        private Color _manaColor = new Color(0.3f, 0.5f, 0.95f, 1f);
+        private Color _armorColor = new Color(0.7f, 0.7f, 0.8f, 1f);
+        private Color _strColor = new Color(1f, 0.5f, 0.4f, 1f);
+        private Color _dexColor = new Color(0.4f, 1f, 0.5f, 1f);
+        private Color _intColor = new Color(0.5f, 0.7f, 1f, 1f);
+        private Color _positiveColor = new Color(0.4f, 1f, 0.55f, 1f);
+        private Color _weaponColor = new Color(1f, 0.5f, 0.5f, 1f);
+        private Color _textLightColor = new Color(0.95f, 0.95f, 0.95f, 1f);
+        private Color _textMutedColor = new Color(0.6f, 0.6f, 0.65f, 1f);
 
         // Layout constants
         private const float STAT_PANEL_WIDTH = 280f;
@@ -63,6 +73,7 @@ namespace Scripts.Models
 
         // Hover tracking
         private HeroUI_EquipedItem _hoveredItem = null;
+        private EquipmentSlot? _hoveredSlot = null;
 
         public void OnStart(Hero_Base hero, KeyCode toggleShowKey, int windowID)
         {
@@ -92,6 +103,7 @@ namespace Scripts.Models
                 }
                 
                 _hoveredItem = null;
+                _hoveredSlot = null;
                 _windowRect = GUI.Window(_windowID, _windowRect, DrawHeroWindow, "", _windowStyle);
             }
         }
@@ -107,9 +119,10 @@ namespace Scripts.Models
             _windowBgTexture = CreateTexture(_windowBgColor);
             _slotBgTexture = CreateTexture(_slotEquippedColor);
             _slotEmptyBgTexture = CreateTexture(_slotEmptyColor);
+            _slotHoverBgTexture = CreateTexture(_slotHoverColor);
             _sectionBgTexture = CreateTexture(_sectionColor);
-            _tooltipBgTexture = CreateTexture(new Color(0.02f, 0.02f, 0.04f, 0.98f));
-            _barBgTexture = CreateTexture(new Color(0.15f, 0.15f, 0.18f, 0.9f));
+            _tooltipBgTexture = CreateTexture(new Color(0.05f, 0.05f, 0.08f, 0.98f));
+            _barBgTexture = CreateTexture(new Color(0.12f, 0.12f, 0.15f, 0.95f));
             _barFillTexture = CreateTexture(Color.white);
         }
 
@@ -136,20 +149,20 @@ namespace Scripts.Models
             _subtitleStyle.fontSize = 13;
             _subtitleStyle.fontStyle = FontStyle.Bold;
             _subtitleStyle.alignment = TextAnchor.MiddleLeft;
-            _subtitleStyle.normal.textColor = Color.white;
+            _subtitleStyle.normal.textColor = _textLightColor;
 
             // Stat Label Style
             _statLabelStyle = new GUIStyle(GUI.skin.label);
             _statLabelStyle.fontSize = 11;
             _statLabelStyle.alignment = TextAnchor.MiddleLeft;
-            _statLabelStyle.normal.textColor = new Color(0.75f, 0.75f, 0.75f);
+            _statLabelStyle.normal.textColor = _textMutedColor;
 
             // Stat Value Style
             _statValueStyle = new GUIStyle(GUI.skin.label);
             _statValueStyle.fontSize = 11;
             _statValueStyle.fontStyle = FontStyle.Bold;
             _statValueStyle.alignment = TextAnchor.MiddleRight;
-            _statValueStyle.normal.textColor = Color.white;
+            _statValueStyle.normal.textColor = _textLightColor;
 
             // Slot Style
             _slotStyle = new GUIStyle(GUI.skin.box);
@@ -159,14 +172,50 @@ namespace Scripts.Models
             _slotEmptyStyle = new GUIStyle(GUI.skin.box);
             _slotEmptyStyle.normal.background = _slotEmptyBgTexture;
 
+            // Slot Hover Style
+            _slotHoverStyle = new GUIStyle(GUI.skin.box);
+            _slotHoverStyle.normal.background = _slotHoverBgTexture;
+
+            // Slot Label Style (for slot names like "Head", "Chest")
+            _slotLabelStyle = new GUIStyle(GUI.skin.label);
+            _slotLabelStyle.fontSize = 10;
+            _slotLabelStyle.fontStyle = FontStyle.Bold;
+            _slotLabelStyle.alignment = TextAnchor.UpperLeft;
+            _slotLabelStyle.normal.textColor = new Color(0.5f, 0.55f, 0.65f, 1f);
+
+            // Slot Item Name Style
+            _slotItemNameStyle = new GUIStyle(GUI.skin.label);
+            _slotItemNameStyle.fontSize = 11;
+            _slotItemNameStyle.fontStyle = FontStyle.Bold;
+            _slotItemNameStyle.alignment = TextAnchor.UpperLeft;
+            _slotItemNameStyle.normal.textColor = _textLightColor;
+
+            // Slot Stat Style
+            _slotStatStyle = new GUIStyle(GUI.skin.label);
+            _slotStatStyle.fontSize = 10;
+            _slotStatStyle.alignment = TextAnchor.UpperLeft;
+            _slotStatStyle.normal.textColor = _accentColor;
+
             // Tooltip Style
             _tooltipStyle = new GUIStyle(GUI.skin.box);
             _tooltipStyle.normal.background = _tooltipBgTexture;
-            _tooltipStyle.normal.textColor = Color.white;
-            _tooltipStyle.alignment = TextAnchor.UpperLeft;
-            _tooltipStyle.padding = new RectOffset(12, 12, 10, 10);
-            _tooltipStyle.fontSize = 11;
-            _tooltipStyle.wordWrap = true;
+            _tooltipStyle.border = new RectOffset(1, 1, 1, 1);
+            _tooltipStyle.padding = new RectOffset(0, 0, 0, 0);
+
+            // Tooltip Title Style
+            _tooltipTitleStyle = new GUIStyle(GUI.skin.label);
+            _tooltipTitleStyle.fontSize = 13;
+            _tooltipTitleStyle.fontStyle = FontStyle.Bold;
+            _tooltipTitleStyle.alignment = TextAnchor.MiddleLeft;
+            _tooltipTitleStyle.normal.textColor = _accentColor;
+            _tooltipTitleStyle.padding = new RectOffset(0, 0, 0, 0);
+
+            // Tooltip Stat Style
+            _tooltipStatStyle = new GUIStyle(GUI.skin.label);
+            _tooltipStatStyle.fontSize = 11;
+            _tooltipStatStyle.alignment = TextAnchor.MiddleLeft;
+            _tooltipStatStyle.normal.textColor = _textLightColor;
+            _tooltipStatStyle.padding = new RectOffset(0, 0, 0, 0);
 
             // Section Style
             _sectionStyle = new GUIStyle(GUI.skin.box);
@@ -247,7 +296,6 @@ namespace Scripts.Models
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            // Separator line
             Rect sepRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(3));
             Color oldColor = GUI.color;
             GUI.color = _accentColor;
@@ -259,17 +307,15 @@ namespace Scripts.Models
         {
             GUILayout.BeginVertical(_sectionStyle, GUILayout.Width(STAT_PANEL_WIDTH), GUILayout.ExpandHeight(true));
 
-            // Character Info
             DrawSectionHeader("CHARACTER");
             
             int level = _hero?.Character?.Level?.Level ?? 0;
             string className = _hero?.Hero?.Class?.name ?? "Unknown";
             
             DrawStatRow("Level", $"{level}", _accentColor);
-            DrawStatRow("Class", className, Color.white);
+            DrawStatRow("Class", className, _textLightColor);
             GUILayout.Space(12);
 
-            // Resources
             DrawSectionHeader("RESOURCES");
             
             int currentHealth = _hero?.Character?.Health?.CurrentHealth ?? 0;
@@ -282,7 +328,6 @@ namespace Scripts.Models
             DrawResourceBar("Mana", (int)currentMana, (int)maxMana, _manaColor);
             GUILayout.Space(12);
 
-            // Combat Stats
             DrawSectionHeader("COMBAT");
             
             int armor = _hero?.Character?.Combat?.Armor ?? 0;
@@ -293,7 +338,6 @@ namespace Scripts.Models
             DrawStatRow("Equipment Bonus", $"+{equipmentArmor}", _positiveColor);
             GUILayout.Space(12);
 
-            // Attributes
             DrawSectionHeader("ATTRIBUTES");
             
             int str = _hero?.Character?.Strength ?? 0;
@@ -320,7 +364,7 @@ namespace Scripts.Models
         {
             GUILayout.Label(title, _subtitleStyle, GUILayout.Height(22));
             Rect sepRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(1));
-            GUI.color = new Color(0.35f, 0.35f, 0.4f);
+            GUI.color = new Color(0.3f, 0.35f, 0.45f);
             GUI.DrawTexture(sepRect, _barFillTexture);
             GUI.color = Color.white;
             GUILayout.Space(6);
@@ -336,7 +380,6 @@ namespace Scripts.Models
             GUI.color = oldColor;
             GUILayout.EndHorizontal();
 
-            // Progress bar
             Rect barRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(10));
             GUI.DrawTexture(barRect, _barBgTexture);
 
@@ -367,7 +410,7 @@ namespace Scripts.Models
             GUI.color = color;
             GUILayout.Label($"{total}", _statValueStyle, GUILayout.Width(35));
             
-            GUI.color = new Color(0.55f, 0.55f, 0.55f);
+            GUI.color = _textMutedColor;
             GUILayout.Label($"({baseVal} +", _statLabelStyle, GUILayout.Width(45));
             
             GUI.color = _positiveColor;
@@ -392,22 +435,11 @@ namespace Scripts.Models
 
         private void DrawEquipmentGrid()
         {
-            // Row 1: Accessories top
             DrawEquipmentRow(EquipmentSlot.Hair, "Hair", EquipmentSlot.Head, "Head", EquipmentSlot.FacialHair, "Facial");
-
-            // Row 2: Shoulders + Chest
             DrawEquipmentRow(EquipmentSlot.LeftShoulder, "L.Shoulder", EquipmentSlot.Chest, "Chest", EquipmentSlot.RightShoulder, "R.Shoulder");
-
-            // Row 3: Arms + Ring
             DrawEquipmentRow(EquipmentSlot.LeftArm, "L.Arm", EquipmentSlot.Ring, "Ring", EquipmentSlot.RightArm, "R.Arm");
-
-            // Row 4: Gloves + Legs
             DrawEquipmentRow(EquipmentSlot.LeftGlove, "L.Glove", EquipmentSlot.Legs, "Legs", EquipmentSlot.RightGlove, "R.Glove");
-
-            // Row 5: Weapons
             DrawEquipmentRowWithCenter(EquipmentSlot.LeftHand, "Main Hand", EquipmentSlot.RightHand, "Off Hand");
-
-            // Row 6: Feet
             DrawEquipmentRowWithCenter(EquipmentSlot.LeftFeet, "L.Foot", EquipmentSlot.RightFeet, "R.Foot");
         }
 
@@ -441,32 +473,50 @@ namespace Scripts.Models
         {
             var item = _equipedItems.ContainsKey(slot) ? _equipedItems[slot] : null;
             bool isEmpty = item == null || item.Name == "Empty";
-            GUIStyle style = isEmpty ? _slotEmptyStyle : _slotStyle;
-
+            
             Rect slotRect = GUILayoutUtility.GetRect(SLOT_WIDTH, SLOT_HEIGHT);
+            bool isHovered = slotRect.Contains(Event.current.mousePosition);
+            
+            // Choose style based on state
+            GUIStyle style = isHovered ? _slotHoverStyle : (isEmpty ? _slotEmptyStyle : _slotStyle);
             GUI.Box(slotRect, "", style);
 
+            // Draw highlight border on hover
+            if (isHovered)
+            {
+                Color oldColor = GUI.color;
+                GUI.color = _accentColor;
+                
+                // Top border
+                GUI.DrawTexture(new Rect(slotRect.x, slotRect.y, slotRect.width, 2), _barFillTexture);
+                // Bottom border
+                GUI.DrawTexture(new Rect(slotRect.x, slotRect.y + slotRect.height - 2, slotRect.width, 2), _barFillTexture);
+                // Left border
+                GUI.DrawTexture(new Rect(slotRect.x, slotRect.y, 2, slotRect.height), _barFillTexture);
+                // Right border
+                GUI.DrawTexture(new Rect(slotRect.x + slotRect.width - 2, slotRect.y, 2, slotRect.height), _barFillTexture);
+                
+                GUI.color = oldColor;
+            }
+
             // Slot label at top
-            GUI.color = new Color(0.5f, 0.5f, 0.55f);
-            GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 3, slotRect.width - 12, 14), slotLabel, _statLabelStyle);
-            GUI.color = Color.white;
+            GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 3, slotRect.width - 12, 14), slotLabel, _slotLabelStyle);
 
             if (!isEmpty)
             {
-                // Item name
+                // Item name with proper color
                 string displayName = TruncateString(item.Name, 15);
                 Color nameColor = item.Behaviour?.Item?.Weapon != null ? _weaponColor : _armorColor;
-                GUI.color = nameColor;
-                GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 20, slotRect.width - 12, 18), displayName, _statLabelStyle);
-                GUI.color = Color.white;
+                
+                GUIStyle nameStyle = new GUIStyle(_slotItemNameStyle);
+                nameStyle.normal.textColor = nameColor;
+                GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 18, slotRect.width - 12, 18), displayName, nameStyle);
 
                 // Stats preview
                 string statPreview = GetItemStatPreview(item);
                 if (!string.IsNullOrEmpty(statPreview))
                 {
-                    GUI.color = _accentColor;
-                    GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 38, slotRect.width - 12, 16), statPreview, _statLabelStyle);
-                    GUI.color = Color.white;
+                    GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 38, slotRect.width - 12, 16), statPreview, _slotStatStyle);
                 }
 
                 // Durability bar
@@ -477,15 +527,16 @@ namespace Scripts.Models
             }
             else
             {
-                GUI.color = new Color(0.4f, 0.4f, 0.45f);
-                GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 28, slotRect.width - 12, 18), "Empty", _statLabelStyle);
-                GUI.color = Color.white;
+                GUIStyle emptyStyle = new GUIStyle(_slotItemNameStyle);
+                emptyStyle.normal.textColor = new Color(0.35f, 0.35f, 0.4f);
+                GUI.Label(new Rect(slotRect.x + 6, slotRect.y + 28, slotRect.width - 12, 18), "Empty", emptyStyle);
             }
 
             // Hover detection
-            if (slotRect.Contains(Event.current.mousePosition))
+            if (isHovered)
             {
                 _hoveredItem = item;
+                _hoveredSlot = slot;
             }
         }
 
@@ -520,66 +571,187 @@ namespace Scripts.Models
 
         private void DrawHoveredTooltip()
         {
-            if (_hoveredItem == null) return;
+            if (_hoveredItem == null || _hoveredSlot == null) return;
 
             Vector2 mousePos = Event.current.mousePosition;
-            float tooltipWidth = 200f;
+            float tooltipWidth = 220f;
             float tooltipX = mousePos.x + 20;
-            float tooltipY = mousePos.y + 15;
+            float tooltipY = mousePos.y + 10;
 
-            if (tooltipX + tooltipWidth > _windowRect.width - 20)
+            // Calculate content and height
+            var tooltipData = BuildTooltipData(_hoveredItem, _hoveredSlot.Value);
+            float tooltipHeight = CalculateTooltipHeight(tooltipData);
+
+            // Clamp position
+            if (tooltipX + tooltipWidth > _windowRect.width - 15)
                 tooltipX = mousePos.x - tooltipWidth - 15;
+            if (tooltipY + tooltipHeight > _windowRect.height - 15)
+                tooltipY = _windowRect.height - tooltipHeight - 15;
 
-            string content = BuildTooltipContent(_hoveredItem);
-            int lineCount = content.Split('\n').Length;
-            float tooltipHeight = Mathf.Max(80, lineCount * 15 + 25);
+            // Draw tooltip background with border
+            Rect tooltipRect = new Rect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
+            
+            // Border
+            Color oldColor = GUI.color;
+            GUI.color = _accentColor;
+            GUI.DrawTexture(new Rect(tooltipRect.x - 1, tooltipRect.y - 1, tooltipRect.width + 2, tooltipRect.height + 2), _barFillTexture);
+            GUI.color = oldColor;
+            
+            // Background
+            GUI.Box(tooltipRect, "", _tooltipStyle);
 
-            if (tooltipY + tooltipHeight > _windowRect.height - 20)
-                tooltipY = _windowRect.height - tooltipHeight - 20;
-
-            GUI.Box(new Rect(tooltipX, tooltipY, tooltipWidth, tooltipHeight), content, _tooltipStyle);
+            // Content
+            DrawTooltipContent(tooltipRect, tooltipData);
         }
 
-        private string BuildTooltipContent(HeroUI_EquipedItem item)
+        private class TooltipData
         {
-            if (item == null || item.Name == "Empty")
-                return $"{item?.Slot}\n\nEmpty Slot";
+            public string Title;
+            public string SlotName;
+            public List<(string Label, string Value, Color Color)> Stats = new List<(string, string, Color)>();
+            public float DurabilityPct;
+            public bool IsEmpty;
+        }
 
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine(item.Name);
-            sb.AppendLine($"Slot: {item.Slot}");
-            sb.AppendLine("────────────────");
+        private TooltipData BuildTooltipData(HeroUI_EquipedItem item, EquipmentSlot slot)
+        {
+            var data = new TooltipData();
+            data.SlotName = slot.ToString();
+            data.IsEmpty = item == null || item.Name == "Empty";
+
+            if (data.IsEmpty)
+            {
+                data.Title = "Empty Slot";
+                return data;
+            }
+
+            data.Title = item.Name;
+            data.DurabilityPct = (float)item.Durability;
 
             if (item.Behaviour?.Item != null)
             {
                 var itemData = item.Behaviour.Item;
 
                 if (itemData.Weapon != null)
-                    sb.AppendLine($"DPS: {itemData.Weapon.DamagePerSecond:F1}");
+                    data.Stats.Add(("DPS", $"{itemData.Weapon.DamagePerSecond:F1}", _weaponColor));
 
                 if (itemData.Armor != null)
-                    sb.AppendLine($"Armor: {itemData.Armor.Armor}");
+                    data.Stats.Add(("Armor", $"{itemData.Armor.Armor}", _armorColor));
 
                 if (itemData.BonusStrength > 0)
-                    sb.AppendLine($"+{itemData.BonusStrength} Strength");
+                    data.Stats.Add(("Strength", $"+{itemData.BonusStrength}", _strColor));
 
                 if (itemData.BonusDexterity > 0)
-                    sb.AppendLine($"+{itemData.BonusDexterity} Dexterity");
+                    data.Stats.Add(("Dexterity", $"+{itemData.BonusDexterity}", _dexColor));
 
                 if (itemData.BonusIntelligence > 0)
-                    sb.AppendLine($"+{itemData.BonusIntelligence} Intelligence");
+                    data.Stats.Add(("Intelligence", $"+{itemData.BonusIntelligence}", _intColor));
 
                 if (itemData.Level?.Level > 0)
-                    sb.AppendLine($"Item Level: {itemData.Level.Level}");
+                    data.Stats.Add(("Item Level", $"{itemData.Level.Level}", _textMutedColor));
             }
 
-            if (item.Durability > 0)
+            return data;
+        }
+
+        private float CalculateTooltipHeight(TooltipData data)
+        {
+            float height = 15; // Padding top
+            height += 22; // Title
+            height += 18; // Slot name
+            height += 10; // Separator + spacing
+            
+            if (data.IsEmpty)
             {
-                float pct = (float)item.Durability * 100f;
-                sb.AppendLine($"Durability: {pct:F0}%");
+                height += 20; // "No item equipped" text
             }
+            else
+            {
+                height += data.Stats.Count * 20; // Stats
+                if (data.DurabilityPct > 0)
+                    height += 25; // Durability bar
+            }
+            
+            height += 12; // Padding bottom
+            return height;
+        }
 
-            return sb.ToString().TrimEnd();
+        private void DrawTooltipContent(Rect rect, TooltipData data)
+        {
+            float y = rect.y + 12;
+            float padding = 12;
+
+            // Title
+            GUI.Label(new Rect(rect.x + padding, y, rect.width - padding * 2, 22), data.Title, _tooltipTitleStyle);
+            y += 22;
+
+            // Slot name
+            GUIStyle slotStyle = new GUIStyle(_tooltipStatStyle);
+            slotStyle.normal.textColor = _textMutedColor;
+            GUI.Label(new Rect(rect.x + padding, y, rect.width - padding * 2, 16), data.SlotName, slotStyle);
+            y += 18;
+
+            // Separator line
+            GUI.color = new Color(0.3f, 0.35f, 0.45f);
+            GUI.DrawTexture(new Rect(rect.x + padding, y, rect.width - padding * 2, 1), _barFillTexture);
+            GUI.color = Color.white;
+            y += 8;
+
+            if (data.IsEmpty)
+            {
+                GUIStyle emptyStyle = new GUIStyle(_tooltipStatStyle);
+                emptyStyle.normal.textColor = _textMutedColor;
+                emptyStyle.fontStyle = FontStyle.Italic;
+                GUI.Label(new Rect(rect.x + padding, y, rect.width - padding * 2, 20), "No item equipped", emptyStyle);
+            }
+            else
+            {
+                // Stats
+                foreach (var stat in data.Stats)
+                {
+                    // Label
+                    GUI.Label(new Rect(rect.x + padding, y, 100, 18), stat.Label, _tooltipStatStyle);
+                    
+                    // Value with color
+                    GUIStyle valueStyle = new GUIStyle(_tooltipStatStyle);
+                    valueStyle.normal.textColor = stat.Color;
+                    valueStyle.fontStyle = FontStyle.Bold;
+                    valueStyle.alignment = TextAnchor.MiddleRight;
+                    GUI.Label(new Rect(rect.x + padding, y, rect.width - padding * 2, 18), stat.Value, valueStyle);
+                    
+                    y += 20;
+                }
+
+                // Durability bar
+                if (data.DurabilityPct > 0)
+                {
+                    y += 5;
+                    float barWidth = rect.width - padding * 2;
+                    float barHeight = 8;
+                    
+                    // Label
+                    GUI.Label(new Rect(rect.x + padding, y, 70, 14), "Durability", _tooltipStatStyle);
+                    
+                    // Percentage
+                    float pct = data.DurabilityPct * 100f;
+                    Color durColor = pct > 50 ? _positiveColor : pct > 25 ? new Color(0.95f, 0.85f, 0.25f) : _healthColor;
+                    GUIStyle pctStyle = new GUIStyle(_tooltipStatStyle);
+                    pctStyle.normal.textColor = durColor;
+                    pctStyle.alignment = TextAnchor.MiddleRight;
+                    GUI.Label(new Rect(rect.x + padding, y, barWidth, 14), $"{pct:F0}%", pctStyle);
+                    
+                    y += 16;
+                    
+                    // Bar background
+                    Rect barRect = new Rect(rect.x + padding, y, barWidth, barHeight);
+                    GUI.DrawTexture(barRect, _barBgTexture);
+                    
+                    // Bar fill
+                    GUI.color = durColor;
+                    GUI.DrawTexture(new Rect(barRect.x, barRect.y, barWidth * data.DurabilityPct, barHeight), _barFillTexture);
+                    GUI.color = Color.white;
+                }
+            }
         }
 
         private string TruncateString(string str, int maxLength)

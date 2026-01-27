@@ -213,13 +213,19 @@ namespace Scripts.Models
             GUILayout.Label(skill.name, _titleStyle, GUILayout.Height(30));
             GUILayout.Space(5);
 
-            DrawLevelBar(skill.Level, skill.MaxLevel);
+            DrawLevelBar(skill.Level, skill.MaxLevel == 1 ? skill.MaxLevel : 100);
             GUILayout.Space(5);
 
             GUILayout.BeginVertical(GUI.skin.box);
             GUILayout.Label($"Level: {skill.Level}", _statLabelStyle, GUILayout.Height(20));
             GUILayout.Label($"Command: {skill.Command}", _statLabelStyle, GUILayout.Height(20));
             GUILayout.Label($"Range: {skill.Range}m", _statLabelStyle, GUILayout.Height(20));
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"STR : {skill.GetRequiredStrength(skill.Level + 1)}", _statLabelStyle, GUILayout.Height(20));
+            GUILayout.Label($"DEX : {skill.GetRequiredDexterity(skill.Level + 1)}", _statLabelStyle, GUILayout.Height(20));
+            GUILayout.Label($"INT : {skill.GetRequiredIntelligence(skill.Level + 1)}", _statLabelStyle, GUILayout.Height(20));
+            GUILayout.EndHorizontal();
+
             GUILayout.EndVertical();
 
             GUILayout.Space(5);
