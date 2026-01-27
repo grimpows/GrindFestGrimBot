@@ -23,6 +23,9 @@ namespace Scripts.Models
         public DateTime LastItemTargetTime = DateTime.MinValue;
         public int TargetItemTimeout = 10;
 
+        public int MaxWeaponToKeep = 5;
+        public int MaxArmorPerSlotToKeep = 5;
+
 
 
 
@@ -46,6 +49,8 @@ namespace Scripts.Models
             RemoveUsedHealthPotFromInventory();
 
             RemoveUnusedWeapon();
+
+            RemoveUnusedArmor();
 
             ScanForItems();
 
@@ -142,7 +147,7 @@ namespace Scripts.Models
             ScannedItems = ScannedItems.Except(IgnoredItems).ToList();
 
             //exept weapon that is not best that 5 best in inventory
-            float averageDPS = CalculateAverageDPSFor5BestWeaponsInInventory();
+            float averageDPS = CalculateAverageDPSForBestWeaponsInInventory();
 
             ScannedItems = ScannedItems.Where(item =>
             {
@@ -153,6 +158,17 @@ namespace Scripts.Models
                         return false;
                     }
                 }
+
+                if (item.Armor != null)
+                {
+                    double averageArmorForSlot = CalculateAverageArmorForBestArmorInInventoryPerSlot(item.Equipable.Slot);
+                    if (item.Armor.Armor < averageArmorForSlot)
+                    {
+                        return false;
+                    }
+                }
+
+
                 return true;
             }).ToList();
 
@@ -202,7 +218,7 @@ namespace Scripts.Models
             }
         }
 
-        float CalculateAverageDPSFor5BestWeaponsInInventory()
+        float CalculateAverageDPSForBestWeaponsInInventory()
         {
             if (_hero.Character.Inventory.Items.Count(i => i.Weapon != null) == 0)
                 return 0f;
@@ -211,7 +227,7 @@ namespace Scripts.Models
             var weaponDPS = _hero.Character.Inventory.Items
                 .Where(i => i.Weapon != null && !i.name.ToLower().Contains("hammer"))
                 .OrderByDescending(i => i.Weapon.DamagePerSecond)
-                .Take(5)
+                .Take(MaxWeaponToKeep)
                 .Average(i => i.Weapon.DamagePerSecond);
 
             return weaponDPS;
@@ -225,15 +241,67 @@ namespace Scripts.Models
                 .OrderByDescending(item => item.Weapon.DamagePerSecond)
                 .ToList();
 
-            if (itemsToRemove.Count <= 5)
+            if (itemsToRemove.Count <= MaxWeaponToKeep)
                 return;
 
-            for (int i = 5; i < itemsToRemove.Count; i++)
+            for (int i = MaxWeaponToKeep; i < itemsToRemove.Count; i++)
             {
                 _hero.Drop(itemsToRemove[i]);
             }
-
         }
+
+        double CalculateAverageArmorForBestArmorInInventoryPerSlot(EquipmentSlot slot)
+        {
+            var armorItemsInSlot = _hero.Character.Inventory.Items
+                .Where(i => i.Armor != null && i.Equipable.Slot == slot)
+                .OrderByDescending(i => i.Armor.Armor)
+                .Take(MaxArmorPerSlotToKeep)
+                .ToList();
+            if (armorItemsInSlot.Count == 0)
+                return 0;
+            var averageArmor = armorItemsInSlot
+                .Average(i => i.Armor.Armor);
+
+            return averageArmor;
+        }
+
+        public void RemoveUnusedArmor()
+        {
+            var armorItems = _hero.Character.Inventory.Items
+                .Where(item => item.Armor != null)
+                .ToList();
+            var armorItemsBySlot = armorItems
+                .GroupBy(item => item.Equipable.Slot)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(item => item.Armor.Armor)
+                .ToList());
+
+            foreach (var slot in armorItemsBySlot.Keys)
+            {
+                var itemsInSlot = armorItemsBySlot[slot];
+                if (itemsInSlot.Count <= MaxArmorPerSlotToKeep)
+                    continue;
+                for (int i = MaxArmorPerSlotToKeep; i < itemsInSlot.Count; i++)
+                {
+                    _hero.Drop(itemsInSlot[i]);
+                }
+            }
+        }
+
+
+
+        public Predicate<ItemBehaviour> FilterCombatWeapon = (ItemBehaviour item) =>
+        {
+            if (item.Weapon != null)
+            {
+                // Example: Only loot swords and axes
+                string itemName = item.name.ToLower();
+                if (itemName.Contains("sword") || itemName.Contains("axe") || itemName.Contains("bow") || itemName.Contains("dagger"))
+                {
+                    return true;
+                }
+            }
+            return false;
+        };
 
     }
 }
