@@ -294,6 +294,22 @@ namespace Scripts.Models
             GUILayout.FlexibleSpace();
             GUILayout.Label($"{_hero.name}", _titleStyle, GUILayout.Height(35));
             GUILayout.FlexibleSpace();
+
+            // Close button
+            Color dangerColor = new Color(1f, 0.4f, 0.4f, 1f);
+            GUI.backgroundColor = dangerColor;
+            GUIStyle closeStyle = new GUIStyle(GUI.skin.button);
+            closeStyle.fontSize = 16;
+            closeStyle.fontStyle = FontStyle.Bold;
+            closeStyle.normal.textColor = Color.white;
+            closeStyle.hover.textColor = Color.white;
+            
+            if (GUILayout.Button("X", closeStyle, GUILayout.Width(30), GUILayout.Height(30)))
+            {
+                _isShow = false;
+            }
+            GUI.backgroundColor = Color.white;
+
             GUILayout.EndHorizontal();
 
             Rect sepRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(3));

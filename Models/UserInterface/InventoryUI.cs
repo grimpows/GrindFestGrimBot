@@ -273,6 +273,22 @@ namespace Scripts.Models
             GUI.backgroundColor = _accentColor;
             GUILayout.Box($"{_filteredItemsCache.Count} items", GUILayout.Width(80), GUILayout.Height(25));
             GUI.backgroundColor = Color.white;
+
+            GUILayout.Space(10);
+
+            // Close button
+            GUI.backgroundColor = _dangerColor;
+            GUIStyle closeStyle = new GUIStyle(GUI.skin.button);
+            closeStyle.fontSize = 14;
+            closeStyle.fontStyle = FontStyle.Bold;
+            closeStyle.normal.textColor = Color.white;
+            closeStyle.hover.textColor = Color.white;
+            
+            if (GUILayout.Button("X", closeStyle, GUILayout.Width(28), GUILayout.Height(25)))
+            {
+                _isShow = false;
+            }
+            GUI.backgroundColor = Color.white;
             
             GUILayout.EndHorizontal();
 

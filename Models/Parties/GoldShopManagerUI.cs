@@ -66,15 +66,17 @@ namespace Scripts.Models
                 e.Use();
             }
 
+            if (!_stylesInitialized)
+            {
+                InitializeStyles();
+                _stylesInitialized = true;
+            }
+
             DrawShopButton();
 
             if (_isShow)
             {
-                if (!_stylesInitialized)
-                {
-                    InitializeStyles();
-                    _stylesInitialized = true;
-                }
+                
                 _windowRect = GUI.Window(WindowsConstants.GOLD_SHOP_MANAGER_UI_ID, _windowRect, DrawWindow, "", _windowStyle);
             }
         }
@@ -115,7 +117,7 @@ namespace Scripts.Models
             _labelStyle = new GUIStyle(GUI.skin.label);
             _labelStyle.fontSize = 11;
             _labelStyle.alignment = TextAnchor.MiddleLeft;
-            _labelStyle.normal.textColor = _textMutedColor;
+            _labelStyle.normal.textColor = _goldColor;
 
             // Value Style
             _valueStyle = new GUIStyle(GUI.skin.label);
@@ -169,12 +171,14 @@ namespace Scripts.Models
             Rect buttonRect = new Rect(buttonX, buttonY, SHOP_BUTTON_SIZE, SHOP_BUTTON_SIZE);
 
             Color originalBgColor = GUI.backgroundColor;
+            Color orignalCntColor = GUI.contentColor;
             GUI.backgroundColor = _isShow ? _positiveColor : _goldColor;
+            GUI.contentColor = _isShow ? _accentColor : Color.white;
+
 
             GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
             buttonStyle.fontSize = 22;
             buttonStyle.fontStyle = FontStyle.Bold;
-            buttonStyle.normal.textColor = Color.white;
 
             if (GUI.Button(buttonRect, "$", buttonStyle))
             {

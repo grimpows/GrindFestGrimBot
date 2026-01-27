@@ -25,7 +25,7 @@ class MyParty : Party_Base
     {
         _worldUI?.OnGUI(SelectedHero, 15);
         _goldShopManager?.OnGUI();
-
+        
     }
 
     public void Update()
@@ -76,13 +76,15 @@ class MyParty : Party_Base
         CreateHero(firstHero.Name, firstHero.ClassName).StartBotting();
     }
 
+    
+
     //public bool IsAnyHeroReachedLevelCap()
     //{
 
     //}
 
 
-    
+
 
 }
 

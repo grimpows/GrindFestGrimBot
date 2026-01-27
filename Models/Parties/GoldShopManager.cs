@@ -40,6 +40,17 @@ namespace Scripts.Models
                 return;
             }
 
+            if (this.Party.Party.LevelCap == GetMaxHeroLevel() && AutoBuyGoldShopItemSelection.ContainsKey("LevelCap"))
+            {
+
+                AutoBuyGoldShopItemSelection["LevelCap"] = true;
+
+            }
+            else
+            {
+                AutoBuyGoldShopItemSelection["LevelCap"] = false;
+            }
+
             BuyGoldShopItems();
         }
 
@@ -77,8 +88,21 @@ namespace Scripts.Models
                     AutoBuyGoldShopItemSelection[itemKey] = lowerName.Contains("gold") || lowerName.Contains("experience") || lowerName.Contains("magicfind") ? true : false;
                 }
 
-              
+
             }
+        }
+
+        public int GetMaxHeroLevel()
+        {
+            int maxLevel = 0;
+            foreach (var hero in this.Party.Party.Heroes)
+            {
+                if (hero.Level.Level > maxLevel)
+                {
+                    maxLevel = hero.Level.Level;
+                }
+            }
+            return maxLevel;
         }
     }
 }

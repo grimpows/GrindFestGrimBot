@@ -245,6 +245,21 @@ namespace Scripts.Model
             GUILayout.FlexibleSpace();
             GUILayout.Label("BOT CONTROL CENTER", _titleStyle, GUILayout.Height(30));
             GUILayout.FlexibleSpace();
+
+            // Close button
+            GUI.backgroundColor = _dangerColor;
+            GUIStyle closeStyle = new GUIStyle(GUI.skin.button);
+            closeStyle.fontSize = 14;
+            closeStyle.fontStyle = FontStyle.Bold;
+            closeStyle.normal.textColor = Color.white;
+            closeStyle.hover.textColor = Color.white;
+            
+            if (GUILayout.Button("X", closeStyle, GUILayout.Width(28), GUILayout.Height(28)))
+            {
+                _isShow = false;
+            }
+            GUI.backgroundColor = Color.white;
+
             GUILayout.EndHorizontal();
 
             // Separator
