@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace Scripts.Models
 {
@@ -20,7 +19,7 @@ namespace Scripts.Models
         public Vector3 LastHeroPosition = Vector3.zero;
         public DateTime LastHeroPositionTime = DateTime.MinValue;
 
-        public DateTime BestInSlotTimer = DateTime.MinValue;
+        public DateTime EquipBestInSlotTimer = DateTime.MinValue;
 
         
         public float StuckDistanceThreshold = 2f;
@@ -80,12 +79,15 @@ namespace Scripts.Models
                 ConsumerAgent = new Bot_Agent_Consumer(_hero);
             }
 
+            if (TravelerAgent == null)
+            {
+                TravelerAgent = new Bot_Agent_Traveler(_hero);
+            }
+
             if (_botUI == null)
             {
                 _botUI = new BotUI(this, hero, toggleShowUIKey, windowID);
             }
-
-
 
             FightingAgent.OnKill += (sender, args) =>
             {
@@ -105,11 +107,6 @@ namespace Scripts.Models
         {
 
         
-
-            
-
-
-
             if (LastHeroPosition == Vector3.zero)
             {
                 LastHeroPosition = _hero.Character.transform.position;
@@ -135,9 +132,9 @@ namespace Scripts.Models
                 return;
             }
 
-            if ((DateTime.Now - BestInSlotTimer).TotalSeconds > 0.5)
+            if ((DateTime.Now - EquipBestInSlotTimer).TotalSeconds > 0.5)
             {
-                BestInSlotTimer = DateTime.Now;
+                EquipBestInSlotTimer = DateTime.Now;
                 _hero.Equip_BestInSlot();
             }
 
@@ -195,8 +192,10 @@ namespace Scripts.Models
             if (_hero.Action_TryInteractWithObjects())
                 return;
 
-            if (_hero.Action_TryMoveToBestFarmArea(IsAllowedToChangeArea))
+            if (TravelerAgent.IsActing())
                 return;
+            //if (_hero.Action_TryMoveToBestFarmArea(IsAllowedToChangeArea))
+            //    return;
 
 
             _hero.RunAroundInArea();

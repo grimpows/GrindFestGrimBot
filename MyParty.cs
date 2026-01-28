@@ -17,7 +17,7 @@ class MyParty : Party_Base
             new PartyMember("Grim", "Warrior"),
         };
 
-    private WorldUI _worldUI = new WorldUI(KeyCode.W);
+    private WorldUI _worldUI = new WorldUI();
 
     private GoldShopManager _goldShopManager = null;
 
@@ -50,9 +50,7 @@ class MyParty : Party_Base
 
         if (Input.GetKeyDown(KeyCode.F3))
         {
-            // This is a static method, that means you don't need to have an instance of the class to call it
             AutomaticParty.PlaceFlag();
-            
         }
 
         if (Input.GetKeyDown(KeyCode.F4))
@@ -75,16 +73,6 @@ class MyParty : Party_Base
 
         CreateHero(firstHero.Name, firstHero.ClassName).StartBotting();
     }
-
-    
-
-    //public bool IsAnyHeroReachedLevelCap()
-    //{
-
-    //}
-
-
-
 
 }
 

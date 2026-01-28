@@ -11,16 +11,15 @@ namespace Scripts.Models
 {
     public class WorldUI
     {
-        private KeyCode _toggleShowKey;
         private bool _isShow = false;
 
         // requied rects
         private Rect _worldUIRect = new Rect(100, 100, 800, 800);
 
 
-        public WorldUI(KeyCode toggleShowKey)
+        public WorldUI()
         {
-            _toggleShowKey = toggleShowKey;
+            
         }
 
         public void OnGUI(AutomaticHero hero, int distance = 200)
