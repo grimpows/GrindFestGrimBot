@@ -22,14 +22,12 @@ namespace Scripts.Models
 
         public void Start()
         {
-            _heroUI.OnStart(this, KeyCode.C, WindowsConstants.HERO_WINDOW_ID);
-            _minimapUI.OnStart(this, KeyCode.M, WindowsConstants.MINIMAP_WINDOW_ID);
-            _inventoryUI.OnStart(this, KeyCode.I, WindowsConstants.INVENTORY_WINDOW_ID);
-            _skillUI.OnStart(this, KeyCode.S, WindowsConstants.SKILL_UI_ID);
+            _heroUI.OnStart(this, KeyCode.C, GLOBALS.WINDOWS.HERO_WINDOW_INFO.ID);
+            _minimapUI.OnStart(this, KeyCode.M, GLOBALS.WINDOWS.MINIMAP_WINDOW_INFO.ID);
+            _inventoryUI.OnStart(this, KeyCode.I, GLOBALS.WINDOWS.INVENTORY_WINDOW_INFO.ID);
+            _skillUI.OnStart(this, KeyCode.S, GLOBALS.WINDOWS.SKILL_WINDOW_INFO.ID);
 
-
-
-            _bot.OnStart(this, KeyCode.B, WindowsConstants.BOT_WINDOW_ID);
+            _bot.OnStart(this, KeyCode.B, GLOBALS.WINDOWS.BOT_WINDOW_INFO.ID);
 
 
             // Initialize quick access buttons

@@ -27,14 +27,13 @@ namespace Scripts.Models
             hero.Display_EnemiesBar(distance);
             hero.Display_ItemsOnGround(distance);
             hero.Display_NameTag();
-            hero.Display_InteractiveObjets(GLOBAL.INTERACTIVE_ITEM_LIST, distance);
+            hero.Display_InteractiveObjets(GLOBALS.INTERACTIVE_ITEM_LIST, distance);
 
             if (_isShow)
             {
-                _worldUIRect = GUI.Window(WindowsConstants.WORLD_UI_ID, _worldUIRect, DrawWorldUI, "World");
+                _worldUIRect = GUI.Window(GLOBALS.WINDOWS.WORLD_WINDOW_INFO.ID, _worldUIRect, DrawWorldUI, "World");
             }
 
-            //GrindFest.UI.UIHealthBall
         }
 
         public void OnUpdate()

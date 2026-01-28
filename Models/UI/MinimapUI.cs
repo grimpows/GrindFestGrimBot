@@ -81,7 +81,7 @@ namespace Scripts.Models
             }
             if (_isShow)
             {
-                _minimapRect = GUI.Window(WindowsConstants.MINIMAP_WINDOW_ID, _minimapRect, DrawMinimapWindow, "Minimap");
+                _minimapRect = GUI.Window(GLOBALS.WINDOWS.MINIMAP_WINDOW_INFO.ID, _minimapRect, DrawMinimapWindow, "Minimap");
             }
         }
 

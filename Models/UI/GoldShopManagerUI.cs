@@ -78,7 +78,7 @@ namespace Scripts.Models
             if (_isShow)
             {
                 
-                _windowRect = GUI.Window(WindowsConstants.GOLD_SHOP_MANAGER_UI_ID, _windowRect, DrawWindow, "", _windowStyle);
+                _windowRect = GUI.Window(GLOBALS.WINDOWS.GOLD_SHOP_MANAGER_WINDOW_INFO.ID, _windowRect, DrawWindow, "", _windowStyle);
             }
         }
 
