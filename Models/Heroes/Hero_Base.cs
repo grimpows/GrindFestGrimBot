@@ -13,6 +13,8 @@ namespace Scripts.Models
         private InventoryUI _inventoryUI = new InventoryUI();
         private SkillUI _skillUI = new SkillUI();
         private QuickAccessUI _quickAccessUI = new QuickAccessUI();
+        private AIChat _aiChat = new AIChat();
+        private AIChatUI _aiChatUI = new AIChatUI();
 
 
         public void Start()
@@ -24,9 +26,12 @@ namespace Scripts.Models
 
             _bot.OnStart(this, KeyCode.B, GLOBALS.WINDOWS.BOT_WINDOW_INFO.ID);
 
+            // Initialize AI Chat
+            _aiChat.OnStart(this);
+            _aiChatUI.OnStart(_aiChat, this, KeyCode.T, GLOBALS.WINDOWS.AICHAT_WINDOW_INFO.ID);
 
             // Initialize quick access buttons
-            _quickAccessUI.OnStart(_heroUI, _inventoryUI, _skillUI, _bot);
+            _quickAccessUI.OnStart(_heroUI, _inventoryUI, _skillUI, _bot, _aiChatUI);
         }
 
 
@@ -38,6 +43,7 @@ namespace Scripts.Models
             _skillUI.OnGUI();
 
             _bot.OnGUI();
+            _aiChatUI.OnGUI();
 
 
             // Draw quick access buttons
@@ -53,6 +59,7 @@ namespace Scripts.Models
 
 
             _bot.OnUpdate();
+            _aiChatUI.OnUpdate();
         }
 
 

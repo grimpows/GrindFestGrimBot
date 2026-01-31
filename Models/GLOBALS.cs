@@ -37,6 +37,7 @@ namespace Scripts.Models
             static readonly public WINDOW_INFO WORLD_WINDOW_INFO = new WINDOW_INFO(5, KeyCode.W);
             static readonly public WINDOW_INFO GOLD_SHOP_MANAGER_WINDOW_INFO = new WINDOW_INFO(6, KeyCode.G);
             static readonly public WINDOW_INFO SKILL_WINDOW_INFO = new WINDOW_INFO(7, KeyCode.K);
+            static readonly public WINDOW_INFO AICHAT_WINDOW_INFO = new WINDOW_INFO(8, KeyCode.T);
         }
 
 

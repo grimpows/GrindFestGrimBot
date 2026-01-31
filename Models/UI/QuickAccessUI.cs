@@ -10,13 +10,15 @@ namespace Scripts.Models
         private InventoryUI _inventoryUI;
         private SkillUI _skillUI;
         private Bot _bot;
+        private AIChatUI _aiChatUI;
 
-        public void OnStart(HeroUI heroUI, InventoryUI inventoryUI, SkillUI skillUI, Bot bot)
+        public void OnStart(HeroUI heroUI, InventoryUI inventoryUI, SkillUI skillUI, Bot bot, AIChatUI aiChatUI = null)
         {
             _heroUI = heroUI;
             _inventoryUI = inventoryUI;
             _skillUI = skillUI;
             _bot = bot;
+            _aiChatUI = aiChatUI;
         }
 
         public void OnGUI()
@@ -47,15 +49,20 @@ namespace Scripts.Models
             // Bot UI Button (B)
             bool botActive = _bot?.IsUIVisible ?? false;
             DrawQuickButton(currentX, buttonY, "B", botActive, () => _bot?.ToggleUIVisible());
+            currentX += UITheme.BUTTON_SIZE + UITheme.BUTTON_SPACING;
+
+            // AI Chat UI Button (T for Talk)
+            bool aiChatActive = _aiChatUI?.IsVisible ?? false;
+            DrawQuickButton(currentX, buttonY, "??", aiChatActive, () => _aiChatUI?.ToggleVisible(), true);
         }
 
-        private void DrawQuickButton(float x, float y, string icon, bool isActive, Action onClick)
+        private void DrawQuickButton(float x, float y, string icon, bool isActive, Action onClick, bool isAIButton = false)
         {
             Rect buttonRect = new Rect(x, y, UITheme.BUTTON_SIZE, UITheme.BUTTON_SIZE);
 
             // Create button style
             GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-            buttonStyle.fontSize = UITheme.FONT_SIZE_BUTTON_LARGE;
+            buttonStyle.fontSize = isAIButton ? 24 : UITheme.FONT_SIZE_BUTTON_LARGE;
             buttonStyle.fontStyle = FontStyle.Bold;
             buttonStyle.alignment = TextAnchor.MiddleCenter;
 
@@ -69,8 +76,17 @@ namespace Scripts.Models
             // Background based on state
             if (isActive)
             {
-                buttonStyle.normal.background = UITheme.ButtonActiveTexture;
-                buttonStyle.hover.background = UITheme.ButtonActiveHoverTexture;
+                // Use accent color for AI button when active
+                if (isAIButton)
+                {
+                    buttonStyle.normal.background = UITheme.CreateTexture(new Color(0.3f, 0.5f, 0.7f, 0.95f));
+                    buttonStyle.hover.background = UITheme.CreateTexture(new Color(0.35f, 0.55f, 0.75f, 0.95f));
+                }
+                else
+                {
+                    buttonStyle.normal.background = UITheme.ButtonActiveTexture;
+                    buttonStyle.hover.background = UITheme.ButtonActiveHoverTexture;
+                }
                 buttonStyle.active.background = UITheme.ButtonActiveTexture;
                 buttonStyle.focused.background = UITheme.ButtonActiveTexture;
             }
@@ -91,7 +107,8 @@ namespace Scripts.Models
             // Draw accent border when active
             if (isActive)
             {
-                UITheme.DrawBorder(buttonRect, UITheme.Accent);
+                Color borderColor = isAIButton ? UITheme.Info : UITheme.Accent;
+                UITheme.DrawBorder(buttonRect, borderColor);
             }
         }
     }

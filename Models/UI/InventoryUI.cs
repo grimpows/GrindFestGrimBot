@@ -638,8 +638,6 @@ namespace Scripts.Models
             GUI.backgroundColor = Color.white;
             GUILayout.FlexibleSpace();
 
-
-
             GUILayout.BeginVertical();
             GUILayout.FlexibleSpace();
 
