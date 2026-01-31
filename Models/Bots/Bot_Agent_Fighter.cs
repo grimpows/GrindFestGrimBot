@@ -105,82 +105,14 @@ namespace Scripts.Models
                 }
                 else
                 {
-                    return Attack(TargetedMonster);
+                    return _hero.Attack(TargetedMonster);
                 }
             }
             return false;
 
         }
 
-        bool Attack(MonsterBehaviour target)
-        {
-            if (target == null)
-            {
-                return false;
-            }
-
-            _hero.AttackTarget = target;
-            if (!IsValidAttackTarget(target))
-            {
-                _hero.AttackTarget = null;
-                return false;
-            }
-
-            if (target == null || target.Health.IsDead || !target.gameObject.activeInHierarchy)
-            {
-                _hero.AttackTarget = null;
-                return false;
-            }
-
-            var attackWeaponSkill = _hero.Equipment[EquipmentSlot.RightHand]?.Item?.Weapon?.DefaultAttack;
-
-            SkillBehaviour attackSkill = _hero.Character.Combat.AttackSkill;
-            float range = attackSkill.Range;
-
-            if (attackWeaponSkill != null)
-            {
-                attackSkill = attackWeaponSkill;
-                range = attackWeaponSkill.Range;
-            }
-
-            Vector3 vector = target.transform.position - (target.transform.position - _hero.Character.transform.position).normalized * range * 0.7f;
-            float num = Vector3.Distance(_hero.Character.transform.position, target.transform.position);
-            if (num > MaxDistance && !_hero.Character.CanNavigateTo(vector, 1f))
-            {
-                _hero.AttackTarget = null;
-                return false;
-            }
-
-            if (num < range)
-            {
-                _hero.Character.UseSkill(attackSkill, target.gameObject, target.transform.position);
-                return true;
-            }
-
-            _hero.Character.MoveTo(vector);
-            return true;
-        }
-
-        bool IsValidAttackTarget(MonsterBehaviour target)
-        {
-            if (target == null || target.Health.IsDead || !target.gameObject.activeInHierarchy)
-            {
-                return false;
-            }
-
-            if (target.Character.IsInWater)
-            {
-                return false;
-            }
-
-            FactionMemberBehaviour factionMember = target.FactionMember;
-            if ((object)factionMember != null && !factionMember.IsHostile(_hero.Character.FactionMember))
-            {
-                return false;
-            }
-
-            return Vector3.Distance(_hero.Character.transform.position, target.transform.position) <= 20f;
-        }
+      
 
     }
 }
