@@ -27,20 +27,18 @@ namespace Scripts.Models
             DrawSectionHeader("TRAVELER AGENT");
             GUILayout.Space(UITheme.BUTTON_SPACING);
 
-            // Status Cards Row
-            DrawStatusSection();
+            // Main content: Left panel (info) + Right panel (area list)
+            GUILayout.BeginHorizontal();
+
+            // Left Panel - Status & Info
+            DrawLeftPanel();
+
             GUILayout.Space(UITheme.WINDOW_PADDING);
 
-            // Current & Target Area
-            DrawAreaInfoCard();
-            GUILayout.Space(UITheme.SECTION_SPACING);
+            // Right Panel - Area Level Requirements with Force buttons
+            DrawRightPanel(contentArea.height - 60);
 
-            // Best Area Recommendation
-            DrawBestAreaCard();
-            GUILayout.Space(UITheme.SECTION_SPACING);
-
-            // Area Level Map (with scroll)
-            DrawAreaLevelMap(contentArea.height - 360);
+            GUILayout.EndHorizontal();
 
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
@@ -53,6 +51,78 @@ namespace Scripts.Models
             UITheme.DrawSeparator();
         }
 
+        private void DrawLeftPanel()
+        {
+            GUILayout.BeginVertical(GUILayout.Width(320));
+
+            // Status Cards Row
+            DrawStatusSection();
+            GUILayout.Space(UITheme.SECTION_SPACING);
+
+            // Travel Status Card
+            DrawAreaInfoCard();
+            GUILayout.Space(UITheme.SECTION_SPACING);
+
+            // Best/Forced Area Card
+            DrawBestAreaCard();
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndVertical();
+        }
+
+        private void DrawRightPanel(float availableHeight)
+        {
+            GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+
+            // Header with clear button
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Area Level Requirements", UITheme.SubtitleStyle);
+            GUILayout.FlexibleSpace();
+
+            // Clear forced button
+            if (_travelerAgent.IsForcedAreaEnabled)
+            {
+                GUI.backgroundColor = UITheme.Danger;
+                if (GUILayout.Button("Clear Forced", UITheme.ButtonStyle, GUILayout.Width(90), GUILayout.Height(20)))
+                {
+                    _travelerAgent.ClearForcedArea();
+                }
+                GUI.backgroundColor = Color.white;
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4);
+
+            UITheme.DrawSeparator(UITheme.TextMuted, 1f);
+            GUILayout.Space(UITheme.ELEMENT_SPACING);
+
+            if (_travelerAgent.MinLevelAreaDictionary == null || _travelerAgent.MinLevelAreaDictionary.Count == 0)
+            {
+                GUILayout.Label("No areas configured", UITheme.LabelStyle);
+                GUILayout.EndVertical();
+                return;
+            }
+
+            string bestArea = "";
+            try { bestArea = _travelerAgent.GetBestArea(); } catch { }
+            string targetArea = _travelerAgent.TargetAreaName;
+            string forcedArea = _travelerAgent.ForcedAreaName;
+
+            // ScrollView for area list
+            float scrollHeight = Mathf.Max(150, availableHeight - 40);
+            _areaScrollPosition = GUILayout.BeginScrollView(_areaScrollPosition, GUILayout.Height(scrollHeight));
+
+            foreach (var kvp in _travelerAgent.MinLevelAreaDictionary.OrderBy(kv => kv.Key))
+            {
+                bool isBest = kvp.Value == bestArea && !_travelerAgent.IsForcedAreaEnabled;
+                bool isTarget = kvp.Value == targetArea;
+                bool isForced = kvp.Value == forcedArea;
+                DrawAreaRow(kvp.Key, kvp.Value, isBest, isTarget, isForced);
+            }
+
+            GUILayout.EndScrollView();
+            GUILayout.EndVertical();
+        }
+
         private void DrawStatusSection()
         {
             bool isTraveling = !string.IsNullOrEmpty(_travelerAgent.TargetAreaName);
@@ -63,20 +133,20 @@ namespace Scripts.Models
             DrawStatBox("Status", statusText, statusColor);
             GUILayout.Space(UITheme.BUTTON_SPACING);
             
-            string bestArea = "";
-            try { bestArea = _travelerAgent.GetBestArea(); } catch { bestArea = "Unknown"; }
-            bool isInBestArea = _travelerAgent.TargetAreaName == "" && !string.IsNullOrEmpty(bestArea);
-            DrawStatBox("Optimal", isInBestArea ? "YES" : "NO", isInBestArea ? UITheme.Positive : UITheme.Warning);
+            // Mode: AUTO or FORCED
+            bool isForced = _travelerAgent.IsForcedAreaEnabled;
+            DrawStatBox("Mode", isForced ? "FORCED" : "AUTO", isForced ? UITheme.Warning : UITheme.Positive);
             GUILayout.Space(UITheme.BUTTON_SPACING);
             
             int areaCount = _travelerAgent.MinLevelAreaDictionary?.Count ?? 0;
             DrawStatBox("Areas", areaCount.ToString(), UITheme.Info);
+            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
 
         private void DrawStatBox(string label, string value, Color valueColor)
         {
-            GUILayout.BeginVertical(GUILayout.Width(90));
+            GUILayout.BeginVertical(GUILayout.Width(80));
             GUILayout.Label(label, UITheme.LabelStyle);
             GUILayout.Label(value, UITheme.CreateValueStyle(valueColor, 14));
             GUILayout.EndVertical();
@@ -97,7 +167,6 @@ namespace Scripts.Models
             // Current Area
             GUILayout.BeginHorizontal();
             GUILayout.Label("Current Area:", UITheme.LabelStyle, GUILayout.Width(100));
-            // Note: We don't have direct access to current area here, so we show target info
             string currentInfo = string.IsNullOrEmpty(_travelerAgent.TargetAreaName) ? "At destination" : "In transit...";
             GUILayout.Label(currentInfo, UITheme.CreateValueStyle(UITheme.TextLight));
             GUILayout.FlexibleSpace();
@@ -118,11 +187,7 @@ namespace Scripts.Models
             if (!string.IsNullOrEmpty(_travelerAgent.TargetAreaName))
             {
                 GUILayout.Space(UITheme.ELEMENT_SPACING);
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-                GUILayout.Label($">>> Traveling to {_travelerAgent.TargetAreaName} >>>", UITheme.CreateLabelStyle(UITheme.Warning, UITheme.FONT_SIZE_SMALL, FontStyle.Italic));
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
+                GUILayout.Label($">>> Traveling >>>", UITheme.CreateLabelStyle(UITheme.Warning, UITheme.FONT_SIZE_SMALL, FontStyle.Italic));
             }
 
             GUILayout.EndVertical();
@@ -133,17 +198,32 @@ namespace Scripts.Models
             GUILayout.BeginVertical(UITheme.CardStyle);
 
             GUILayout.BeginHorizontal();
-            GUI.color = UITheme.Accent;
-            GUILayout.Label("★", GUILayout.Width(20));
+            GUI.color = _travelerAgent.IsForcedAreaEnabled ? UITheme.Warning : UITheme.Accent;
+            GUILayout.Label(_travelerAgent.IsForcedAreaEnabled ? "⚡" : "★", GUILayout.Width(20));
             GUI.color = Color.white;
-            GUILayout.Label("Recommended Area", UITheme.SubtitleStyle);
+            
+            string headerText = _travelerAgent.IsForcedAreaEnabled ? "Forced Area" : "Recommended Area";
+            GUILayout.Label(headerText, UITheme.SubtitleStyle);
+            
+            GUILayout.FlexibleSpace();
+            
+            // Show mode indicator
+            if (_travelerAgent.IsForcedAreaEnabled)
+            {
+                GUILayout.Label("FORCED", UITheme.CreateLabelStyle(UITheme.Warning, UITheme.FONT_SIZE_SMALL, FontStyle.Bold));
+            }
+            else
+            {
+                GUILayout.Label("AUTO", UITheme.CreateLabelStyle(UITheme.Positive, UITheme.FONT_SIZE_SMALL, FontStyle.Bold));
+            }
             GUILayout.EndHorizontal();
             GUILayout.Space(UITheme.ELEMENT_SPACING);
 
             string bestArea = "";
             try { bestArea = _travelerAgent.GetBestArea(); } catch { bestArea = "Unknown"; }
 
-            GUILayout.Label(bestArea, UITheme.CreateValueStyle(UITheme.Accent, 14));
+            Color areaColor = _travelerAgent.IsForcedAreaEnabled ? UITheme.Warning : UITheme.Accent;
+            GUILayout.Label(bestArea, UITheme.CreateValueStyle(areaColor, 14));
 
             // Show level requirement
             if (_travelerAgent.MinLevelAreaDictionary != null)
@@ -158,46 +238,12 @@ namespace Scripts.Models
             GUILayout.EndVertical();
         }
 
-        private void DrawAreaLevelMap(float availableHeight)
+        private void DrawAreaRow(int minLevel, string areaName, bool isBestArea, bool isTargetArea, bool isForcedArea)
         {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Area Level Requirements", UITheme.SubtitleStyle);
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-            GUILayout.Space(4);
-
-            UITheme.DrawSeparator(UITheme.TextMuted, 1f);
-            GUILayout.Space(UITheme.ELEMENT_SPACING);
-
-            if (_travelerAgent.MinLevelAreaDictionary == null || _travelerAgent.MinLevelAreaDictionary.Count == 0)
-            {
-                GUILayout.Label("No areas configured", UITheme.LabelStyle);
-                return;
-            }
-
-            string bestArea = "";
-            try { bestArea = _travelerAgent.GetBestArea(); } catch { }
-            string targetArea = _travelerAgent.TargetAreaName;
-
-            // ScrollView for area list
-            float scrollHeight = Mathf.Max(100, availableHeight);
-            _areaScrollPosition = GUILayout.BeginScrollView(_areaScrollPosition, GUILayout.Height(scrollHeight));
-
-            foreach (var kvp in _travelerAgent.MinLevelAreaDictionary.OrderBy(kv => kv.Key))
-            {
-                DrawAreaRow(kvp.Key, kvp.Value, kvp.Value == bestArea, kvp.Value == targetArea);
-            }
-
-            GUILayout.EndScrollView();
-        }
-
-        private void DrawAreaRow(int minLevel, string areaName, bool isBestArea, bool isTargetArea)
-        {
-            GUILayout.BeginHorizontal(UITheme.CardStyle, GUILayout.Height(30));
+            GUILayout.BeginHorizontal(UITheme.CardStyle, GUILayout.Height(32));
 
             // Level badge
-            Color levelColor = UITheme.Info;
-            GUILayout.Label($"Lv.{minLevel}+", UITheme.CreateValueStyle(levelColor, UITheme.FONT_SIZE_NORMAL), GUILayout.Width(50));
+            GUILayout.Label($"Lv.{minLevel}+", UITheme.CreateValueStyle(UITheme.Info, UITheme.FONT_SIZE_NORMAL), GUILayout.Width(45));
 
             GUILayout.Space(UITheme.BUTTON_SPACING);
 
@@ -205,7 +251,12 @@ namespace Scripts.Models
             Color nameColor = UITheme.TextLight;
             FontStyle fontStyle = FontStyle.Normal;
             
-            if (isBestArea)
+            if (isForcedArea)
+            {
+                nameColor = UITheme.Warning;
+                fontStyle = FontStyle.Bold;
+            }
+            else if (isBestArea)
             {
                 nameColor = UITheme.Accent;
                 fontStyle = FontStyle.Bold;
@@ -217,18 +268,51 @@ namespace Scripts.Models
 
             GUILayout.Label(areaName, UITheme.CreateLabelStyle(nameColor, UITheme.FONT_SIZE_NORMAL, fontStyle), GUILayout.ExpandWidth(true));
 
-            // Status indicators
-            if (isBestArea)
+            // Status indicator
+            if (isForcedArea)
             {
-                GUILayout.Label("★ BEST", UITheme.CreateLabelStyle(UITheme.Accent, UITheme.FONT_SIZE_SMALL, FontStyle.Bold), GUILayout.Width(50));
+                GUILayout.Label("⚡", UITheme.CreateLabelStyle(UITheme.Warning, 14), GUILayout.Width(18));
+            }
+            else if (isBestArea)
+            {
+                GUILayout.Label("★", UITheme.CreateLabelStyle(UITheme.Accent, 14), GUILayout.Width(18));
             }
             else if (isTargetArea)
             {
-                GUILayout.Label("→ TARGET", UITheme.CreateLabelStyle(UITheme.Warning, UITheme.FONT_SIZE_SMALL, FontStyle.Bold), GUILayout.Width(60));
+                GUILayout.Label("→", UITheme.CreateLabelStyle(UITheme.Warning, 14), GUILayout.Width(18));
             }
             else
             {
-                GUILayout.Space(50);
+                GUILayout.Space(18);
+            }
+
+            GUILayout.Space(4);
+
+            // Force/Unforce button
+            if (isForcedArea)
+            {
+                GUI.backgroundColor = UITheme.Danger;
+                GUIStyle unforceBtnStyle = new GUIStyle(UITheme.ButtonStyle);
+                unforceBtnStyle.fontSize = UITheme.FONT_SIZE_SMALL;
+                unforceBtnStyle.normal.textColor = UITheme.TextLight;
+                
+                if (GUILayout.Button("Unforce", unforceBtnStyle, GUILayout.Width(55), GUILayout.Height(22)))
+                {
+                    _travelerAgent.ClearForcedArea();
+                }
+                GUI.backgroundColor = Color.white;
+            }
+            else
+            {
+                GUI.backgroundColor = UITheme.ButtonNormal;
+                GUIStyle forceBtnStyle = new GUIStyle(UITheme.ButtonStyle);
+                forceBtnStyle.fontSize = UITheme.FONT_SIZE_SMALL;
+                
+                if (GUILayout.Button("Force", forceBtnStyle, GUILayout.Width(55), GUILayout.Height(22)))
+                {
+                    _travelerAgent.ForcedAreaName = areaName;
+                }
+                GUI.backgroundColor = Color.white;
             }
 
             GUILayout.EndHorizontal();

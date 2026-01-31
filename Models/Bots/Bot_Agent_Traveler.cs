@@ -14,6 +14,7 @@ namespace Scripts.Models
         private AutomaticHero _hero;
 
         private string _targetAreaName = "";
+        private string _forcedAreaName = "";
 
         public string TargetAreaName { 
             get => _targetAreaName; 
@@ -28,6 +29,32 @@ namespace Scripts.Models
                 }
             }
         }
+
+        /// <summary>
+        /// Forces the bot to always travel to this area, ignoring the automatic best area calculation.
+        /// Set to empty string or null to disable forced area.
+        /// </summary>
+        public string ForcedAreaName
+        {
+            get => _forcedAreaName;
+            set
+            {
+                if (_forcedAreaName != value)
+                {
+                    _forcedAreaName = value ?? "";
+
+                    if (!string.IsNullOrEmpty(_forcedAreaName))
+                        _hero?.Say($"Forcing travel to {_forcedAreaName}");
+                    else
+                        _hero?.Say("Disabled forced area, returning to auto mode");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns true if a forced area is set.
+        /// </summary>
+        public bool IsForcedAreaEnabled => !string.IsNullOrEmpty(_forcedAreaName);
 
         public Bot_Agent_Traveler(AutomaticHero hero)
         {
@@ -48,12 +75,16 @@ namespace Scripts.Models
 
             TargetAreaName = "";
 
-
             return false;
         }
 
         public string GetBestArea()
         {
+            // If forced area is set, always return it
+            if (IsForcedAreaEnabled)
+            {
+                return _forcedAreaName;
+            }
 
             int heroLevel = _hero.Level;
             var areaForLevel = MinLevelAreaDictionary
@@ -87,6 +118,14 @@ namespace Scripts.Models
            
         }
 
+        /// <summary>
+        /// Clears the forced area and returns to automatic mode.
+        /// </summary>
+        public void ClearForcedArea()
+        {
+            ForcedAreaName = "";
+        }
+
         public Dictionary<int, string> MinLevelAreaDictionary = new Dictionary<int, string>()
         {
             {1, "Stony Plains" },
@@ -96,9 +135,5 @@ namespace Scripts.Models
             {11, "Ashen Pastures" },
             {15, "Canyon of Death" }
         };
-
-
-
-
     }
 }
