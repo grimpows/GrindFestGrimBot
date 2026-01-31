@@ -21,6 +21,7 @@ namespace Scripts.Model
         private Bot_Agent_LooterUI _pickUpAgentUI;
         private Bot_Agent_ConsumerUI _consumerAgentUI;
         private Bot_Agent_TravelerUI _travelerAgentUI;
+        private Bot_Agent_UnstuckerUI _unstuckerAgentUI;
 
         private Rect _botWindowRect = new Rect(100, 100, 750, 650);
 
@@ -32,7 +33,8 @@ namespace Scripts.Model
             FightingAgent,
             PickUpAgent,
             ConsumerAgent,
-            TravelerAgent
+            TravelerAgent,
+            UnstuckerAgent
         }
 
         public bool IsVisible => _isShow;
@@ -50,6 +52,7 @@ namespace Scripts.Model
             _pickUpAgentUI = new Bot_Agent_LooterUI(bot.PickUpAgent);
             _consumerAgentUI = new Bot_Agent_ConsumerUI(bot.ConsumerAgent);
             _travelerAgentUI = new Bot_Agent_TravelerUI(bot.TravelerAgent);
+            _unstuckerAgentUI = new Bot_Agent_UnstuckerUI(bot.UnstuckerAgent);
         }
 
         public void OnGUI()
@@ -97,6 +100,9 @@ namespace Scripts.Model
                 case BotTab.TravelerAgent:
                     _travelerAgentUI.DrawTravelerAgentPanel(contentArea);
                     break;
+                case BotTab.UnstuckerAgent:
+                    _unstuckerAgentUI.DrawUnstuckerAgentPanel(contentArea);
+                    break;
             }
 
             GUILayout.EndVertical();
@@ -128,14 +134,16 @@ namespace Scripts.Model
             GUILayout.BeginHorizontal();
 
             DrawTab("Global", BotTab.Global, "⚙");
-            GUILayout.Space(UITheme.BUTTON_SPACING);
+            GUILayout.Space(3);
             DrawTab("Fighter", BotTab.FightingAgent, "⚔");
-            GUILayout.Space(UITheme.BUTTON_SPACING);
+            GUILayout.Space(3);
             DrawTab("Looter", BotTab.PickUpAgent, "◆");
-            GUILayout.Space(UITheme.BUTTON_SPACING);
+            GUILayout.Space(3);
             DrawTab("Consumer", BotTab.ConsumerAgent, "♥");
-            GUILayout.Space(UITheme.BUTTON_SPACING);
+            GUILayout.Space(3);
             DrawTab("Traveler", BotTab.TravelerAgent, "✈");
+            GUILayout.Space(3);
+            DrawTab("Unstucker", BotTab.UnstuckerAgent, "⚡");
 
             GUILayout.EndHorizontal();
         }
@@ -168,9 +176,17 @@ namespace Scripts.Model
             DrawStatusCard("Bot Status", statusText, statusColor);
             
             GUILayout.Space(UITheme.BUTTON_SPACING);
-            DrawStatusCard("Unstick Mode", _bot.IsOnUnstickMode ? "ACTIVE" : "OFF", _bot.IsOnUnstickMode ? UITheme.Warning : UITheme.TextMuted);
+            
+            // Unstick Mode from UnstuckerAgent
+            bool isUnsticking = _bot.UnstuckerAgent?.IsOnUnstickMode ?? false;
+            DrawStatusCard("Unstick Mode", isUnsticking ? "ACTIVE" : "OFF", isUnsticking ? UITheme.Warning : UITheme.TextMuted);
+            
             GUILayout.Space(UITheme.BUTTON_SPACING);
-            DrawStatusCard("Change Area", _bot.IsAllowedToChangeArea ? "ALLOWED" : "LOCKED", _bot.IsAllowedToChangeArea ? UITheme.Positive : UITheme.TextMuted);
+            
+            // Unstick Count
+            int unstickCount = _bot.UnstuckerAgent?.UnstickCount ?? 0;
+            DrawStatusCard("Unstick Count", unstickCount.ToString(), UITheme.Info);
+            
             GUILayout.EndHorizontal();
             GUILayout.Space(UITheme.WINDOW_PADDING);
 
@@ -178,12 +194,6 @@ namespace Scripts.Model
             GUILayout.Space(UITheme.SECTION_SPACING);
 
             DrawActivityCard();
-            GUILayout.Space(UITheme.SECTION_SPACING);
-
-            DrawPositionCard();
-            GUILayout.Space(UITheme.SECTION_SPACING);
-
-            DrawSettingsSection();
 
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
@@ -235,8 +245,11 @@ namespace Scripts.Model
             GUILayout.EndHorizontal();
             GUILayout.Space(4);
 
-            string areaName = _hero.CurrentArea?.Root.name ?? "Unknown Area";
-            GUILayout.Label(areaName, UITheme.CreateValueStyle(UITheme.Info, 13));
+            string rootAreaName = _hero.CurrentArea?.Root.name ?? "Unknown Area";
+            GUILayout.Label(rootAreaName, UITheme.CreateValueStyle(UITheme.Info, 13));
+
+            string areaName = _hero.CurrentArea?.name ?? "Unknown Subarea";
+            GUILayout.Label(areaName, UITheme.CreateValueStyle(UITheme.TextMuted, 12));
 
             GUILayout.EndVertical();
         }
@@ -264,69 +277,6 @@ namespace Scripts.Model
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
-        }
-
-        void DrawPositionCard()
-        {
-            GUILayout.BeginVertical(UITheme.CardStyle);
-
-            GUILayout.BeginHorizontal();
-            GUI.color = UITheme.Warning;
-            GUILayout.Label("⊕", GUILayout.Width(20));
-            GUI.color = Color.white;
-            GUILayout.Label("Position Tracking", UITheme.SubtitleStyle);
-            GUILayout.EndHorizontal();
-            GUILayout.Space(4);
-
-            // Last Position
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Last Position:", UITheme.LabelStyle, GUILayout.Width(110));
-            string posStr = _bot.LastHeroPosition != null
-                ? $"({_bot.LastHeroPosition.x:F1}, {_bot.LastHeroPosition.y:F1}, {_bot.LastHeroPosition.z:F1})"
-                : "N/A";
-            GUILayout.Label(posStr, UITheme.ValueStyle);
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            // Time Since Move
-            TimeSpan timeSinceMove = DateTime.Now - _bot.LastHeroPositionTime;
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Time Since Move:", UITheme.LabelStyle, GUILayout.Width(110));
-            Color timeColor = UITheme.GetTimeStatusColor(timeSinceMove.TotalSeconds);
-            GUILayout.Label($"{timeSinceMove.TotalSeconds:F1}s", UITheme.CreateValueStyle(timeColor));
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            // Distance from Last
-            float distance = Vector3.Distance(_hero.Character.transform.position, _bot.LastHeroPosition);
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Distance Moved:", UITheme.LabelStyle, GUILayout.Width(110));
-            GUILayout.Label($"{distance:F1} units", UITheme.ValueStyle);
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            GUILayout.EndVertical();
-        }
-
-        void DrawSettingsSection()
-        {
-            GUILayout.Label("Quick Settings", UITheme.SubtitleStyle);
-            GUILayout.Space(4);
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Allow Area Change:", UITheme.LabelStyle, GUILayout.Width(120));
-
-            GUIStyle toggleStyle = _bot.IsAllowedToChangeArea ? UITheme.ToggleOnStyle : UITheme.ToggleOffStyle;
-            GUI.backgroundColor = _bot.IsAllowedToChangeArea ? UITheme.Positive : UITheme.TextMuted;
-
-            if (GUILayout.Button(_bot.IsAllowedToChangeArea ? "ON" : "OFF", toggleStyle, GUILayout.Width(UITheme.TOGGLE_WIDTH), GUILayout.Height(UITheme.TOGGLE_HEIGHT)))
-            {
-                _bot.IsAllowedToChangeArea = !_bot.IsAllowedToChangeArea;
-            }
-            GUI.backgroundColor = Color.white;
-
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
         }
     }
 }

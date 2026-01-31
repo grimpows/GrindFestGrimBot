@@ -15,45 +15,14 @@ namespace Scripts.Models
         public Bot_Agent_Fighter FightingAgent = null;
         public Bot_Agent_Consumer ConsumerAgent = null;
         public Bot_Agent_Traveler TravelerAgent = null;
-
-        public Vector3 LastHeroPosition = Vector3.zero;
-        public DateTime LastHeroPositionTime = DateTime.MinValue;
+        public Bot_Agent_Unstucker UnstuckerAgent = null;
 
         public DateTime EquipBestInSlotTimer = DateTime.MinValue;
-
-        public float StuckDistanceThreshold = 2f;
-        public float StuckTimeThresholdSeconds = 3f;
-        public float UnstickModeDurationSeconds = 30f;
 
         /// <summary>
         /// Current status of the bot indicating what action it's performing.
         /// </summary>
         public BotStatus CurrentStatus { get; private set; } = BotStatus.INACTIVE;
-
-        private bool _isOnUnstickMode = false;
-        public bool IsOnUnstickMode
-        {
-            get { return _isOnUnstickMode; }
-            set
-            {
-                if (_isOnUnstickMode != value)
-                {
-                    _isOnUnstickMode = value;
-                    if (_isOnUnstickMode)
-                    {
-                        UnstickStartTime = DateTime.Now;
-                        _hero.Say("Entering Unstick Mode");
-                    }
-                    else
-                    {
-                        _hero.Say("Exiting Unstick Mode");
-                        LastHeroPosition = _hero.Character.transform.position;
-                        LastHeroPositionTime = DateTime.Now;
-                    }
-                }
-            }
-        }
-        public DateTime UnstickStartTime = DateTime.MinValue;
 
         private AutomaticHero _hero;
         private BotUI? _botUI = null;
@@ -88,6 +57,11 @@ namespace Scripts.Models
                 TravelerAgent = new Bot_Agent_Traveler(_hero);
             }
 
+            if (UnstuckerAgent == null)
+            {
+                UnstuckerAgent = new Bot_Agent_Unstucker(_hero);
+            }
+
             if (_botUI == null)
             {
                 _botUI = new BotUI(this, hero, toggleShowUIKey, windowID);
@@ -99,8 +73,6 @@ namespace Scripts.Models
             };
         }
 
-        public bool IsAllowedToChangeArea = true;
-
         public void OnGUI()
         {
             _botUI?.OnGUI();
@@ -108,11 +80,8 @@ namespace Scripts.Models
 
         public void OnUpdate()
         {
-            if (LastHeroPosition == Vector3.zero)
-            {
-                LastHeroPosition = _hero.Character.transform.position;
-                LastHeroPositionTime = DateTime.Now;
-            }
+            // Initialize unstucker position tracking
+            UnstuckerAgent?.Initialize();
 
             if (_hero == null)
                 return;
@@ -120,8 +89,7 @@ namespace Scripts.Models
             if (!_hero.IsBotting)
             {
                 CurrentStatus = BotStatus.INACTIVE;
-                LastHeroPosition = _hero.Character.transform.position;
-                LastHeroPositionTime = DateTime.Now;
+                UnstuckerAgent?.ResetPosition();
                 return;
             }
 
@@ -129,7 +97,7 @@ namespace Scripts.Models
             if (ConsumerAgent.IsActing(true, 0.2f))
             {
                 CurrentStatus = BotStatus.CONSUMING;
-                this.IDontCareAboutStick();
+                UnstuckerAgent?.NotifyActivity();
                 return;
             }
 
@@ -141,14 +109,10 @@ namespace Scripts.Models
 
             _hero.Action_UpgradeStats();
 
-            if (IsOnUnstickMode)
+            // Check unstuck mode
+            if (UnstuckerAgent.IsActing())
             {
                 CurrentStatus = BotStatus.UNSTICKING;
-                _hero.RunAroundInArea();
-                if ((DateTime.Now - UnstickStartTime).TotalSeconds > UnstickModeDurationSeconds)
-                {
-                    IsOnUnstickMode = false;
-                }
                 return;
             }
 
@@ -156,14 +120,14 @@ namespace Scripts.Models
             {
                 CurrentStatus = BotStatus.FIGHTING;
                 PickUpAgent.TargetedItem = null;
-                this.IDontCareAboutStick();
+                UnstuckerAgent?.NotifyActivity();
                 return;
             }
 
             if (PickUpAgent.IsActing())
             {
                 CurrentStatus = BotStatus.LOOTING;
-                this.IDontCareAboutStick();
+                UnstuckerAgent?.NotifyActivity();
                 return;
             }
 
@@ -171,41 +135,30 @@ namespace Scripts.Models
             if (ConsumerAgent.IsActing(false, 0.8f))
             {
                 CurrentStatus = BotStatus.CONSUMING;
-                this.IDontCareAboutStick();
+                UnstuckerAgent?.NotifyActivity();
                 return;
             }
 
-            if (Vector3.Distance(LastHeroPosition, _hero.Character.transform.position) > StuckDistanceThreshold)
-            {
-                LastHeroPosition = _hero.Character.transform.position;
-                LastHeroPositionTime = DateTime.Now;
-            }
-
-            if ((DateTime.Now - LastHeroPositionTime).TotalSeconds > StuckTimeThresholdSeconds)
-            {
-                IsOnUnstickMode = true;
-            }
+            // Update position tracking for stuck detection
+            UnstuckerAgent?.UpdatePositionTracking();
 
             if (_hero.Action_TryInteractWithObjects())
             {
                 CurrentStatus = BotStatus.INTERACTING;
+                UnstuckerAgent?.NotifyActivity();
                 return;
             }
 
             if (TravelerAgent.IsActing())
             {
                 CurrentStatus = BotStatus.TRAVELING;
+                UnstuckerAgent?.NotifyActivity();
                 return;
             }
 
             // Default: run around
             CurrentStatus = BotStatus.RUNAROUND;
             _hero.RunAroundInArea();
-        }
-
-        private void IDontCareAboutStick()
-        {
-            LastHeroPositionTime = DateTime.Now;
         }
     }
 }
