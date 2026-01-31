@@ -80,11 +80,15 @@ namespace Scripts.Models
 
         public void OnUpdate()
         {
-            // Initialize unstucker position tracking
-            UnstuckerAgent?.Initialize();
+            
+            
 
             if (_hero == null)
                 return;
+            // Initialize unstucker position tracking
+            UnstuckerAgent.Initialize();
+
+            UnstuckerAgent.UpdatePositionTracking();
 
             if (!_hero.IsBotting)
             {
@@ -139,8 +143,7 @@ namespace Scripts.Models
                 return;
             }
 
-            // Update position tracking for stuck detection
-            UnstuckerAgent?.UpdatePositionTracking();
+            
 
             if (_hero.Action_TryInteractWithObjects())
             {
