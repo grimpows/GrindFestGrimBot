@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using UnityEngine;
 
 namespace Scripts.Models
@@ -156,7 +152,7 @@ namespace Scripts.Models
             // Add new custom area
             GUILayout.BeginHorizontal();
             _newCustomAreaName = GUILayout.TextField(_newCustomAreaName, UITheme.InputStyle, GUILayout.ExpandWidth(true), GUILayout.Height(20));
-            
+
             GUI.backgroundColor = UITheme.Positive;
             GUIStyle addBtnStyle = new GUIStyle(UITheme.ButtonStyle);
             addBtnStyle.fontSize = UITheme.FONT_SIZE_SMALL;
@@ -206,7 +202,7 @@ namespace Scripts.Models
             GUILayout.BeginHorizontal();
             DrawStatBox("Status", statusText, statusColor);
             GUILayout.Space(UITheme.BUTTON_SPACING);
-            
+
             // Mode: AUTO or FORCED
             bool isForced = _travelerAgent.IsForcedAreaEnabled;
             DrawStatBox("Mode", isForced ? "FORCED" : "AUTO", isForced ? UITheme.Warning : UITheme.Positive);
@@ -245,11 +241,11 @@ namespace Scripts.Models
             // Target Area
             GUILayout.BeginHorizontal();
             GUILayout.Label("Target:", UITheme.LabelStyle, GUILayout.Width(60));
-            
+
             string targetName = string.IsNullOrEmpty(_travelerAgent.TargetAreaName) ? "None" : _travelerAgent.TargetAreaName;
             Color targetColor = string.IsNullOrEmpty(_travelerAgent.TargetAreaName) ? UITheme.TextMuted : UITheme.Warning;
             GUILayout.Label(targetName, UITheme.CreateValueStyle(targetColor, UITheme.FONT_SIZE_SMALL));
-            
+
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -264,12 +260,12 @@ namespace Scripts.Models
             GUI.color = _travelerAgent.IsForcedAreaEnabled ? UITheme.Warning : UITheme.Accent;
             GUILayout.Label(_travelerAgent.IsForcedAreaEnabled ? "⚡" : "★", GUILayout.Width(20));
             GUI.color = Color.white;
-            
+
             string headerText = _travelerAgent.IsForcedAreaEnabled ? "Forced" : "Best";
             GUILayout.Label(headerText, UITheme.SubtitleStyle);
-            
+
             GUILayout.FlexibleSpace();
-            
+
             // Show mode indicator
             string modeText = _travelerAgent.IsForcedAreaEnabled ? "FORCED" : "AUTO";
             Color modeColor = _travelerAgent.IsForcedAreaEnabled ? UITheme.Warning : UITheme.Positive;
@@ -298,7 +294,7 @@ namespace Scripts.Models
             // Area name
             Color nameColor = UITheme.TextLight;
             FontStyle fontStyle = FontStyle.Normal;
-            
+
             if (isForcedArea)
             {
                 nameColor = UITheme.Warning;
@@ -310,7 +306,7 @@ namespace Scripts.Models
                 fontStyle = FontStyle.Bold;
             }
 
-            GUILayout.Label(TruncateText(areaName, 12), UITheme.CreateLabelStyle(nameColor, UITheme.FONT_SIZE_SMALL, fontStyle), GUILayout.ExpandWidth(true));
+            GUILayout.Label(TruncateText(areaName, 20), UITheme.CreateLabelStyle(nameColor, UITheme.FONT_SIZE_SMALL, fontStyle), GUILayout.ExpandWidth(true));
 
             // Status indicator
             if (isForcedArea)
@@ -382,7 +378,7 @@ namespace Scripts.Models
                 GUIStyle unforceBtnStyle = new GUIStyle(UITheme.ButtonStyle);
                 unforceBtnStyle.fontSize = UITheme.FONT_SIZE_SMALL;
                 unforceBtnStyle.normal.textColor = UITheme.TextDark;
-                
+
                 if (GUILayout.Button("On", unforceBtnStyle, GUILayout.Width(30), GUILayout.Height(20)))
                 {
                     _travelerAgent.ClearForcedArea();
@@ -394,7 +390,7 @@ namespace Scripts.Models
                 GUI.backgroundColor = UITheme.ButtonNormal;
                 GUIStyle forceBtnStyle = new GUIStyle(UITheme.ButtonStyle);
                 forceBtnStyle.fontSize = UITheme.FONT_SIZE_SMALL;
-                
+
                 if (GUILayout.Button("Off", forceBtnStyle, GUILayout.Width(30), GUILayout.Height(20)))
                 {
                     _travelerAgent.ForcedAreaName = areaName;

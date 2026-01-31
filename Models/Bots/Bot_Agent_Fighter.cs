@@ -1,11 +1,7 @@
-﻿using System;
-using GrindFest;
+﻿using GrindFest;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using System.Text;
-using System.Threading.Tasks;
-using System.Timers;
 
 
 namespace Scripts.Models
@@ -47,24 +43,25 @@ namespace Scripts.Models
 
         }
 
-        public bool IsActing()
+        public bool IsActing(bool ignoreMaxDistance = false)
         {
             if (!_hero.IsBotting && KillCount > 0)
             {
                 KillCount = 0;
             }
 
-            return TryFight();
+            return TryFight(ignoreMaxDistance);
 
         }
 
-        bool TryFight()
+        bool TryFight(bool ignoreMaxDistance)
         {
+            float maxDistance = ignoreMaxDistance ? 15f : MaxDistance;
 
             if (TargetedMonster == null)
             {
                 //get ennemies exept ignored ones
-                var enemy = _hero.Find_NearestEnemiesByReward(MaxDistance)
+                var enemy = _hero.Find_NearestEnemiesByReward(maxDistance)
                     .Where(enemy => !IgnoredMonsters.Contains(enemy))
                     .ToList()
                     .FirstOrDefault();
@@ -112,7 +109,7 @@ namespace Scripts.Models
 
         }
 
-      
+
 
     }
 }

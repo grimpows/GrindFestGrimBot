@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Scripts.Models
@@ -105,7 +103,7 @@ namespace Scripts.Models
                     InitializeStyles();
                     _stylesInitialized = true;
                 }
-                
+
                 _hoveredItem = null;
                 _hoveredSlot = null;
                 _windowRect = GUI.Window(_windowID, _windowRect, DrawHeroWindow, "", _windowStyle);
@@ -307,7 +305,7 @@ namespace Scripts.Models
             closeStyle.fontStyle = FontStyle.Bold;
             closeStyle.normal.textColor = Color.white;
             closeStyle.hover.textColor = Color.white;
-            
+
             if (GUILayout.Button("X", closeStyle, GUILayout.Width(30), GUILayout.Height(30)))
             {
                 _isShow = false;
@@ -328,50 +326,50 @@ namespace Scripts.Models
             GUILayout.BeginVertical(_sectionStyle, GUILayout.Width(STAT_PANEL_WIDTH), GUILayout.ExpandHeight(true));
 
             DrawSectionHeader("CHARACTER");
-            
+
             int level = _hero?.Character?.Level?.Level ?? 0;
             string className = _hero?.Hero?.Class?.name ?? "Unknown";
-            
+
             DrawStatRow("Level", $"{level}", _accentColor);
             DrawStatRow("Class", className, _textLightColor);
             GUILayout.Space(12);
 
             DrawSectionHeader("RESOURCES");
-            
+
             int currentHealth = _hero?.Character?.Health?.CurrentHealth ?? 0;
             int maxHealth = _hero?.Character?.Health?.MaxHealth ?? 1;
             float currentMana = _hero?.Character?.Mana?.CurrentMana ?? 0;
             float maxMana = _hero?.Character?.Mana?.MaxMana ?? 1;
-            
+
             DrawResourceBar("Health", currentHealth, maxHealth, _healthColor);
             GUILayout.Space(6);
             DrawResourceBar("Mana", (int)currentMana, (int)maxMana, _manaColor);
             GUILayout.Space(12);
 
             DrawSectionHeader("COMBAT");
-            
+
             int armor = _hero?.Character?.Combat?.Armor ?? 0;
             int equipmentArmor = 0;
             try { equipmentArmor = _hero?.EquipedItems_TotalArmor() ?? 0; } catch { }
-            
+
             DrawStatRow("Armor", $"{armor}", _armorColor);
             DrawStatRow("Equipment Bonus", $"+{equipmentArmor}", _positiveColor);
             GUILayout.Space(12);
 
             DrawSectionHeader("ATTRIBUTES");
-            
+
             int str = _hero?.Character?.Strength ?? 0;
             int baseStr = _hero?.Character?.BaseStrength ?? 0;
             int bonusStr = _hero?.Character?.ItemStrengthBonus ?? 0;
-            
+
             int dex = _hero?.Character?.Dexterity ?? 0;
             int baseDex = _hero?.Character?.BaseDexterity ?? 0;
             int bonusDex = _hero?.Character?.ItemDexterityBonus ?? 0;
-            
+
             int intel = _hero?.Character?.Intelligence ?? 0;
             int baseInt = _hero?.Character?.BaseIntelligence ?? 0;
             int bonusInt = _hero?.Character?.ItemIntelligenceBonus ?? 0;
-            
+
             DrawAttributeRow("Strength", str, baseStr, bonusStr, _strColor);
             DrawAttributeRow("Dexterity", dex, baseDex, bonusDex, _dexColor);
             DrawAttributeRow("Intelligence", intel, baseInt, bonusInt, _intColor);
@@ -425,7 +423,7 @@ namespace Scripts.Models
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label(label, _statLabelStyle, GUILayout.Width(85));
-            
+
             Color oldColor = GUI.color;
             GUI.color = color;
             GUILayout.Label($"{total}", _statValueStyle, GUILayout.Width(35));
@@ -435,7 +433,7 @@ namespace Scripts.Models
 
             GUILayout.BeginHorizontal();
             GUILayout.Label($"({baseVal} +", _statLabelStyle, GUILayout.Width(0));
-            
+
             GUIStyle bonusStatLabel = new GUIStyle(_statLabelStyle);
             bonusStatLabel.normal.textColor = _positiveColor;
 
@@ -498,10 +496,10 @@ namespace Scripts.Models
         {
             var item = _equipedItems.ContainsKey(slot) ? _equipedItems[slot] : null;
             bool isEmpty = item == null || item.Name == "Empty";
-            
+
             Rect slotRect = GUILayoutUtility.GetRect(SLOT_WIDTH, SLOT_HEIGHT);
             bool isHovered = slotRect.Contains(Event.current.mousePosition);
-            
+
             // Choose style based on state
             GUIStyle style = isHovered ? _slotHoverStyle : (isEmpty ? _slotEmptyStyle : _slotStyle);
             GUI.Box(slotRect, "", style);
@@ -529,7 +527,7 @@ namespace Scripts.Models
                 // Item name with proper color
                 string displayName = TruncateString(item.Name, 16);
                 Color nameColor = item.Behaviour?.Item?.Weapon != null ? _weaponColor : _armorColor;
-                
+
                 GUIStyle nameStyle = new GUIStyle(_slotItemNameStyle);
                 nameStyle.normal.textColor = nameColor;
                 nameStyle.fontSize = 10;
@@ -614,13 +612,13 @@ namespace Scripts.Models
 
             // Draw tooltip background with border
             Rect tooltipRect = new Rect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
-            
+
             // Border
             Color oldColor = GUI.color;
             GUI.color = _accentColor;
             GUI.DrawTexture(new Rect(tooltipRect.x - 1, tooltipRect.y - 1, tooltipRect.width + 2, tooltipRect.height + 2), _barFillTexture);
             GUI.color = oldColor;
-            
+
             // Background
             GUI.Box(tooltipRect, "", _tooltipStyle);
 
@@ -684,7 +682,7 @@ namespace Scripts.Models
             height += 22; // Title
             height += 18; // Slot name
             height += 10; // Separator + spacing
-            
+
             if (data.IsEmpty)
             {
                 height += 20; // "No item equipped" text
@@ -695,7 +693,7 @@ namespace Scripts.Models
                 if (data.DurabilityPct > 0)
                     height += 25; // Durability bar
             }
-            
+
             height += 12; // Padding bottom
             return height;
         }
@@ -735,14 +733,14 @@ namespace Scripts.Models
                 {
                     // Label
                     GUI.Label(new Rect(rect.x + padding, y, 100, 18), stat.Label, _tooltipStatStyle);
-                    
+
                     // Value with color
                     GUIStyle valueStyle = new GUIStyle(_tooltipStatStyle);
                     valueStyle.normal.textColor = stat.Color;
                     valueStyle.fontStyle = FontStyle.Bold;
                     valueStyle.alignment = TextAnchor.MiddleRight;
                     GUI.Label(new Rect(rect.x + padding, y, rect.width - padding * 2, 18), stat.Value, valueStyle);
-                    
+
                     y += 20;
                 }
 
@@ -752,10 +750,10 @@ namespace Scripts.Models
                     y += 5;
                     float barWidth = rect.width - padding * 2;
                     float barHeight = 8;
-                    
+
                     // Label
                     GUI.Label(new Rect(rect.x + padding, y, 70, 14), "Durability", _tooltipStatStyle);
-                    
+
                     // Percentage
                     float pct = data.DurabilityPct * 100f;
                     Color durColor = pct > 50 ? _positiveColor : pct > 25 ? new Color(0.95f, 0.85f, 0.25f) : _healthColor;
@@ -763,13 +761,13 @@ namespace Scripts.Models
                     pctStyle.normal.textColor = durColor;
                     pctStyle.alignment = TextAnchor.MiddleRight;
                     GUI.Label(new Rect(rect.x + padding, y, barWidth, 14), $"{pct:F0}%", pctStyle);
-                    
+
                     y += 16;
-                    
+
                     // Bar background
                     Rect barRect = new Rect(rect.x + padding, y, barWidth, barHeight);
                     GUI.DrawTexture(barRect, _barBgTexture);
-                    
+
                     // Bar fill
                     GUI.color = durColor;
                     GUI.DrawTexture(new Rect(barRect.x, barRect.y, barWidth * data.DurabilityPct, barHeight), _barFillTexture);

@@ -2,10 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using static Scripts.Models.Hero_Base;
 
 namespace Scripts.Models
 {
@@ -269,7 +266,7 @@ namespace Scripts.Models
             GUILayout.BeginHorizontal();
             GUILayout.Label("INVENTORY", _subtitleStyle, GUILayout.Height(30));
             GUILayout.FlexibleSpace();
-            
+
             GUI.backgroundColor = _accentColor;
             GUILayout.Box($"{_filteredItemsCache.Count} items", GUILayout.Width(80), GUILayout.Height(25));
             GUI.backgroundColor = Color.white;
@@ -283,13 +280,13 @@ namespace Scripts.Models
             closeStyle.fontStyle = FontStyle.Bold;
             closeStyle.normal.textColor = Color.white;
             closeStyle.hover.textColor = Color.white;
-            
+
             if (GUILayout.Button("X", closeStyle, GUILayout.Width(28), GUILayout.Height(25)))
             {
                 _isShow = false;
             }
             GUI.backgroundColor = Color.white;
-            
+
             GUILayout.EndHorizontal();
 
             Rect sepRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(2));
@@ -315,7 +312,7 @@ namespace Scripts.Models
         {
             bool isActive = _currentTab == tab;
             GUIStyle style = isActive ? _tabActiveStyle : _tabInactiveStyle;
-            
+
             if (isActive) GUI.backgroundColor = tabColor;
 
             if (GUILayout.Button($"{label} ({count})", style, GUILayout.Height(32), GUILayout.ExpandWidth(true)))
@@ -466,7 +463,7 @@ namespace Scripts.Models
 
             // Item Header with type color
             Color typeColor = GetItemTypeColor(item);
-            
+
             // Icon
             GUI.color = typeColor;
             GUI.Label(new Rect(cardRect.x + padding, y, 20, 20), GetItemTypeIcon(item), _titleStyle);
@@ -475,7 +472,7 @@ namespace Scripts.Models
             // Name (truncated if needed)
             string displayName = TruncateString(item.Name, 20);
             bool isTruncated = item.Name.Length > 20;
-            
+
             Rect nameRect = new Rect(cardRect.x + padding + 22, y, ITEM_CARD_WIDTH - padding * 2 - 22, 20);
             GUI.Label(nameRect, displayName, _titleStyle);
 
@@ -591,7 +588,7 @@ namespace Scripts.Models
             // Drop button
             GUI.backgroundColor = _dangerColor;
             if (GUI.Button(new Rect(cardRect.x + ITEM_CARD_WIDTH - padding - 28, y, 28, 22), "X")) DropItem(item);
-            
+
             GUI.backgroundColor = Color.white;
         }
 
@@ -601,10 +598,10 @@ namespace Scripts.Models
 
             Vector2 mousePos = Event.current.mousePosition;
             string fullName = _hoveredItem.Name;
-            
+
             float tooltipWidth = Mathf.Max(150, fullName.Length * 8 + 20);
             float tooltipHeight = 28;
-            
+
             float tooltipX = mousePos.x + 15;
             float tooltipY = mousePos.y - 10;
 
@@ -628,7 +625,7 @@ namespace Scripts.Models
         {
             GUILayout.Space(12);
             GUILayout.BeginHorizontal();
-            
+
             GUI.backgroundColor = _dangerColor;
             if (GUILayout.Button("Drop All Filtered", GUILayout.Height(32), GUILayout.Width(180)))
             {
@@ -639,12 +636,24 @@ namespace Scripts.Models
                 _needsCacheUpdate = true;
             }
             GUI.backgroundColor = Color.white;
-
             GUILayout.FlexibleSpace();
-            GUILayout.Label($"Total inventory: {_hero.Character.Inventory.Items.Count()} items", _statLabelStyle);
-            
+
+
+
+            GUILayout.BeginVertical();
+            GUILayout.FlexibleSpace();
+
+            GUILayout.Label($"Total inventory: {_hero.Character.Inventory.Items.Count()}  items", _statLabelStyle);
+
+            GUILayout.Label($"Weight : {_hero.Hero.Inventory.Container.TotalItemsWeight} {_hero.Character.CarryingCapacity}", _statLabelStyle);
+
+            GUILayout.EndVertical();
+
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
+
+
+
         }
 
         private Color GetItemTypeColor(ItemBehaviour item)

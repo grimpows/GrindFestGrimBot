@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace Scripts.Models
@@ -247,7 +246,7 @@ namespace Scripts.Models
 
         private static void EnsureStylesInitialized()
         {
-            
+
             if (_stylesInitialized) return;
             //if (GUI.skin == null)
             //{

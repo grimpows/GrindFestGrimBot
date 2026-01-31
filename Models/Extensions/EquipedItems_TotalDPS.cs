@@ -1,15 +1,10 @@
 ﻿using GrindFest;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Scripts.Models
 {
     public static partial class HeroExtensions
     {
-       
+
         public static float EquipedItems_TotalDPS(this AutomaticHero hero)
         {
             float totalDPS = 0f;

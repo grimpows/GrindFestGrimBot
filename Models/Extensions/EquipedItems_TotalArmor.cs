@@ -1,9 +1,4 @@
 ﻿using GrindFest;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Scripts.Models
 {
@@ -11,7 +6,7 @@ namespace Scripts.Models
     {
         public static int EquipedItems_TotalArmor(this AutomaticHero hero)
         {
-            
+
             int totalArmor = 0;
             foreach (var equipment in hero.Equipment._items.Values)
             {
@@ -23,6 +18,6 @@ namespace Scripts.Models
             return totalArmor;
         }
 
-        
+
     }
 }

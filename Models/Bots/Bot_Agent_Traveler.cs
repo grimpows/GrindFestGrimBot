@@ -1,10 +1,6 @@
-﻿using System;
+﻿using GrindFest;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GrindFest;
-using UnityEngine;
 
 namespace Scripts.Models
 {
@@ -16,15 +12,16 @@ namespace Scripts.Models
         private string _targetAreaName = "";
         private string _forcedAreaName = "";
 
-        public string TargetAreaName { 
-            get => _targetAreaName; 
+        public string TargetAreaName
+        {
+            get => _targetAreaName;
             set
             {
                 if (_targetAreaName != value)
                 {
                     _targetAreaName = value;
 
-                    if(!string.IsNullOrEmpty(value))
+                    if (!string.IsNullOrEmpty(value))
                         _hero?.Say($"Traveling to {_targetAreaName}");
                 }
             }
@@ -115,7 +112,7 @@ namespace Scripts.Models
             }
 
             return areaForLevel.Value;
-           
+
         }
 
         /// <summary>
@@ -136,7 +133,7 @@ namespace Scripts.Models
             {5, "Rotten Burrows" },
             {7, "Ashen Pastures" },
             {9, "Canyon of Death" },
-            {11, "Endless Desert" },
+            //{11, "Endless Desert" },
 
         };
 
@@ -146,7 +143,7 @@ namespace Scripts.Models
         /// </summary>
         public List<string> CustomAreaList = new List<string>()
         {
-          
+
         };
 
         /// <summary>

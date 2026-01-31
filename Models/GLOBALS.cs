@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Scripts.Models
@@ -43,6 +39,6 @@ namespace Scripts.Models
             static readonly public WINDOW_INFO SKILL_WINDOW_INFO = new WINDOW_INFO(7, KeyCode.K);
         }
 
-       
+
     }
 }

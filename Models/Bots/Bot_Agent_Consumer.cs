@@ -1,11 +1,7 @@
-﻿using System;
-using GrindFest;
+﻿using GrindFest;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using System.Text;
-using System.Threading.Tasks;
-using System.Timers;
 
 
 namespace Scripts.Models
@@ -24,6 +20,9 @@ namespace Scripts.Models
 
         public bool IsActing(bool usePotionFirst, float healthThreshold = 0.5f)
         {
+
+            //LearnSkillBookIfAvailable();
+
             if (_hero.Character.SkillUser.IsUsingSkill && _hero.Character.SkillUser.CurrentlyUsedSkill == LastUsedSkill)
             {
                 _hero.RunAwayFromNearestEnemy(20); // Keep distance while using skills
@@ -40,17 +39,29 @@ namespace Scripts.Models
 
         public bool LearnSkillBookIfAvailable()
         {
-            ItemBehaviour? skillBook = _hero.Character.Inventory.Items.FirstOrDefault(item => item?.GetComponent<SkillBookBehavior>() != null);
-            if (skillBook != null)
+            List<ItemBehaviour> skillBook = _hero.Character.Inventory.Items.Where(item => item?.GetComponent<SkillBookBehavior>() != null).ToList();
+
+            foreach (var book in skillBook)
             {
-                SkillBookBehavior skillBookBehavior = skillBook.GetComponent<SkillBookBehavior>();
+                SkillBookBehavior skillBookBehavior = book.GetComponent<SkillBookBehavior>();
                 if (skillBookBehavior != null)
                 {
-                    _hero.Character.Speech.SayLine($"Learning skill from {skillBook.name}");
+                    //_hero.Character.Speech.SayLine($"Learning skill from {book.name}");
                     skillBookBehavior.Interactive.OnPlayerDoubleClick(_hero.Character.Hero);
                     return true;
                 }
             }
+
+            //if (skillBook != null)
+            //{
+            //    SkillBookBehavior skillBookBehavior = skillBook.GetComponent<SkillBookBehavior>();
+            //    if (skillBookBehavior != null)
+            //    {
+            //        //_hero.Character.Speech.SayLine($"Learning skill from {skillBook.name}");
+            //        skillBookBehavior.Interactive.OnPlayerDoubleClick(_hero.Character.Hero);
+            //        return true;
+            //    }
+            //}
 
             return false;
         }

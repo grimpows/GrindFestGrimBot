@@ -1,9 +1,5 @@
 ﻿using GrindFest;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Scripts.Models
@@ -27,7 +23,7 @@ namespace Scripts.Models
                 _goldShopManagerUI = new GoldShopManagerUI(this, toggleShowKey);
             }
 
-            
+
         }
 
         public void OnGUI()
@@ -87,13 +83,13 @@ namespace Scripts.Models
                 {
                     // add to dictionary if not present and set up default value for gold items
                     string lowerName = item.Name.ToLower();
-                    AutoBuyGoldShopItemSelection[itemKey] = 
-                        lowerName.Contains("gold") || 
-                        lowerName.Contains("experience") || 
+                    AutoBuyGoldShopItemSelection[itemKey] =
+                        lowerName.Contains("gold") ||
+                        lowerName.Contains("experience") ||
                         lowerName.Contains("magicfind") ||
                         lowerName.Contains("statpoints") ||
                         lowerName.Contains("heroslot") ||
-                        lowerName.Contains("armorbonus") 
+                        lowerName.Contains("armorbonus")
                         ? true : false;
                 }
 

@@ -2,10 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using static Scripts.Models.Hero_Base;
 
 namespace Scripts.Models
 {
@@ -15,10 +12,10 @@ namespace Scripts.Models
         private KeyCode _toggleShowKey;
         private bool _isShow = false;
         private int _windowID;
-        
+
         private Rect _skillsWindowRect = new Rect(100, 100, SKILL_CARD_WIDTH * 3.3f, 700);
         private Vector2 _scrollPosition = Vector2.zero;
-        
+
         private List<SkillBehaviour> _skillsList = new List<SkillBehaviour>();
         private const float SKILL_CARD_WIDTH = 280f;
         private const float SKILL_CARD_HEIGHT = 340f;
@@ -176,7 +173,7 @@ namespace Scripts.Models
             GUILayout.BeginHorizontal();
             GUILayout.Label("Available Skill Points", _titleStyle, GUILayout.Height(25));
             GUILayout.FlexibleSpace();
-            
+
             GUI.backgroundColor = _accentColor;
             GUILayout.Box($"{_hero.SkillPoints}", GUILayout.Width(50), GUILayout.Height(25));
             GUI.backgroundColor = Color.white;
@@ -190,7 +187,7 @@ namespace Scripts.Models
             closeStyle.fontStyle = FontStyle.Bold;
             closeStyle.normal.textColor = Color.white;
             closeStyle.hover.textColor = Color.white;
-            
+
             if (GUILayout.Button("X", closeStyle, GUILayout.Width(28), GUILayout.Height(25)))
             {
                 _isShow = false;
@@ -256,31 +253,31 @@ namespace Scripts.Models
             GUILayout.Label($"Level: {skill.Level}", _statLabelStyle, GUILayout.Height(20));
             GUILayout.Label($"Command: {skill.Command}", _statLabelStyle, GUILayout.Height(20));
             GUILayout.Label($"Range: {skill.Range}m", _statLabelStyle, GUILayout.Height(20));
-            
+
             // Requirements for next level with color coding
             int nextLevel = skill.Level + 1;
             int reqStr = skill.GetRequiredStrength(nextLevel);
             int reqDex = skill.GetRequiredDexterity(nextLevel);
             int reqInt = skill.GetRequiredIntelligence(nextLevel);
-            
+
             int heroStr = _hero?.Character?.Strength ?? 0;
             int heroDex = _hero?.Character?.Dexterity ?? 0;
             int heroInt = _hero?.Character?.Intelligence ?? 0;
 
             GUILayout.BeginHorizontal();
-            
+
             // STR requirement
             GUIStyle strStyle = heroStr >= reqStr ? _reqMetStyle : _reqNotMetStyle;
             GUILayout.Label($"STR: {reqStr}", strStyle, GUILayout.Height(20), GUILayout.Width(75));
-            
+
             // DEX requirement
             GUIStyle dexStyle = heroDex >= reqDex ? _reqMetStyle : _reqNotMetStyle;
             GUILayout.Label($"DEX: {reqDex}", dexStyle, GUILayout.Height(20), GUILayout.Width(75));
-            
+
             // INT requirement
             GUIStyle intStyle = heroInt >= reqInt ? _reqMetStyle : _reqNotMetStyle;
             GUILayout.Label($"INT: {reqInt}", intStyle, GUILayout.Height(20), GUILayout.Width(75));
-            
+
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
@@ -315,9 +312,9 @@ namespace Scripts.Models
         {
             GUILayout.BeginVertical(GUI.skin.box);
             GUILayout.Label($"Progress: {currentLevel}/{maxLevel}", _statLabelStyle, GUILayout.Height(18));
-            
+
             float progress = (float)currentLevel / maxLevel;
-            
+
             Rect barRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(20), GUILayout.ExpandWidth(true));
             barRect.x += 5;
             barRect.width -= 10;

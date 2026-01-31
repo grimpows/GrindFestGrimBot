@@ -1,11 +1,6 @@
-using Scripts.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using GrindFest;
 
 namespace Scripts.Models
 {
@@ -188,7 +183,7 @@ namespace Scripts.Models
             {
                 foreach (var monster in _fightingAgent.IgnoredMonsters.Take(5))
                 {
-                    GUILayout.Label($"  • {monster.name}", listStyle);
+                    GUILayout.Label($"  • {monster?.name}", listStyle);
                 }
 
                 if (_fightingAgent.IgnoredMonsters.Count > 5)

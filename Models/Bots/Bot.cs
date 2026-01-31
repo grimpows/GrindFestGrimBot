@@ -1,10 +1,6 @@
 ﻿using GrindFest;
 using Scripts.Model;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Scripts.Models
@@ -80,8 +76,8 @@ namespace Scripts.Models
 
         public void OnUpdate()
         {
-            
-            
+
+
 
             if (_hero == null)
                 return;
@@ -116,7 +112,7 @@ namespace Scripts.Models
             // Check unstuck mode
             if (UnstuckerAgent.IsActing())
             {
-                
+
                 CurrentStatus = BotStatus.UNSTICKING;
                 return;
             }
@@ -136,7 +132,7 @@ namespace Scripts.Models
                 return;
             }
 
-            // Once looting and fighting is done, try to consume if needed before other actions
+            // Once looting and fighting close is done, try to consume if needed before other actions
             if (ConsumerAgent.IsActing(false, 0.8f))
             {
                 CurrentStatus = BotStatus.CONSUMING;
@@ -144,11 +140,14 @@ namespace Scripts.Models
                 return;
             }
 
+
+
             if (_hero.Action_TryInteractWithObjects())
             {
                 CurrentStatus = BotStatus.INTERACTING;
                 return;
             }
+
 
             if (TravelerAgent.IsActing())
             {
@@ -156,7 +155,16 @@ namespace Scripts.Models
                 return;
             }
 
-           
+            //if not traveling or interacting, try fight at farther range
+            if (FightingAgent.IsActing(true))
+            {
+                CurrentStatus = BotStatus.FIGHTING;
+                PickUpAgent.TargetedItem = null;
+                UnstuckerAgent?.NotifyActivity();
+                return;
+            }
+
+
             // Default: run around
             CurrentStatus = BotStatus.RUNAROUND;
             _hero.RunAroundInArea();

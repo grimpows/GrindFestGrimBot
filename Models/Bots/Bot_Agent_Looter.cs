@@ -1,11 +1,8 @@
-﻿using System;
-using GrindFest;
+﻿using GrindFest;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using System.Text;
-using System.Threading.Tasks;
-using System.Timers;
 
 
 namespace Scripts.Models
@@ -151,8 +148,24 @@ namespace Scripts.Models
 
             ScannedItems = ScannedItems.Where(item =>
             {
-                if (item.Weapon != null && !item.name.ToLower().Contains("hammer"))
+                if (item.Weapon != null)
                 {
+                    if (!item.name.ToLower().Contains("hammer"))
+                    {
+                        //check if we already have more thatn 3 "hammer" name in inventory
+                        int hammerCountInInventory = _hero.Character.Inventory.Items
+                            .Count(i => i.Weapon != null && i.name.ToLower().Contains("hammer"));
+
+                        if (hammerCountInInventory >= 3)
+                        {
+                            return false;
+                        }
+
+                        //if we dont have more that 3 hammers, we can loot it
+                        return true;
+                    }
+
+
                     if (item.Weapon.DamagePerSecond < averageDPS)
                     {
                         return false;

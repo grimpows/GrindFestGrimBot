@@ -1,11 +1,6 @@
-﻿using Scripts.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using GrindFest;
+using Scripts.Models;
 using UnityEngine;
-using GrindFest;
 
 namespace Scripts.Model
 {
@@ -80,7 +75,7 @@ namespace Scripts.Model
             DrawTabs();
             GUILayout.Space(UITheme.SECTION_SPACING);
 
-            Rect contentArea = new Rect(10, UITheme.HEADER_HEIGHT + UITheme.TAB_HEIGHT + 35, 
+            Rect contentArea = new Rect(10, UITheme.HEADER_HEIGHT + UITheme.TAB_HEIGHT + 35,
                 _botWindowRect.width - 20, _botWindowRect.height - UITheme.HEADER_HEIGHT - UITheme.TAB_HEIGHT - 50);
 
             switch (_currentTab)
@@ -169,11 +164,11 @@ namespace Scripts.Model
 
             // Status Card - Bot Status only
             GUILayout.BeginHorizontal();
-            
+
             string statusText = _bot.CurrentStatus.ToString();
             Color statusColor = GetStatusColor(_bot.CurrentStatus);
             DrawStatusCard("Bot Status", statusText, statusColor);
-            
+
             GUILayout.Space(UITheme.BUTTON_SPACING);
 
             // Stats recap
@@ -184,7 +179,7 @@ namespace Scripts.Model
 
             int lootCount = _bot.PickUpAgent?.LootedItemCount ?? 0;
             DrawStatusCard("Looted", lootCount.ToString(), UITheme.Gold);
-            
+
             GUILayout.EndHorizontal();
             GUILayout.Space(UITheme.WINDOW_PADDING);
 
@@ -194,6 +189,7 @@ namespace Scripts.Model
 
             // Activity Card
             DrawActivityCard();
+
 
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();

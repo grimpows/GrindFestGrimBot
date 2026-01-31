@@ -1,9 +1,6 @@
 ﻿using GrindFest;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Scripts.Models
@@ -250,7 +247,7 @@ namespace Scripts.Models
             GUILayout.Space(UITheme.SECTION_SPACING);
 
             // Buy button
-            GUIStyle buyStyle = new GUIStyle( UITheme.ButtonStyle);
+            GUIStyle buyStyle = new GUIStyle(UITheme.ButtonStyle);
             bool canAfford = _goldShopManager.CanAffordItem(item);
 
             buyStyle.normal.background = UITheme.BarBgTexture;

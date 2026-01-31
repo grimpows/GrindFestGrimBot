@@ -1,10 +1,7 @@
 ﻿using GrindFest;
 using Scripts.Models;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 
@@ -30,7 +27,7 @@ class MyParty : Party_Base
         //GUI.skin = UITheme.Skin;
         GUI.backgroundColor = Color.white;
         GUI.contentColor = Color.white;
-         
+
 
         _worldUI?.OnGUI(SelectedHero, 15);
         _goldShopManager?.OnGUI();
@@ -45,7 +42,7 @@ class MyParty : Party_Base
     {
         if (_goldShopManager == null)
         {
-            _goldShopManager = new GoldShopManager(this,GLOBALS.WINDOWS.GOLD_SHOP_MANAGER_WINDOW_INFO.ToggleKey);
+            _goldShopManager = new GoldShopManager(this, GLOBALS.WINDOWS.GOLD_SHOP_MANAGER_WINDOW_INFO.ToggleKey);
         }
 
 
@@ -73,7 +70,7 @@ class MyParty : Party_Base
         ResurectDeadHeroes(PartyMembers);
     }
 
-   
+
 
     public override void OnAllHeroesDied()
     {

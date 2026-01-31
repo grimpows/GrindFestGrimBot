@@ -1,16 +1,11 @@
 ﻿using GrindFest;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Scripts.Models
 {
     public class Hero_Base : AutomaticHero
     {
-        
+
 
         private Bot _bot = new Bot();
         private HeroUI _heroUI = new HeroUI();
@@ -61,7 +56,7 @@ namespace Scripts.Models
         }
 
 
-        
+
 
 
     }
