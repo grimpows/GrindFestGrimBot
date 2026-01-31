@@ -132,12 +132,11 @@ namespace Scripts.Models
         public Dictionary<int, string> MinLevelAreaDictionary = new Dictionary<int, string>()
         {
             {1, "Stony Plains" },
-            {5, "Crimson Meadows" },
-            {8, "Rotten Burrows" },
-            {10, "Ashen Pastures" },
-            {11, "Canyon of Death" },
-            {12, "Endless Desert" },
-            {13, "Marsh of Madness" },
+            {3, "Crimson Meadows" },
+            {5, "Rotten Burrows" },
+            {7, "Ashen Pastures" },
+            {9, "Canyon of Death" },
+            {11, "Endless Desert" },
 
         };
 
