@@ -173,7 +173,7 @@ namespace Scripts.Models
             {
                 foreach (var item in _pickUpAgent.IgnoredItems.Take(5))
                 {
-                    GUILayout.Label($"  • {item.name}", listStyle);
+                    GUILayout.Label($"  • {item?.name}", listStyle);
                 }
 
                 if (_pickUpAgent.IgnoredItems.Count > 5)

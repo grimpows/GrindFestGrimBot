@@ -126,15 +126,47 @@ namespace Scripts.Models
             ForcedAreaName = "";
         }
 
+        /// <summary>
+        /// Dictionary of minimum hero level to area name for automatic area selection.
+        /// </summary>
         public Dictionary<int, string> MinLevelAreaDictionary = new Dictionary<int, string>()
         {
             {1, "Stony Plains" },
             {5, "Crimson Meadows" },
             {8, "Rotten Burrows" },
-            //{10, "Depths of Despair" },
-            {9, "Ashen Pastures" },
+            {10, "Ashen Pastures" },
             {11, "Canyon of Death" },
             {12, "Endless Desert" },
+            {13, "Marsh of Madness" },
+
         };
+
+        /// <summary>
+        /// List of custom areas that can be forced but are not part of the level-based area selection.
+        /// These areas are for special purposes like farming specific resources, bosses, etc.
+        /// </summary>
+        public List<string> CustomAreaList = new List<string>()
+        {
+          
+        };
+
+        /// <summary>
+        /// Adds a custom area to the list.
+        /// </summary>
+        public void AddCustomArea(string areaName)
+        {
+            if (!string.IsNullOrEmpty(areaName) && !CustomAreaList.Contains(areaName))
+            {
+                CustomAreaList.Add(areaName);
+            }
+        }
+
+        /// <summary>
+        /// Removes a custom area from the list.
+        /// </summary>
+        public void RemoveCustomArea(string areaName)
+        {
+            CustomAreaList.Remove(areaName);
+        }
     }
 }

@@ -253,6 +253,20 @@ namespace Scripts.Model
             string areaName = _hero.CurrentArea?.name ?? "Unknown Subarea";
             GUILayout.Label(areaName, UITheme.CreateValueStyle(UITheme.TextMuted, 12));
 
+            var childrenArea = _hero.CurrentArea.GetComponentInChildren<AreaBehaviour>();
+            if (childrenArea != null)
+            {
+                string area = childrenArea.name;
+                GUILayout.Label($"Children Area Behaviour: {area}", UITheme.CreateValueStyle(UITheme.TextMuted, 12));
+            }
+
+            var parentArea = _hero.CurrentArea.GetComponentInParent<AreaBehaviour>();
+            if (parentArea != null)
+            {
+                string area = parentArea.name;
+                GUILayout.Label($"Parent Area Behaviour: {area}", UITheme.CreateValueStyle(UITheme.TextMuted, 12));
+            }
+
             GUILayout.EndVertical();
         }
 
