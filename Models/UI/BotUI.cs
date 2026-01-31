@@ -161,7 +161,12 @@ namespace Scripts.Model
 
             // Status Cards Row
             GUILayout.BeginHorizontal();
-            DrawStatusCard("Bot Status", _hero.IsBotting ? "ACTIVE" : "INACTIVE", _hero.IsBotting ? UITheme.Positive : UITheme.Danger);
+            
+            // Bot Status with enum
+            string statusText = _bot.CurrentStatus.ToString();
+            Color statusColor = GetStatusColor(_bot.CurrentStatus);
+            DrawStatusCard("Bot Status", statusText, statusColor);
+            
             GUILayout.Space(UITheme.BUTTON_SPACING);
             DrawStatusCard("Unstick Mode", _bot.IsOnUnstickMode ? "ACTIVE" : "OFF", _bot.IsOnUnstickMode ? UITheme.Warning : UITheme.TextMuted);
             GUILayout.Space(UITheme.BUTTON_SPACING);
@@ -183,6 +188,24 @@ namespace Scripts.Model
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
             GUILayout.EndArea();
+        }
+
+        private Color GetStatusColor(BotStatus status)
+        {
+            return status switch
+            {
+                BotStatus.INACTIVE => UITheme.Danger,
+                BotStatus.IDLE => UITheme.TextMuted,
+                BotStatus.FIGHTING => UITheme.Danger,
+                BotStatus.LOOTING => UITheme.Gold,
+                BotStatus.CONSUMING => UITheme.Health,
+                BotStatus.TRAVELING => UITheme.Info,
+                BotStatus.RUNAROUND => UITheme.Positive,
+                BotStatus.UNSTICKING => UITheme.Warning,
+                BotStatus.INTERACTING => UITheme.Accent,
+                BotStatus.UPGRADING => UITheme.Intelligence,
+                _ => UITheme.TextMuted
+            };
         }
 
         void DrawSectionHeader(string title)

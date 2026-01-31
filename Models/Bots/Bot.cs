@@ -21,10 +21,14 @@ namespace Scripts.Models
 
         public DateTime EquipBestInSlotTimer = DateTime.MinValue;
 
-        
         public float StuckDistanceThreshold = 2f;
         public float StuckTimeThresholdSeconds = 3f;
         public float UnstickModeDurationSeconds = 30f;
+
+        /// <summary>
+        /// Current status of the bot indicating what action it's performing.
+        /// </summary>
+        public BotStatus CurrentStatus { get; private set; } = BotStatus.INACTIVE;
 
         private bool _isOnUnstickMode = false;
         public bool IsOnUnstickMode
@@ -102,32 +106,29 @@ namespace Scripts.Models
             _botUI?.OnGUI();
         }
 
-
         public void OnUpdate()
         {
-
-        
             if (LastHeroPosition == Vector3.zero)
             {
                 LastHeroPosition = _hero.Character.transform.position;
                 LastHeroPositionTime = DateTime.Now;
             }
 
-
             if (_hero == null)
                 return;
 
             if (!_hero.IsBotting)
             {
+                CurrentStatus = BotStatus.INACTIVE;
                 LastHeroPosition = _hero.Character.transform.position;
                 LastHeroPositionTime = DateTime.Now;
                 return;
             }
 
-
-            //try keep health up first
+            // Try keep health up first (emergency consume)
             if (ConsumerAgent.IsActing(true, 0.2f))
             {
+                CurrentStatus = BotStatus.CONSUMING;
                 this.IDontCareAboutStick();
                 return;
             }
@@ -140,21 +141,20 @@ namespace Scripts.Models
 
             _hero.Action_UpgradeStats();
 
-
             if (IsOnUnstickMode)
             {
+                CurrentStatus = BotStatus.UNSTICKING;
                 _hero.RunAroundInArea();
                 if ((DateTime.Now - UnstickStartTime).TotalSeconds > UnstickModeDurationSeconds)
                 {
                     IsOnUnstickMode = false;
-
                 }
                 return;
             }
 
-
             if (FightingAgent.IsActing())
             {
+                CurrentStatus = BotStatus.FIGHTING;
                 PickUpAgent.TargetedItem = null;
                 this.IDontCareAboutStick();
                 return;
@@ -162,13 +162,15 @@ namespace Scripts.Models
 
             if (PickUpAgent.IsActing())
             {
+                CurrentStatus = BotStatus.LOOTING;
                 this.IDontCareAboutStick();
                 return;
             }
 
-            // once looting and fighting is done, try to consume if needed before other actions
+            // Once looting and fighting is done, try to consume if needed before other actions
             if (ConsumerAgent.IsActing(false, 0.8f))
             {
+                CurrentStatus = BotStatus.CONSUMING;
                 this.IDontCareAboutStick();
                 return;
             }
@@ -179,36 +181,31 @@ namespace Scripts.Models
                 LastHeroPositionTime = DateTime.Now;
             }
 
-
             if ((DateTime.Now - LastHeroPositionTime).TotalSeconds > StuckTimeThresholdSeconds)
             {
-                //_hero.RunAroundInArea();
                 IsOnUnstickMode = true;
             }
 
-
-
             if (_hero.Action_TryInteractWithObjects())
+            {
+                CurrentStatus = BotStatus.INTERACTING;
                 return;
+            }
 
             if (TravelerAgent.IsActing())
+            {
+                CurrentStatus = BotStatus.TRAVELING;
                 return;
-            //if (_hero.Action_TryMoveToBestFarmArea(IsAllowedToChangeArea))
-            //    return;
+            }
 
-
+            // Default: run around
+            CurrentStatus = BotStatus.RUNAROUND;
             _hero.RunAroundInArea();
         }
-
 
         private void IDontCareAboutStick()
         {
             LastHeroPositionTime = DateTime.Now;
         }
-
-
-
-
-
     }
 }
