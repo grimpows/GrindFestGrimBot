@@ -10,30 +10,11 @@ namespace Scripts.Models
 {
     public class QuickAccessUI
     {
-        private const int BUTTON_SIZE = 50;
-        private const int BUTTON_SPACING = 8;
-
         // References to UI panels
         private HeroUI _heroUI;
         private InventoryUI _inventoryUI;
         private SkillUI _skillUI;
         private Bot _bot;
-
-        // Button textures (initialized once)
-        private bool _texturesInitialized = false;
-        private Texture2D _normalTexture;
-        private Texture2D _hoverTexture;
-        private Texture2D _activeTexture;
-        private Texture2D _activeHoverTexture;
-
-        // Colors - Unified dark theme
-        private Color _normalColor = new Color(0.15f, 0.15f, 0.18f, 0.95f);
-        private Color _hoverColor = new Color(0.22f, 0.22f, 0.26f, 0.95f);
-        private Color _activeColor = new Color(0.25f, 0.45f, 0.65f, 0.95f);
-        private Color _activeHoverColor = new Color(0.3f, 0.52f, 0.72f, 0.95f);
-        private Color _textColor = new Color(0.85f, 0.85f, 0.88f, 1f);
-        private Color _textActiveColor = new Color(1f, 1f, 1f, 1f);
-        private Color _accentColor = new Color(0.95f, 0.75f, 0.3f, 1f);
 
         public void OnStart(HeroUI heroUI, InventoryUI inventoryUI, SkillUI skillUI, Bot bot)
         {
@@ -43,102 +24,67 @@ namespace Scripts.Models
             _bot = bot;
         }
 
-        private void InitializeTextures()
-        {
-            if (_texturesInitialized) return;
-
-            _normalTexture = CreateTexture(_normalColor);
-            _hoverTexture = CreateTexture(_hoverColor);
-            _activeTexture = CreateTexture(_activeColor);
-            _activeHoverTexture = CreateTexture(_activeHoverColor);
-
-            _texturesInitialized = true;
-        }
-
-        private Texture2D CreateTexture(Color color)
-        {
-            Texture2D tex = new Texture2D(1, 1);
-            tex.SetPixel(0, 0, color);
-            tex.Apply();
-            return tex;
-        }
-
         public void OnGUI()
         {
-            InitializeTextures();
-
             float screenHeight = Screen.height;
             float startX = 100;
-            float buttonY = screenHeight - BUTTON_SIZE - 10;
+            float buttonY = screenHeight - UITheme.BUTTON_SIZE - 10;
 
             // GoldShop button is at startX (position 0)
             // Our buttons start after it
-            float currentX = startX + BUTTON_SIZE + BUTTON_SPACING;
+            float currentX = startX;
 
             // Hero UI Button (C for Character)
             bool heroActive = _heroUI?.IsVisible ?? false;
-            DrawQuickButton(currentX, buttonY, "C", heroActive, () =>
-            {
-                _heroUI?.ToggleVisible();
-            });
-            currentX += BUTTON_SIZE + BUTTON_SPACING;
+            DrawQuickButton(currentX, buttonY, "C", heroActive, () => _heroUI?.ToggleVisible());
+            currentX += UITheme.BUTTON_SIZE + UITheme.BUTTON_SPACING;
 
             // Inventory UI Button (I)
             bool invActive = _inventoryUI?.IsVisible ?? false;
-            DrawQuickButton(currentX, buttonY, "I", invActive, () =>
-            {
-                _inventoryUI?.ToggleVisible();
-            });
-            currentX += BUTTON_SIZE + BUTTON_SPACING;
+            DrawQuickButton(currentX, buttonY, "I", invActive, () => _inventoryUI?.ToggleVisible());
+            currentX += UITheme.BUTTON_SIZE + UITheme.BUTTON_SPACING;
 
             // Skill UI Button (S)
             bool skillActive = _skillUI?.IsVisible ?? false;
-            DrawQuickButton(currentX, buttonY, "S", skillActive, () =>
-            {
-                _skillUI?.ToggleVisible();
-            });
-            currentX += BUTTON_SIZE + BUTTON_SPACING;
+            DrawQuickButton(currentX, buttonY, "S", skillActive, () => _skillUI?.ToggleVisible());
+            currentX += UITheme.BUTTON_SIZE + UITheme.BUTTON_SPACING;
 
             // Bot UI Button (B)
             bool botActive = _bot?.IsUIVisible ?? false;
-            DrawQuickButton(currentX, buttonY, "B", botActive, () =>
-            {
-                _bot?.ToggleUIVisible();
-            });
+            DrawQuickButton(currentX, buttonY, "B", botActive, () => _bot?.ToggleUIVisible());
         }
 
         private void DrawQuickButton(float x, float y, string icon, bool isActive, Action onClick)
         {
-            Rect buttonRect = new Rect(x, y, BUTTON_SIZE, BUTTON_SIZE);
-            bool isHovered = buttonRect.Contains(Event.current.mousePosition);
+            Rect buttonRect = new Rect(x, y, UITheme.BUTTON_SIZE, UITheme.BUTTON_SIZE);
 
             // Create button style
             GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-            buttonStyle.fontSize = 22;
+            buttonStyle.fontSize = UITheme.FONT_SIZE_BUTTON_LARGE;
             buttonStyle.fontStyle = FontStyle.Bold;
             buttonStyle.alignment = TextAnchor.MiddleCenter;
 
             // Text color
-            Color textColor = isActive ? _textActiveColor : _textColor;
+            Color textColor = isActive ? UITheme.TextLight : UITheme.TextLight;
             buttonStyle.normal.textColor = textColor;
-            buttonStyle.hover.textColor = _textActiveColor;
-            buttonStyle.active.textColor = _textActiveColor;
+            buttonStyle.hover.textColor = UITheme.TextLight;
+            buttonStyle.active.textColor = UITheme.TextLight;
             buttonStyle.focused.textColor = textColor;
 
             // Background based on state
             if (isActive)
             {
-                buttonStyle.normal.background = _activeTexture;
-                buttonStyle.hover.background = _activeHoverTexture;
-                buttonStyle.active.background = _activeTexture;
-                buttonStyle.focused.background = _activeTexture;
+                buttonStyle.normal.background = UITheme.ButtonActiveTexture;
+                buttonStyle.hover.background = UITheme.ButtonActiveHoverTexture;
+                buttonStyle.active.background = UITheme.ButtonActiveTexture;
+                buttonStyle.focused.background = UITheme.ButtonActiveTexture;
             }
             else
             {
-                buttonStyle.normal.background = _normalTexture;
-                buttonStyle.hover.background = _hoverTexture;
-                buttonStyle.active.background = _normalTexture;
-                buttonStyle.focused.background = _normalTexture;
+                buttonStyle.normal.background = UITheme.ButtonNormalTexture;
+                buttonStyle.hover.background = UITheme.ButtonHoverTexture;
+                buttonStyle.active.background = UITheme.ButtonNormalTexture;
+                buttonStyle.focused.background = UITheme.ButtonNormalTexture;
             }
 
             // Draw button
@@ -150,23 +96,8 @@ namespace Scripts.Models
             // Draw accent border when active
             if (isActive)
             {
-                DrawButtonBorder(buttonRect, _accentColor);
+                UITheme.DrawBorder(buttonRect, UITheme.Accent);
             }
-        }
-
-        private void DrawButtonBorder(Rect rect, Color color)
-        {
-            Texture2D borderTex = CreateTexture(color);
-            float borderWidth = 2f;
-
-            // Top
-            GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, borderWidth), borderTex);
-            // Bottom
-            GUI.DrawTexture(new Rect(rect.x, rect.y + rect.height - borderWidth, rect.width, borderWidth), borderTex);
-            // Left
-            GUI.DrawTexture(new Rect(rect.x, rect.y, borderWidth, rect.height), borderTex);
-            // Right
-            GUI.DrawTexture(new Rect(rect.x + rect.width - borderWidth, rect.y, borderWidth, rect.height), borderTex);
         }
     }
 }

@@ -20,12 +20,14 @@ namespace Scripts.Models
 
         public GoldShopManager(AutomaticParty party, KeyCode toggleShowKey)
         {
+            Party = party;
+
             if (_goldShopManagerUI == null)
             {
                 _goldShopManagerUI = new GoldShopManagerUI(this, toggleShowKey);
             }
 
-            Party = party;
+            
         }
 
         public void OnGUI()
@@ -85,7 +87,14 @@ namespace Scripts.Models
                 {
                     // add to dictionary if not present and set up default value for gold items
                     string lowerName = item.Name.ToLower();
-                    AutoBuyGoldShopItemSelection[itemKey] = lowerName.Contains("gold") || lowerName.Contains("experience") || lowerName.Contains("magicfind") ? true : false;
+                    AutoBuyGoldShopItemSelection[itemKey] = 
+                        lowerName.Contains("gold") || 
+                        lowerName.Contains("experience") || 
+                        lowerName.Contains("magicfind") ||
+                        lowerName.Contains("statpoints") ||
+                        lowerName.Contains("heroslot") ||
+                        lowerName.Contains("armorbonus") 
+                        ? true : false;
                 }
 
 

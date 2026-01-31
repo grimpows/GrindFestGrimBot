@@ -220,12 +220,18 @@ namespace Scripts.Models
 
         float CalculateAverageDPSForBestWeaponsInInventory()
         {
-            if (_hero.Character.Inventory.Items.Count(i => i.Weapon != null) == 0)
+            if (_hero?.Character?.Inventory?.Items == null)
                 return 0f;
 
-            // dont forget to not consider blacksmith items used for crafting
-            var weaponDPS = _hero.Character.Inventory.Items
+
+            var filteredWeapons = _hero.Character.Inventory.Items
                 .Where(i => i.Weapon != null && !i.name.ToLower().Contains("hammer"))
+                .ToList();
+
+            if (filteredWeapons.Count == 0)
+                return 0f;
+
+            var weaponDPS = filteredWeapons
                 .OrderByDescending(i => i.Weapon.DamagePerSecond)
                 .Take(MaxWeaponToKeep)
                 .Average(i => i.Weapon.DamagePerSecond);

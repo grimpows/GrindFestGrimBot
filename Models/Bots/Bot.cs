@@ -126,7 +126,7 @@ namespace Scripts.Models
 
 
             //try keep health up first
-            if (ConsumerAgent.IsActing(true, 0.5f))
+            if (ConsumerAgent.IsActing(true, 0.2f))
             {
                 this.IDontCareAboutStick();
                 return;
@@ -140,7 +140,6 @@ namespace Scripts.Models
 
             _hero.Action_UpgradeStats();
 
-            
 
             if (IsOnUnstickMode)
             {

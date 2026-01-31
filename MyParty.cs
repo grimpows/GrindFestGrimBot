@@ -23,18 +23,29 @@ class MyParty : Party_Base
 
     public void OnGUI()
     {
+        Color originalBgColor = GUI.backgroundColor;
+        Color orignalCntColor = GUI.contentColor;
+        GUISkin orignalSkin = GUI.skin;
+
+        //GUI.skin = UITheme.Skin;
+        GUI.backgroundColor = Color.white;
+        GUI.contentColor = Color.white;
+         
+
         _worldUI?.OnGUI(SelectedHero, 15);
         _goldShopManager?.OnGUI();
-        
+
+        GUI.backgroundColor = originalBgColor;
+        GUI.contentColor = orignalCntColor;
+        GUI.skin = orignalSkin;
+
     }
 
     public void Update()
     {
         if (_goldShopManager == null)
         {
-            Debug.Log("Initializing Gold Shop Manager");
-            _goldShopManager = new GoldShopManager(this,KeyCode.A);
-            Debug.Log($"Gold Shop Manager Initialized with KeyCode: {KeyCode.A}");
+            _goldShopManager = new GoldShopManager(this,GLOBALS.WINDOWS.GOLD_SHOP_MANAGER_WINDOW_INFO.ToggleKey);
         }
 
 

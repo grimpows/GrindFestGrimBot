@@ -84,6 +84,7 @@ namespace Scripts.Models
             }
 
             return areaForLevel.Value;
+           
         }
 
         public Dictionary<int, string> MinLevelAreaDictionary = new Dictionary<int, string>()
@@ -92,7 +93,8 @@ namespace Scripts.Models
             {5, "Crimson Meadows" },
             {8, "Rotten Burrows" },
             //{10, "Depths of Despair" },
-            {11, "Ashen Pastures" }
+            {11, "Ashen Pastures" },
+            {15, "Canyon of Death" }
         };
 
 
