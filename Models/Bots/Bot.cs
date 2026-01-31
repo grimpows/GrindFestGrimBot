@@ -145,17 +145,16 @@ namespace Scripts.Models
             if (_hero.Action_TryInteractWithObjects())
             {
                 CurrentStatus = BotStatus.INTERACTING;
-                UnstuckerAgent?.NotifyActivity();
                 return;
             }
 
             if (TravelerAgent.IsActing())
             {
                 CurrentStatus = BotStatus.TRAVELING;
-                UnstuckerAgent?.NotifyActivity();
                 return;
             }
 
+           
             // Default: run around
             CurrentStatus = BotStatus.RUNAROUND;
             _hero.RunAroundInArea();

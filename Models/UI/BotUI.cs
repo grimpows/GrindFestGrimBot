@@ -245,6 +245,8 @@ namespace Scripts.Model
             GUILayout.EndHorizontal();
             GUILayout.Space(4);
 
+            
+
             string rootAreaName = _hero.CurrentArea?.Root.name ?? "Unknown Area";
             GUILayout.Label(rootAreaName, UITheme.CreateValueStyle(UITheme.Info, 13));
 

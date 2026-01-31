@@ -22,7 +22,7 @@ namespace Scripts.Models
 
         }
 
-        public bool IsActing(bool usePotionFirst,float healthThreshold = 0.5f)
+        public bool IsActing(bool usePotionFirst, float healthThreshold = 0.5f)
         {
             if (_hero.Character.SkillUser.IsUsingSkill && _hero.Character.SkillUser.CurrentlyUsedSkill == LastUsedSkill)
             {
@@ -34,6 +34,23 @@ namespace Scripts.Models
                 return true;
 
 
+
+            return false;
+        }
+
+        public bool LearnSkillBookIfAvailable()
+        {
+            ItemBehaviour? skillBook = _hero.Character.Inventory.Items.FirstOrDefault(item => item?.GetComponent<SkillBookBehavior>() != null);
+            if (skillBook != null)
+            {
+                SkillBookBehavior skillBookBehavior = skillBook.GetComponent<SkillBookBehavior>();
+                if (skillBookBehavior != null)
+                {
+                    _hero.Character.Speech.SayLine($"Learning skill from {skillBook.name}");
+                    skillBookBehavior.Interactive.OnPlayerDoubleClick(_hero.Character.Hero);
+                    return true;
+                }
+            }
 
             return false;
         }

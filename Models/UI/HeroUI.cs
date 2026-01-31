@@ -429,18 +429,19 @@ namespace Scripts.Models
             Color oldColor = GUI.color;
             GUI.color = color;
             GUILayout.Label($"{total}", _statValueStyle, GUILayout.Width(35));
-            
-            // Base value - more visible gray
-            GUIStyle baseStyle = new GUIStyle(_statLabelStyle);
-            baseStyle.normal.textColor = new Color(0.6f, 0.6f, 0.65f);
-            GUILayout.Label($"({baseVal} +", baseStyle, GUILayout.Width(45));
-            
-            // Bonus value - green
-            GUIStyle bonusStyle = new GUIStyle(_statLabelStyle);
-            bonusStyle.normal.textColor = _positiveColor;
-            GUILayout.Label($"{bonus})", bonusStyle, GUILayout.Width(30));
-            
             GUI.color = oldColor;
+
+            // group both without horizontal spacing
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"({baseVal} +", _statLabelStyle, GUILayout.Width(0));
+            
+            GUIStyle bonusStatLabel = new GUIStyle(_statLabelStyle);
+            bonusStatLabel.normal.textColor = _positiveColor;
+
+            GUILayout.Label($"{bonus})", bonusStatLabel, GUILayout.Width(0));
+            GUILayout.EndHorizontal();
+
             GUILayout.EndHorizontal();
         }
 
