@@ -37,29 +37,44 @@ namespace Scripts.Models
 
         public void OnGUI()
         {
-            _heroUI.OnGUI();
-            _minimapUI.OnGUI();
-            _inventoryUI.OnGUI();
-            _skillUI.OnGUI();
+            try
+            {
+                _heroUI.OnGUI();
+                _minimapUI.OnGUI();
+                _inventoryUI.OnGUI();
+                _skillUI.OnGUI();
 
-            _bot.OnGUI();
-            _aiChatUI.OnGUI();
+                _bot.OnGUI();
+                _aiChatUI.OnGUI();
 
 
-            // Draw quick access buttons
-            _quickAccessUI.OnGUI();
+                // Draw quick access buttons
+                _quickAccessUI.OnGUI();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"Hero_Base OnGUI Error: {ex.Message}\n{ex.StackTrace}");
+            }
+            
         }
 
         public void Update()
         {
-            _heroUI.OnUpdate();
-            _minimapUI.OnUpdate();
-            _inventoryUI.OnUpdate();
-            _skillUI.OnUpdate();
+            try
+            {
+                _heroUI.OnUpdate();
+                _minimapUI.OnUpdate();
+                _inventoryUI.OnUpdate();
+                _skillUI.OnUpdate();
 
 
-            _bot.OnUpdate();
-            _aiChatUI.OnUpdate();
+                _bot.OnUpdate();
+                _aiChatUI.OnUpdate();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"Hero_Base Update Error: {ex.Message}\n{ex.StackTrace}");
+            }
         }
 
 
