@@ -65,7 +65,7 @@ namespace Scripts.Models
         {
             if (_hero == null) return false;
 
-            string bestArea = GetBestArea();
+            string bestArea = GetAreaToTravel();
             if (_hero.CurrentArea?.Root?.name != null && _hero.CurrentArea.Root.name != bestArea)
             {
                 TargetAreaName = bestArea;
@@ -78,7 +78,7 @@ namespace Scripts.Models
             return false;
         }
 
-        public string GetBestArea()
+        public string GetAreaToTravel()
         {
             // If forced area is set, always return it
             if (IsForcedAreaEnabled)

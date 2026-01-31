@@ -167,32 +167,32 @@ namespace Scripts.Model
             DrawSectionHeader("GLOBAL STATUS");
             GUILayout.Space(UITheme.SECTION_SPACING);
 
-            // Status Cards Row
+            // Status Card - Bot Status only
             GUILayout.BeginHorizontal();
             
-            // Bot Status with enum
             string statusText = _bot.CurrentStatus.ToString();
             Color statusColor = GetStatusColor(_bot.CurrentStatus);
             DrawStatusCard("Bot Status", statusText, statusColor);
             
             GUILayout.Space(UITheme.BUTTON_SPACING);
-            
-            // Unstick Mode from UnstuckerAgent
-            bool isUnsticking = _bot.UnstuckerAgent?.IsOnUnstickMode ?? false;
-            DrawStatusCard("Unstick Mode", isUnsticking ? "ACTIVE" : "OFF", isUnsticking ? UITheme.Warning : UITheme.TextMuted);
-            
+
+            // Stats recap
+            int killCount = _bot.FightingAgent?.KillCount ?? 0;
+            DrawStatusCard("Kills", killCount.ToString(), UITheme.Danger);
+
             GUILayout.Space(UITheme.BUTTON_SPACING);
-            
-            // Unstick Count
-            int unstickCount = _bot.UnstuckerAgent?.UnstickCount ?? 0;
-            DrawStatusCard("Unstick Count", unstickCount.ToString(), UITheme.Info);
+
+            int lootCount = _bot.PickUpAgent?.LootedItemCount ?? 0;
+            DrawStatusCard("Looted", lootCount.ToString(), UITheme.Gold);
             
             GUILayout.EndHorizontal();
             GUILayout.Space(UITheme.WINDOW_PADDING);
 
+            // Area Info Card with 5 columns
             DrawAreaCard();
             GUILayout.Space(UITheme.SECTION_SPACING);
 
+            // Activity Card
             DrawActivityCard();
 
             GUILayout.FlexibleSpace();
@@ -241,31 +241,78 @@ namespace Scripts.Model
             GUI.color = UITheme.Info;
             GUILayout.Label("◎", GUILayout.Width(20));
             GUI.color = Color.white;
-            GUILayout.Label("Current Area", UITheme.SubtitleStyle);
+            GUILayout.Label("Area Information", UITheme.SubtitleStyle);
             GUILayout.EndHorizontal();
+            GUILayout.Space(UITheme.ELEMENT_SPACING);
+
+            // 5 columns: Root | Name | Children | Parent | Target
+            GUILayout.BeginHorizontal();
+
+            // Column 1: Root
+            GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+            GUILayout.Label("Root", UITheme.LabelStyle);
+            string rootName = _hero.CurrentArea?.Root?.name ?? "N/A";
+            GUILayout.Label(TruncateText(rootName, 40), UITheme.CreateLabelStyle(UITheme.Info, UITheme.FONT_SIZE_NORMAL, FontStyle.Bold));
+            GUILayout.EndVertical();
+
             GUILayout.Space(4);
 
-            
+            // Column 2: Name
+            GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+            GUILayout.Label("Name", UITheme.LabelStyle);
+            string areaName = _hero.CurrentArea?.name ?? "N/A";
+            GUILayout.Label(TruncateText(areaName, 40), UITheme.CreateLabelStyle(UITheme.TextLight, UITheme.FONT_SIZE_NORMAL, FontStyle.Bold));
+            GUILayout.EndVertical();
 
-            string rootAreaName = _hero.CurrentArea?.Root.name ?? "Unknown Area";
-            GUILayout.Label(rootAreaName, UITheme.CreateValueStyle(UITheme.Info, 13));
+            GUILayout.Space(4);
 
-            string areaName = _hero.CurrentArea?.name ?? "Unknown Subarea";
-            GUILayout.Label(areaName, UITheme.CreateValueStyle(UITheme.TextMuted, 12));
-
-            var childrenArea = _hero.CurrentArea.GetComponentInChildren<AreaBehaviour>();
-            if (childrenArea != null)
+            // Column 3: Children
+            GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+            GUILayout.Label("Children", UITheme.LabelStyle);
+            string childrenName = "N/A";
+            try
             {
-                string area = childrenArea.name;
-                GUILayout.Label($"Children Area Behaviour: {area}", UITheme.CreateValueStyle(UITheme.TextMuted, 12));
+                var childrenArea = _hero.CurrentArea?.GetComponentInChildren<AreaBehaviour>();
+                if (childrenArea != null && childrenArea != _hero.CurrentArea)
+                {
+                    childrenName = childrenArea.name;
+                }
             }
+            catch { }
+            GUILayout.Label(TruncateText(childrenName, 40), UITheme.CreateLabelStyle(UITheme.TextMuted, UITheme.FONT_SIZE_NORMAL, FontStyle.Bold));
+            GUILayout.EndVertical();
 
-            var parentArea = _hero.CurrentArea.GetComponentInParent<AreaBehaviour>();
-            if (parentArea != null)
+            GUILayout.Space(4);
+
+            // Column 4: Parent
+            GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+            GUILayout.Label("Parent", UITheme.LabelStyle);
+            string parentName = "N/A";
+            try
             {
-                string area = parentArea.name;
-                GUILayout.Label($"Parent Area Behaviour: {area}", UITheme.CreateValueStyle(UITheme.TextMuted, 12));
+                var parentArea = _hero.CurrentArea?.GetComponentInParent<AreaBehaviour>();
+                if (parentArea != null && parentArea != _hero.CurrentArea)
+                {
+                    parentName = parentArea.name;
+                }
             }
+            catch { }
+            GUILayout.Label(TruncateText(parentName, 40), UITheme.CreateLabelStyle(UITheme.TextMuted, UITheme.FONT_SIZE_NORMAL, FontStyle.Bold));
+            GUILayout.EndVertical();
+
+            GUILayout.Space(4);
+
+            // Column 5: Target Area
+            GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+            GUILayout.Label("Target", UITheme.LabelStyle);
+            string targetArea = _bot.TravelerAgent?.TargetAreaName;
+            bool hasTarget = !string.IsNullOrEmpty(targetArea);
+            string targetDisplay = hasTarget ? targetArea : "None";
+            Color targetColor = hasTarget ? UITheme.Warning : UITheme.TextMuted;
+            GUILayout.Label(TruncateText(targetDisplay, 40), UITheme.CreateLabelStyle(targetColor, UITheme.FONT_SIZE_NORMAL, FontStyle.Bold));
+            GUILayout.EndVertical();
+
+            GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
         }
@@ -293,6 +340,13 @@ namespace Scripts.Model
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
+        }
+
+        private string TruncateText(string text, int maxLength)
+        {
+            if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+                return text;
+            return text.Substring(0, maxLength - 2) + "..";
         }
     }
 }

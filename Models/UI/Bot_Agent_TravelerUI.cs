@@ -109,7 +109,7 @@ namespace Scripts.Models
             }
 
             string bestArea = "";
-            try { bestArea = _travelerAgent.GetBestArea(); } catch { }
+            try { bestArea = _travelerAgent.GetAreaToTravel(); } catch { }
             string targetArea = _travelerAgent.TargetAreaName;
             string forcedArea = _travelerAgent.ForcedAreaName;
 
@@ -278,7 +278,7 @@ namespace Scripts.Models
             GUILayout.Space(UITheme.ELEMENT_SPACING);
 
             string bestArea = "";
-            try { bestArea = _travelerAgent.GetBestArea(); } catch { bestArea = "Unknown"; }
+            try { bestArea = _travelerAgent.GetAreaToTravel(); } catch { bestArea = "Unknown"; }
 
             Color areaColor = _travelerAgent.IsForcedAreaEnabled ? UITheme.Warning : UITheme.Accent;
             GUILayout.Label(bestArea, UITheme.CreateValueStyle(areaColor, 12));
