@@ -167,6 +167,23 @@ namespace Scripts.Models
                         return true;
                     }
 
+                    if (item.name.ToLower().Contains("pickaxe"))
+                    {
+                        //check if we already have more thatn 3 "hammer" name in inventory
+                        int hammerCountInInventory = _hero.Character.Inventory.Items
+                            .Count(i => i.Weapon != null && i.name.ToLower().Contains("pickaxe"));
+
+                        if (hammerCountInInventory >= 3)
+                        {
+                            return false;
+                        }
+
+                        //if we dont have more that 3 hammers, we can loot it
+                        return true;
+                    }
+
+
+
 
                     if (item.Weapon.DamagePerSecond < averageDPS)
                     {
@@ -245,7 +262,7 @@ namespace Scripts.Models
 
 
             var filteredWeapons = _hero.Character.Inventory.Items
-                .Where(i => i.Weapon != null && !i.name.ToLower().Contains("hammer"))
+                .Where(i => i.Weapon != null && !i.name.ToLower().Contains("hammer") & !i.name.ToLower().Contains("pickaxe"))
                 .ToList();
 
             if (filteredWeapons.Count == 0)
@@ -263,7 +280,7 @@ namespace Scripts.Models
         {
             //dontforget to not remove blacksmith items used for crafting
             var itemsToRemove = _hero.Character.Inventory.Items
-                .Where(item => item.Weapon != null && !item.name.ToLower().Contains("hammer"))
+                .Where(item => item.Weapon != null && !item.name.ToLower().Contains("hammer") && !item.name.ToLower().Contains("pickaxe"))
                 .OrderByDescending(item => item.Weapon.DamagePerSecond)
                 .ToList();
 
@@ -323,7 +340,7 @@ namespace Scripts.Models
             {
                 // Example: Only loot swords and axes
                 string itemName = item.name.ToLower();
-                if (itemName.Contains("sword") || itemName.Contains("axe") || itemName.Contains("bow") || itemName.Contains("dagger"))
+                if (itemName.Contains("sword") || (itemName.Contains("axe") && !itemName.Contains("pickaxe")) || itemName.Contains("bow") || itemName.Contains("dagger"))
                 {
                     return true;
                 }
