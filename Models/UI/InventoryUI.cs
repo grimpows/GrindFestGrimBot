@@ -537,11 +537,20 @@ namespace Scripts.Models
                 y += statHeight;
             }
 
-            if (item.GoldValue > 0)
+            try
             {
-                DrawStatLineAt(cardRect, y, padding, "Value", $"{item.GoldValue}g", _accentColor);
-                y += statHeight;
+                if (item?.GoldValue != null && item?.GoldValue > 0)
+                {
+                    DrawStatLineAt(cardRect, y, padding, "Value", $"{item?.GoldValue}g", _accentColor);
+                    y += statHeight;
+                }
             }
+            catch (Exception ex)
+            {
+                //Debug.LogError($"Error accessing GoldValue for item {item.Name}\n{ex.StackTrace}");
+                //silent catch
+            }
+
 
             return y;
         }
