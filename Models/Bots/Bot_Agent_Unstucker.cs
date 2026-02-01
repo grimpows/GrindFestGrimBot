@@ -12,12 +12,12 @@ namespace Scripts.Models
         /// Distance threshold to consider the hero as "stuck".
         /// If the hero moves less than this distance, they might be stuck.
         /// </summary>
-        public float StuckDistanceThreshold { get; set; } = 2f;
+        public float StuckDistanceThreshold { get; set; } = 3f;
 
         /// <summary>
         /// Time in seconds before considering the hero as stuck.
         /// </summary>
-        public float StuckTimeThresholdSeconds { get; set; } = 3f;
+        public float StuckTimeThresholdSeconds { get; set; } = 5f;
 
         /// <summary>
         /// Duration in seconds for the unstick mode.

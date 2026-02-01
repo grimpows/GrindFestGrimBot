@@ -1,8 +1,10 @@
 ﻿using GrindFest;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using UnityEngine;
+using static GrindFest.LocalHero;
 
 namespace Scripts.Models
 {
@@ -147,6 +149,9 @@ namespace Scripts.Models
         {
             try
             {
+                GUILayout.BeginHorizontal();
+
+                // Skills list area
                 GUILayout.BeginVertical(GUILayout.Height(_skillsWindowRect.height - 40));
 
                 DrawSkillHeader();
@@ -155,6 +160,16 @@ namespace Scripts.Models
                 DrawSkillsGrid();
 
                 GUILayout.EndVertical();
+
+                //skill bar assignation area
+                if (_selectedSkillForAssignation != null)
+                {
+                    GUILayout.Space(10);
+                    DrawSkillBarAssignation();
+                }
+
+                GUILayout.EndHorizontal();
+
             }
             catch (Exception ex)
             {
@@ -239,6 +254,50 @@ namespace Scripts.Models
             GUILayout.EndVertical();
         }
 
+        private SkillBehaviour _selectedSkillForAssignation = null;
+
+        private void DrawSkillBarAssignation()
+        {
+            GUILayout.BeginVertical();
+            GUILayout.Label($"Assign {_selectedSkillForAssignation?.name} to Skill Bar:", _statLabelStyle, GUILayout.Height(20));
+
+            //loop over skill bar slots
+            if (_selectedSkillForAssignation == null)
+            {
+                GUILayout.Label("No skill selected for assignation.", _descriptionStyle, GUILayout.Height(20));
+            }
+            else
+            {
+                bool isAsigned = false;
+
+                //cancel button
+                GUI.backgroundColor = _negativeColor;
+                if (GUILayout.Button("Cancel", GUILayout.Width(70), GUILayout.Height(30)))
+                {
+                    _selectedSkillForAssignation = null;
+                }
+                GUI.backgroundColor = Color.white;
+
+                for (int i = 0; i < _hero.SkillBar1.Skills.Length; i++)
+                {
+                    GUI.backgroundColor = (_hero.SkillBar1.Skills[i] == _selectedSkillForAssignation) ? _positiveColor : Color.white;
+                    if (GUILayout.Button($"Slot {i}", GUILayout.Width(70), GUILayout.Height(30)))
+                    {
+                        _hero.SkillBar1.Skills[i] = _selectedSkillForAssignation;
+                        isAsigned = true;
+
+
+                    }
+                    GUI.backgroundColor = Color.white;
+                }
+
+                if (isAsigned)
+                    _selectedSkillForAssignation = null;
+            }
+
+            GUILayout.EndVertical();
+        }
+
         private void DrawSkillCard(SkillBehaviour skill, int index)
         {
             GUILayout.BeginVertical(_skillCardStyle, GUILayout.Width(SKILL_CARD_WIDTH), GUILayout.Height(SKILL_CARD_HEIGHT));
@@ -280,6 +339,22 @@ namespace Scripts.Models
 
             GUILayout.EndHorizontal();
 
+            //check if assigned to skill bar
+            bool isAssigned = _hero.SkillBar1.Skills.Contains(skill);
+            if (isAssigned)
+            {
+                var hotkeyIndex = Array.IndexOf(_hero.SkillBar1.Skills, skill);
+                GUILayout.Label($"Assigned to Skill Bar (Slot {hotkeyIndex})", _reqMetStyle, GUILayout.Height(20));
+
+                //draw button to unassign
+                GUI.backgroundColor = _negativeColor;
+                if (GUILayout.Button("Unassign", GUILayout.Height(25)))
+                {
+                    _hero.SkillBar1.Skills[hotkeyIndex] = null;
+                }
+                GUI.backgroundColor = Color.white;
+            }
+
             GUILayout.EndVertical();
 
             GUILayout.Space(5);
@@ -288,25 +363,34 @@ namespace Scripts.Models
 
             GUILayout.BeginHorizontal();
 
-            if (skill.CheckSkillRequirement(nextLevel, _hero.Hero, false))
+            // enable the upgrade button only if requirements are met
+            GUI.enabled = skill.CheckSkillRequirement(nextLevel, _hero.Hero, false);
+            GUI.backgroundColor = _positiveColor;
+            if (GUILayout.Button("Upgrade", GUILayout.Height(25)))
             {
-                GUI.backgroundColor = _positiveColor;
-                if (GUILayout.Button("Upgrade", GUILayout.Height(25)))
-                {
-                    _hero.AllocateSkillPoints(skill.name, 1);
-                }
-                GUI.backgroundColor = Color.white;
+                _hero.AllocateSkillPoints(skill.name, 1);
             }
-            else
+            GUI.backgroundColor = Color.white;
+            GUI.enabled = true;
+
+            //show use skill button
+            GUI.backgroundColor = _accentColor;
+            if (GUILayout.Button("Use Skill", GUILayout.Height(25)))
             {
-                GUI.enabled = false;
-                GUILayout.Button("Upgrade", GUILayout.Height(25));
-                GUI.enabled = true;
+                _hero.Character.UseSkill(skill, true);
+            }
+            GUI.backgroundColor = Color.white;
+
+            if (GUILayout.Button("Assign", GUILayout.Height(25)))
+            {
+                _selectedSkillForAssignation = skill;
             }
 
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
+
+
 
         private void DrawLevelBar(int currentLevel, int maxLevel)
         {

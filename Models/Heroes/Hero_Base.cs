@@ -15,6 +15,7 @@ namespace Scripts.Models
         private QuickAccessUI _quickAccessUI = new QuickAccessUI();
         private AIChat _aiChat = new AIChat();
         private AIChatUI _aiChatUI = new AIChatUI();
+        public SkillBar SkillBar1 = new SkillBar();
 
 
         public void Start()
@@ -32,6 +33,7 @@ namespace Scripts.Models
 
             // Initialize quick access buttons
             _quickAccessUI.OnStart(_heroUI, _inventoryUI, _skillUI, _bot, _aiChatUI);
+            SkillBar1.OnStart(this);
         }
 
 
@@ -50,6 +52,8 @@ namespace Scripts.Models
 
                 // Draw quick access buttons
                 _quickAccessUI.OnGUI();
+
+                SkillBar1.OnGUI();
             }
             catch (System.Exception ex)
             {
@@ -70,6 +74,7 @@ namespace Scripts.Models
 
                 _bot.OnUpdate();
                 _aiChatUI.OnUpdate();
+                SkillBar1.OnUpdate();
             }
             catch (System.Exception ex)
             {
