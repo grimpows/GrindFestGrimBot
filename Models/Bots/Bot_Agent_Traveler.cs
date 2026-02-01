@@ -284,12 +284,24 @@ namespace Scripts.Models
             return false;
         }
 
+        public VectorZone LastActiveVectorZone = null;
+
         /// <summary>
         /// Handles automatic travel using vector zones with path-based navigation.
         /// The list of zones is treated as a path, navigating through intermediate waypoints.
         /// </summary>
         private bool HandleAutomaticVectorTravel()
         {
+
+            var activeVectorZone = GetActiveVectorZone();
+            if (LastActiveVectorZone == null || activeVectorZone.Position != LastActiveVectorZone.Position)
+            {
+                // Reset path tracking when active zone changes
+                ClearVisitedWaypoints();
+                LastActiveVectorZone = activeVectorZone;
+            }
+
+
             var bestZone = GetBestVectorZoneForLevel();
             if (bestZone == null)
             {
@@ -902,14 +914,16 @@ namespace Scripts.Models
         /// </summary>
         public List<LevelVectorZone> MinLevelVectorDictionary = new List<LevelVectorZone>()
         {
-            new LevelVectorZone(1, "Lv1", -192, 11, 675, 100),
-            new LevelVectorZone(3, "Lv3", -196, 11, 862, 100),
-            new LevelVectorZone(3, "Wp5", -59.5f, 11, 981, 30),
-            new LevelVectorZone(4, "Lv5", 63.6f, 11, 817, 100),
-            new LevelVectorZone(4, "Wp7", 158.8f, 11f, 650, 30),
-            new LevelVectorZone(7, "Lv7", 299.3f, 11, 646, 100),
-            new LevelVectorZone(8, "Lv8", 502.7f, 11, 755.2f, 100),
-            new LevelVectorZone(10, "Lv10", 243.5f, 11, 1123.7f, 200),
+            new LevelVectorZone(1, "1", -192, 11, 675, 100),
+            new LevelVectorZone(3, "2", -196, 11, 862, 100),
+            new LevelVectorZone(3, "3-way", -59.5f, 11, 981, 30),
+            new LevelVectorZone(4, "4", 63.6f, 11, 817, 100),
+            new LevelVectorZone(4, "5-way", 158.8f, 11f, 650, 30),
+            new LevelVectorZone(7, "6", 299.3f, 11, 646, 100),
+            new LevelVectorZone(8, "7", 502.7f, 11, 755.2f, 100),
+            new LevelVectorZone(10, "8", 243.5f, 11, 1123.7f, 150), // good spot for farm :p
+            new LevelVectorZone(10, "9-way", 263.5f, 11, 1342.7f, 30), // crossroad pour TaintedDunngeon
+            new LevelVectorZone(11, "10", 272.5f, 11, 1612.2f, 150), // canyon of death
         };
 
         #endregion
@@ -928,6 +942,7 @@ namespace Scripts.Models
         /// </summary>
         public List<VectorZone> CustomVectorZoneList = new List<VectorZone>()
         {
+            new VectorZone("TaintedTowerDungneon", 451, 11, 1329, 50),
         };
 
         #endregion

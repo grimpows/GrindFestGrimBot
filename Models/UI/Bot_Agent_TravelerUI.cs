@@ -1,4 +1,4 @@
-using Scripts.Models.PathFinding;
+﻿using Scripts.Models.PathFinding;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -109,7 +109,7 @@ namespace Scripts.Models
             GUILayout.BeginVertical(UITheme.CardStyle);
             GUILayout.BeginHorizontal();
             GUI.color = UITheme.Info;
-            GUILayout.Label("?", GUILayout.Width(20));
+            GUILayout.Label("⚙", GUILayout.Width(20));
             GUI.color = Color.white;
             GUILayout.Label("Travel Mode", UITheme.SubtitleStyle);
             GUILayout.FlexibleSpace();
@@ -279,7 +279,7 @@ namespace Scripts.Models
             GUILayout.Label($"({zone.Position.x:F0},{zone.Position.y:F0},{zone.Position.z:F0}) R:{zone.Radius:F0}", UITheme.CreateLabelStyle(UITheme.TextMuted, 9));
             GUILayout.EndVertical();
             GUILayout.FlexibleSpace();
-            if (isBest) GUILayout.Label("?", UITheme.CreateLabelStyle(UITheme.Accent, 12), GUILayout.Width(14));
+            if (isBest) GUILayout.Label("★", UITheme.CreateLabelStyle(UITheme.Accent, 12), GUILayout.Width(14));
             else GUILayout.Space(14);
 
             GUI.backgroundColor = UITheme.Danger;
@@ -341,7 +341,7 @@ namespace Scripts.Models
             {
                 var wp = _travelerAgent.GetWaypointAtIndex(currentIdx);
                 string wpName = wp != null ? TruncateText(wp.Name, 8) : $"#{currentIdx + 1}";
-                GUILayout.Label($"? {wpName}", UITheme.CreateLabelStyle(WaypointTransitColor, 9));
+                GUILayout.Label($"→ {wpName}", UITheme.CreateLabelStyle(WaypointTransitColor, 9));
             }
             
             GUILayout.FlexibleSpace();
@@ -543,13 +543,13 @@ namespace Scripts.Models
         private void DrawMiniMapLegend()
         {
             GUILayout.BeginHorizontal();
-            GUI.color = PlayerColor; GUILayout.Label("?", GUILayout.Width(10)); GUI.color = Color.white;
+            GUI.color = PlayerColor; GUILayout.Label("◆", GUILayout.Width(10)); GUI.color = Color.white;
             GUILayout.Label("P", UITheme.CreateLabelStyle(UITheme.TextMuted, 7), GUILayout.Width(12));
-            GUI.color = WaypointBestColor; GUILayout.Label("?", GUILayout.Width(10)); GUI.color = Color.white;
+            GUI.color = WaypointBestColor; GUILayout.Label("●", GUILayout.Width(10)); GUI.color = Color.white;
             GUILayout.Label("Best", UITheme.CreateLabelStyle(UITheme.TextMuted, 7), GUILayout.Width(22));
-            GUI.color = WaypointTransitColor; GUILayout.Label("?", GUILayout.Width(10)); GUI.color = Color.white;
+            GUI.color = WaypointTransitColor; GUILayout.Label("●", GUILayout.Width(10)); GUI.color = Color.white;
             GUILayout.Label("Next", UITheme.CreateLabelStyle(UITheme.TextMuted, 7), GUILayout.Width(22));
-            GUI.color = WaypointVisitedColor; GUILayout.Label("?", GUILayout.Width(10)); GUI.color = Color.white;
+            GUI.color = WaypointVisitedColor; GUILayout.Label("✓", GUILayout.Width(10)); GUI.color = Color.white;
             GUILayout.Label("Done", UITheme.CreateLabelStyle(UITheme.TextMuted, 7));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -685,7 +685,7 @@ namespace Scripts.Models
             if (zone == null) return;
             GUILayout.BeginVertical(UITheme.CardStyle);
             GUILayout.BeginHorizontal();
-            GUI.color = UITheme.Warning; GUILayout.Label("?", GUILayout.Width(14)); GUI.color = Color.white;
+            GUI.color = UITheme.Warning; GUILayout.Label("⚡", GUILayout.Width(14)); GUI.color = Color.white;
             GUILayout.Label("Active", UITheme.CreateLabelStyle(UITheme.Warning, UITheme.FONT_SIZE_SMALL, FontStyle.Bold));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -701,11 +701,11 @@ namespace Scripts.Models
         {
             GUILayout.BeginHorizontal(UITheme.CardStyle, GUILayout.Height(36));
             GUILayout.BeginVertical();
-            GUILayout.Label(TruncateText(zone.Name, 14), UITheme.CreateLabelStyle(isForcedZone ? UITheme.Warning : UITheme.TextLight, UITheme.FONT_SIZE_SMALL, isForcedZone ? FontStyle.Bold : FontStyle.Normal));
+            GUILayout.Label(TruncateText(zone.Name, 30), UITheme.CreateLabelStyle(isForcedZone ? UITheme.Warning : UITheme.TextLight, UITheme.FONT_SIZE_SMALL, isForcedZone ? FontStyle.Bold : FontStyle.Normal));
             GUILayout.Label($"({zone.Position.x:F0},{zone.Position.y:F0},{zone.Position.z:F0}) R:{zone.Radius:F0}", UITheme.CreateLabelStyle(UITheme.TextMuted, 9));
             GUILayout.EndVertical();
             GUILayout.FlexibleSpace();
-            if (isForcedZone) GUILayout.Label("?", UITheme.CreateLabelStyle(UITheme.Warning, 12), GUILayout.Width(14));
+            if (isForcedZone) GUILayout.Label("⚡", UITheme.CreateLabelStyle(UITheme.Warning, 12), GUILayout.Width(14));
             else GUILayout.Space(14);
 
             GUI.backgroundColor = isForcedZone ? UITheme.Warning : UITheme.ButtonNormal;
