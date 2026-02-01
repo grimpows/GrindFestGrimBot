@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static GrindFest.LocalHero;
 
 
 namespace Scripts.Models
@@ -146,7 +145,7 @@ namespace Scripts.Models
 
             //exept weapon that is not best that 5 best in inventory
             float averageDPS = CalculateAverageDPSForBestWeaponsInInventory();
-            
+
 
             ScannedItems = ScannedItems.Where(item =>
             {
