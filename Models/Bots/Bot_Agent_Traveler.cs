@@ -187,6 +187,16 @@ namespace Scripts.Models
         /// </summary>
         public LevelVectorZone CurrentPathWaypoint => _currentPathWaypoint;
 
+        /// <summary>
+        /// Gets the current hero position (for UI/debugging).
+        /// </summary>
+        public Vector3 HeroPosition => _hero?.transform?.position ?? Vector3.zero;
+
+        /// <summary>
+        /// Returns true if the hero reference is valid.
+        /// </summary>
+        public bool HasValidHero => _hero != null;
+
         public Bot_Agent_Traveler(AutomaticHero hero)
         {
             _hero = hero;
@@ -377,7 +387,7 @@ namespace Scripts.Models
                     {
                         // Need to go forward
                         nextWaypoint = zoneB;
-                    }
+                      }
                     else if (targetIndex < indexA)
                     {
                         // Need to go back, find previous zone
@@ -696,11 +706,6 @@ namespace Scripts.Models
         }
 
         /// <summary>
-        /// Gets the current run around target position (for debugging/UI).
-        /// </summary>
-        public Vector3 CurrentRunAroundTarget => _currentRunAroundTarget;
-
-        /// <summary>
         /// Resets the run around state.
         /// </summary>
         public void ResetRunAroundState()
@@ -877,13 +882,17 @@ namespace Scripts.Models
         /// </summary>
         public List<LevelVectorZone> MinLevelVectorDictionary = new List<LevelVectorZone>()
         {
-            new LevelVectorZone(1, "Stony Plains", -185, -11, 590, 50),
-            new LevelVectorZone(5, "10", 150, 11, 970, 50),
-            new LevelVectorZone(7, "20", 147, 11, 616, 50),
-            new LevelVectorZone(9, "30", 504, 11, 1030, 50),
-            new LevelVectorZone(11, "40", 269, 9, 17780, 50),
-            new LevelVectorZone(13, "50", 28, 9, 2502, 50),
-            new LevelVectorZone(15, "54", 28, 9, 2502, 50),
+            new LevelVectorZone(1, "Lv1", -192, 11, 675, 200),
+            new LevelVectorZone(3, "Lv3", -196, 11, 862, 200),
+            new LevelVectorZone(5, "Wp5", -59.5f, 11, 981, 200),
+            new LevelVectorZone(5, "Lv5", 63.6f, 11, 817, 200),
+            //new LevelVectorZone(1, "Stony Plains", -185, -11, 590, 50),
+            //new LevelVectorZone(5, "10", 150, 11, 970, 50),
+            //new LevelVectorZone(7, "20", 147, 11, 616, 50),
+            //new LevelVectorZone(9, "30", 504, 11, 1030, 50),
+            //new LevelVectorZone(11, "40", 269, 9, 17780, 50),
+            //new LevelVectorZone(13, "50", 28, 9, 2502, 50),
+            //new LevelVectorZone(15, "54", 28, 9, 2502, 50),
         };
 
         #endregion

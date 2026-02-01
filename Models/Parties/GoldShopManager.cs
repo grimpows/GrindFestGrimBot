@@ -88,8 +88,7 @@ namespace Scripts.Models
                         lowerName.Contains("experience") ||
                         lowerName.Contains("magicfind") ||
                         lowerName.Contains("statpoints") ||
-                        lowerName.Contains("heroslot") ||
-                        lowerName.Contains("armorbonus")
+                        lowerName.Contains("heroslot")
                         ? true : false;
                 }
 
