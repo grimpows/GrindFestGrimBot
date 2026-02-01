@@ -76,9 +76,6 @@ namespace Scripts.Models
 
         public void OnUpdate()
         {
-
-
-
             if (_hero == null)
                 return;
             // Initialize unstucker position tracking
@@ -92,10 +89,6 @@ namespace Scripts.Models
                 UnstuckerAgent?.NotifyActivity();
                 return;
             }
-
-            
-
-            
 
             // Try keep health up first (emergency consume)
             if (ConsumerAgent.IsActing(true, 0.2f))
@@ -169,9 +162,9 @@ namespace Scripts.Models
             }
 
 
-            // Default: run around
+            // Default: run around (delegated to TravelerAgent for proper mode handling)
             CurrentStatus = BotStatus.RUNAROUND;
-            _hero.RunAroundInArea();
+            TravelerAgent.RunAround();
         }
     }
 }

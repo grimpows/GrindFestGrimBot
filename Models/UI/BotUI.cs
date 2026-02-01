@@ -18,7 +18,7 @@ namespace Scripts.Model
         private Bot_Agent_TravelerUI _travelerAgentUI;
         private Bot_Agent_UnstuckerUI _unstuckerAgentUI;
 
-        private Rect _botWindowRect = new Rect(100, 100, 1280, 650);
+        private Rect _botWindowRect = new Rect(100, 100, 1280, 920);
 
         private BotTab _currentTab = BotTab.Global;
 

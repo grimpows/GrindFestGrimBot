@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static GrindFest.LocalHero;
 
 
 namespace Scripts.Models
@@ -145,12 +146,13 @@ namespace Scripts.Models
 
             //exept weapon that is not best that 5 best in inventory
             float averageDPS = CalculateAverageDPSForBestWeaponsInInventory();
+            
 
             ScannedItems = ScannedItems.Where(item =>
             {
                 if (item.Weapon != null)
                 {
-                    if (!item.name.ToLower().Contains("hammer"))
+                    if (item.name.ToLower().Contains("hammer"))
                     {
                         //check if we already have more thatn 3 "hammer" name in inventory
                         int hammerCountInInventory = _hero.Character.Inventory.Items
@@ -175,7 +177,7 @@ namespace Scripts.Models
                 if (item.Armor != null)
                 {
                     double averageArmorForSlot = CalculateAverageArmorForBestArmorInInventoryPerSlot(item.Equipable.Slot);
-                    if (item.Armor.Armor <= averageArmorForSlot)
+                    if (item.Armor.Armor < averageArmorForSlot)
                     {
                         return false;
                     }
@@ -281,7 +283,7 @@ namespace Scripts.Models
             //var averageArmor = armorItemsInSlot
             //    .Average(i => i.Armor.Armor);
 
-            var averageArmor = armorItemsInSlot.Min(i => i.Armor.Armor);
+            var averageArmor = armorItemsInSlot.Average(i => i.Armor.Armor);
 
             return averageArmor;
         }
