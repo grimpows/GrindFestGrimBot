@@ -470,8 +470,8 @@ namespace Scripts.Models
             GUI.color = Color.white;
 
             // Name (truncated if needed)
-            string displayName = TruncateString(item.Name, 20);
-            bool isTruncated = item.Name.Length > 20;
+            string displayName = TruncateString(item.Name, 40);
+            bool isTruncated = item.Name.Length > 40;
 
             Rect nameRect = new Rect(cardRect.x + padding + 22, y, ITEM_CARD_WIDTH - padding * 2 - 22, 20);
             GUI.Label(nameRect, displayName, _titleStyle);
