@@ -168,6 +168,7 @@ namespace Scripts.Models
             {
                 foreach (var item in _pickUpAgent.IgnoredItems.Take(5))
                 {
+                    if (item == null) continue;
                     GUILayout.Label($"  • {item?.name}", listStyle);
                 }
 

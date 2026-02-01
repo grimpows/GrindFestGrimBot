@@ -22,7 +22,7 @@ namespace Scripts.Models
         /// <summary>
         /// Duration in seconds for the unstick mode.
         /// </summary>
-        public float UnstickModeDurationSeconds { get; set; } = 30f;
+        public float UnstickModeDurationSeconds { get; set; } = 5f;
 
         /// <summary>
         /// Last recorded position of the hero.

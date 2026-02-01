@@ -156,6 +156,10 @@ namespace Scripts.Models
 
             if (TravelerAgent.IsActing())
             {
+                if(TravelerAgent.TravelMode == TravelMode.VectorBased && TravelerAgent.StuckCounter < 3)
+                {
+                    UnstuckerAgent?.NotifyActivity();
+                }
                 CurrentStatus = BotStatus.TRAVELING;
                 return;
             }

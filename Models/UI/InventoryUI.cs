@@ -470,8 +470,8 @@ namespace Scripts.Models
             GUI.color = Color.white;
 
             // Name (truncated if needed)
-            string displayName = TruncateString(item.Name, 40);
-            bool isTruncated = item.Name.Length > 40;
+            string displayName = TruncateString(item.Name, 30);
+            bool isTruncated = item.Name.Length > 30;
 
             Rect nameRect = new Rect(cardRect.x + padding + 22, y, ITEM_CARD_WIDTH - padding * 2 - 22, 20);
             GUI.Label(nameRect, displayName, _titleStyle);
@@ -631,6 +631,18 @@ namespace Scripts.Models
             {
                 foreach (var item in _filteredItemsCache.ToList())
                 {
+                    try { _hero.Drop(item); } catch { }
+                }
+                _needsCacheUpdate = true;
+            }
+
+
+            if (GUILayout.Button("Drop 10 Filtered", GUILayout.Height(32), GUILayout.Width(180)))
+            {
+                int dropCount = Math.Min(10, _filteredItemsCache.Count);
+                foreach (var item in _filteredItemsCache.ToList())
+                {
+                    if (dropCount-- <= 0) break;
                     try { _hero.Drop(item); } catch { }
                 }
                 _needsCacheUpdate = true;

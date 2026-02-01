@@ -914,17 +914,19 @@ namespace Scripts.Models
         /// </summary>
         public List<LevelVectorZone> MinLevelVectorDictionary = new List<LevelVectorZone>()
         {
-            new LevelVectorZone(1, "1", -192, 11, 675, 100),
+            new LevelVectorZone(1, "1", -192, 11, 675, 80),
             new LevelVectorZone(3, "2", -196, 11, 862, 100),
             new LevelVectorZone(3, "3-way", -59.5f, 11, 981, 30),
             new LevelVectorZone(4, "4", 63.6f, 11, 817, 100),
             new LevelVectorZone(4, "5-way", 158.8f, 11f, 650, 30),
             new LevelVectorZone(7, "6", 299.3f, 11, 646, 100),
-            new LevelVectorZone(8, "7", 502.7f, 11, 755.2f, 100),
-            new LevelVectorZone(10, "8", 243.5f, 11, 1123.7f, 150), // good spot for farm :p
-            new LevelVectorZone(10, "9-way", 263.5f, 11, 1342.7f, 30), // crossroad pour TaintedDunngeon
-            new LevelVectorZone(10, "10-way", 272.5f, 11, 1612.2f, 150), 
-            new LevelVectorZone(11, "11", 272.5f, 11, 1612.2f, 150), // canyon of death before stone block
+            new LevelVectorZone(7, "7-way", 444.2f, 11, 641.9f, 50),
+            new LevelVectorZone(7, "8-way", 502.7f, 11, 755.2f, 10),
+            new LevelVectorZone(7, "9-way", 492.5f, 11, 1120.2f, 10),
+            new LevelVectorZone(10, "10", 243.5f, 11, 1123.7f, 150), // good spot for farm :p
+            new LevelVectorZone(10, "11-way", 263.5f, 11, 1342.7f, 30), // crossroad pour TaintedDunngeon
+            new LevelVectorZone(10, "12-way", 272.5f, 11, 1612.2f, 150), 
+            new LevelVectorZone(11, "13", 272.5f, 11, 1612.2f, 150), // canyon of death before stone block
         };
 
         #endregion
