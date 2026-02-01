@@ -8,7 +8,9 @@ namespace Scripts.Models
         public string Name { get; set; }
         public ItemType Type { get; set; }          // your own classification
         public EquipmentSlot Slot { get; set; }     // 🔹 link to GrindFest.EquipmentSlot
-        public Double Durability { get; set; }    // example additional property
+        public Double DurabilityPercentage { get; set; }    // example additional property
+        public Double DurabilityFlat { get; set; }   
+        public Double DurabilityMax { get; set; }   
 
         public EquipableBehaviour? Behaviour { get; set; }
 
@@ -16,7 +18,7 @@ namespace Scripts.Models
         {
             Name = name;
             Slot = slot;
-            Durability = durability;
+            DurabilityPercentage = durability;
             Behaviour = behaviour;
         }
     }

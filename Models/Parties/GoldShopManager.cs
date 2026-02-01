@@ -75,6 +75,7 @@ namespace Scripts.Models
                     // check if can afford
                     if (Party.Gold >= item.GoldPrice && Party.Souls >= item.SoulPrice && Party.Gems >= item.GemPrice)
                     {
+                        Debug.Log($"[GoldShopManager] Buying item: {item.Name} for {item.GoldPrice} Gold, {item.SoulPrice} Souls, {item.GemPrice} Gems");
                         //buy item
                         Party.BuyFromGoldShop(item.Name);
                         return;

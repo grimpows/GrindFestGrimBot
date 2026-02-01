@@ -257,7 +257,9 @@ namespace Scripts.Models
                 double itemDurability = equippedItem.Value?.Item?.Durability?.DurabilityPercentage ?? 0;
 
                 _equipedItems[equippedItem.Key].Name = itemName;
-                _equipedItems[equippedItem.Key].Durability = itemDurability;
+                _equipedItems[equippedItem.Key].DurabilityPercentage = itemDurability;
+                _equipedItems[equippedItem.Key].DurabilityFlat = equippedItem.Value.Item.Durability.CurrentDurability;
+                _equipedItems[equippedItem.Key].DurabilityMax = equippedItem.Value.Item.Durability.MaxDurability;
                 _equipedItems[equippedItem.Key].Behaviour = equippedItem.Value;
                 _equipedItems[equippedItem.Key].Slot = equippedItem.Key;
             }
@@ -541,9 +543,9 @@ namespace Scripts.Models
                 }
 
                 // Durability bar
-                if (item.Durability > 0)
+                if (item.DurabilityPercentage > 0)
                 {
-                    DrawSlotDurabilityBar(slotRect, (float)item.Durability);
+                    DrawSlotDurabilityBar(slotRect, (float)item.DurabilityPercentage);
                 }
             }
             else
@@ -632,6 +634,8 @@ namespace Scripts.Models
             public string SlotName;
             public List<(string Label, string Value, Color Color)> Stats = new List<(string, string, Color)>();
             public float DurabilityPct;
+            public float DurabilityFlat;
+            public float DurabilityMax;
             public bool IsEmpty;
         }
 
@@ -648,7 +652,10 @@ namespace Scripts.Models
             }
 
             data.Title = item.Name;
-            data.DurabilityPct = (float)item.Durability;
+            data.DurabilityPct = (float)item.DurabilityPercentage;
+
+            data.DurabilityFlat = (float)item.DurabilityFlat;
+            data.DurabilityMax = (float)item.DurabilityMax;
 
             if (item.Behaviour?.Item != null)
             {
@@ -760,7 +767,7 @@ namespace Scripts.Models
                     GUIStyle pctStyle = new GUIStyle(_tooltipStatStyle);
                     pctStyle.normal.textColor = durColor;
                     pctStyle.alignment = TextAnchor.MiddleRight;
-                    GUI.Label(new Rect(rect.x + padding, y, barWidth, 14), $"{pct:F0}%", pctStyle);
+                    GUI.Label(new Rect(rect.x + padding, y, barWidth, 14), $"{pct:F0}%({data.DurabilityFlat}/{data.DurabilityMax})", pctStyle);
 
                     y += 16;
 

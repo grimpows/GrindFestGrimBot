@@ -24,6 +24,13 @@ namespace Scripts.Models
 
             if (hero.StatPoints > 0 && isMelee)
             {
+                if(INTBasePoints < hero.Level / 2)
+                {
+                    hero.AllocateStatPoints(Stat.Intelligence, 1);
+                    hero.Say($"Upgraded Intelligence");
+                    return;
+                }
+
                 if (DEXBasePoints < (2.0 / 3.0) * STRBasePoints)
                 {
                     hero.AllocateStatPoints(Stat.Dexterity, 1);
