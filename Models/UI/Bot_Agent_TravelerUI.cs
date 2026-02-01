@@ -37,6 +37,7 @@ namespace Scripts.Models
         private static readonly Color WaypointNormalColor = new Color(0.5f, 0.5f, 0.6f);
         private static readonly Color WaypointBestColor = new Color(0.2f, 0.8f, 0.4f);
         private static readonly Color WaypointTransitColor = new Color(0.6f, 0.8f, 1f);
+        private static readonly Color WaypointVisitedColor = new Color(0.3f, 0.6f, 0.3f);
         private static readonly Color PlayerColor = new Color(1f, 0.8f, 0.2f);
         private static readonly Color PathLineColor = new Color(0.4f, 0.4f, 0.5f, 0.6f);
 
@@ -292,17 +293,59 @@ namespace Scripts.Models
         private void DrawMiniMapPanel(float availableHeight)
         {
             GUILayout.BeginVertical(GUILayout.Width(200));
+            
+            // Header with reset button
+            GUILayout.BeginHorizontal();
             GUILayout.Label("Mini-Map", UITheme.SubtitleStyle);
+            GUILayout.FlexibleSpace();
+            
+            // Reset waypoints button
+            if (_travelerAgent.VisitedWaypointsCount > 0)
+            {
+                GUI.backgroundColor = UITheme.Warning;
+                if (GUILayout.Button("Reset", UITheme.ButtonStyle, GUILayout.Width(45), GUILayout.Height(16)))
+                    _travelerAgent.ClearVisitedWaypoints();
+                GUI.backgroundColor = Color.white;
+            }
+            GUILayout.EndHorizontal();
+            
             GUILayout.Space(2);
             UITheme.DrawSeparator(UITheme.TextMuted, 1f);
             GUILayout.Space(UITheme.ELEMENT_SPACING);
 
-            float mapSize = Mathf.Min(180, availableHeight - 40);
+            // Waypoint progress info
+            DrawWaypointProgressInfo();
+            GUILayout.Space(4);
+
+            float mapSize = Mathf.Min(160, availableHeight - 80);
             Rect mapRect = GUILayoutUtility.GetRect(mapSize, mapSize);
             DrawMiniMapContent(mapRect);
             GUILayout.Space(4);
             DrawMiniMapLegend();
             GUILayout.EndVertical();
+        }
+
+        private void DrawWaypointProgressInfo()
+        {
+            int visited = _travelerAgent.VisitedWaypointsCount;
+            int total = _travelerAgent.TotalWaypointsCount;
+            int currentIdx = _travelerAgent.CurrentWaypointIndex;
+
+            GUILayout.BeginHorizontal();
+            
+            // Visited count
+            GUILayout.Label($"Visited: {visited}/{total}", UITheme.CreateLabelStyle(visited > 0 ? UITheme.Positive : UITheme.TextMuted, 9), GUILayout.Width(70));
+            
+            // Current waypoint index
+            if (currentIdx >= 0)
+            {
+                var wp = _travelerAgent.GetWaypointAtIndex(currentIdx);
+                string wpName = wp != null ? TruncateText(wp.Name, 8) : $"#{currentIdx + 1}";
+                GUILayout.Label($"? {wpName}", UITheme.CreateLabelStyle(WaypointTransitColor, 9));
+            }
+            
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
         }
 
         private void DrawMiniMapContent(Rect mapRect)
@@ -334,6 +377,7 @@ namespace Scripts.Models
             try { bestZone = _travelerAgent.GetBestVectorZoneForLevel(); } catch { }
             var transitWaypoint = _travelerAgent.CurrentPathWaypoint;
             Vector3 heroPos = _travelerAgent.HeroPosition;
+            int currentWpIndex = _travelerAgent.CurrentWaypointIndex;
 
             DrawPathLines(mapRect, orderedZones, bounds, padding, mapWidth, mapHeight);
 
@@ -341,16 +385,38 @@ namespace Scripts.Models
             {
                 var zone = orderedZones[i];
                 Vector2 screenPos = WorldToMapPosition(zone.Position, mapRect, bounds, padding, mapWidth, mapHeight);
+                
+                // Determine waypoint state
+                bool isBest = zone == bestZone;
+                bool isTransit = (zone == transitWaypoint && transitWaypoint != bestZone) || i == currentWpIndex;
+                bool isVisited = _travelerAgent.IsWaypointVisited(i);
+                
+                // Determine color and size based on state
                 Color wpColor = WaypointNormalColor;
                 float wpSize = 8f;
-                bool isBest = zone == bestZone;
-                bool isTransit = zone == transitWaypoint && transitWaypoint != bestZone;
 
-                if (isBest) { wpColor = WaypointBestColor; wpSize = 12f; }
-                else if (isTransit) { wpColor = WaypointTransitColor; wpSize = 10f; }
+                if (isBest) 
+                { 
+                    wpColor = WaypointBestColor; 
+                    wpSize = 12f; 
+                }
+                else if (isTransit) 
+                { 
+                    wpColor = WaypointTransitColor; 
+                    wpSize = 10f; 
+                }
+                else if (isVisited) 
+                { 
+                    wpColor = WaypointVisitedColor; 
+                    wpSize = 8f; 
+                }
 
                 DrawCircle(screenPos, wpSize, wpColor);
-                DrawCenteredLabel(screenPos, (i + 1).ToString(), isBest || isTransit ? Color.white : UITheme.TextLight, 9);
+                
+                // Draw waypoint number with checkmark if visited
+                string wpLabel = isVisited && !isBest && !isTransit ? "\u2713" : (i + 1).ToString();
+                Color labelColor = (isBest || isTransit) ? Color.white : (isVisited ? WaypointVisitedColor : UITheme.TextLight);
+                DrawCenteredLabel(screenPos, wpLabel, labelColor, isVisited && !isBest && !isTransit ? 8 : 9);
 
                 if (isBest || isTransit)
                     DrawCircleOutline(screenPos, ScaleRadius(zone.Radius, bounds, mapWidth, mapHeight), wpColor * 0.5f);
@@ -477,12 +543,14 @@ namespace Scripts.Models
         private void DrawMiniMapLegend()
         {
             GUILayout.BeginHorizontal();
-            GUI.color = PlayerColor; GUILayout.Label("?", GUILayout.Width(12)); GUI.color = Color.white;
-            GUILayout.Label("Player", UITheme.CreateLabelStyle(UITheme.TextMuted, 8), GUILayout.Width(35));
-            GUI.color = WaypointBestColor; GUILayout.Label("?", GUILayout.Width(12)); GUI.color = Color.white;
-            GUILayout.Label("Best", UITheme.CreateLabelStyle(UITheme.TextMuted, 8), GUILayout.Width(25));
-            GUI.color = WaypointTransitColor; GUILayout.Label("?", GUILayout.Width(12)); GUI.color = Color.white;
-            GUILayout.Label("Transit", UITheme.CreateLabelStyle(UITheme.TextMuted, 8));
+            GUI.color = PlayerColor; GUILayout.Label("?", GUILayout.Width(10)); GUI.color = Color.white;
+            GUILayout.Label("P", UITheme.CreateLabelStyle(UITheme.TextMuted, 7), GUILayout.Width(12));
+            GUI.color = WaypointBestColor; GUILayout.Label("?", GUILayout.Width(10)); GUI.color = Color.white;
+            GUILayout.Label("Best", UITheme.CreateLabelStyle(UITheme.TextMuted, 7), GUILayout.Width(22));
+            GUI.color = WaypointTransitColor; GUILayout.Label("?", GUILayout.Width(10)); GUI.color = Color.white;
+            GUILayout.Label("Next", UITheme.CreateLabelStyle(UITheme.TextMuted, 7), GUILayout.Width(22));
+            GUI.color = WaypointVisitedColor; GUILayout.Label("?", GUILayout.Width(10)); GUI.color = Color.white;
+            GUILayout.Label("Done", UITheme.CreateLabelStyle(UITheme.TextMuted, 7));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
@@ -674,138 +742,37 @@ namespace Scripts.Models
             GUILayout.EndHorizontal();
         }
 
-        private void DrawStatBox(string label, string value, Color valueColor)
+        private void DrawStatBox(string label, string value, Color color)
         {
-            GUILayout.BeginVertical(GUILayout.Width(70));
-            GUILayout.Label(label, UITheme.LabelStyle);
-            GUILayout.Label(value, UITheme.CreateValueStyle(valueColor, 11));
+            GUILayout.BeginVertical(UITheme.CardStyle, GUILayout.Height(50));
+            GUILayout.Label(label, UITheme.CreateLabelStyle(UITheme.TextMuted, 8));
+            GUILayout.Label(value, UITheme.CreateValueStyle(color, 12));
             GUILayout.EndVertical();
         }
 
         private void DrawAreaInfoCard()
         {
             GUILayout.BeginVertical(UITheme.CardStyle);
-            GUILayout.BeginHorizontal();
-            GUI.color = UITheme.Info; GUILayout.Label("?", GUILayout.Width(20)); GUI.color = Color.white;
-            GUILayout.Label("Travel Status", UITheme.SubtitleStyle);
-            GUILayout.EndHorizontal();
-            GUILayout.Space(UITheme.ELEMENT_SPACING);
+            GUILayout.Label("Current Area", UITheme.SubtitleStyle);
+            GUILayout.Space(4);
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Current:", UITheme.LabelStyle, GUILayout.Width(55));
-            GUILayout.Label(string.IsNullOrEmpty(_travelerAgent.TargetAreaName) ? "At dest." : "Transit...", UITheme.CreateValueStyle(UITheme.TextLight));
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Target:", UITheme.LabelStyle, GUILayout.Width(55));
-            string targetName = string.IsNullOrEmpty(_travelerAgent.TargetAreaName) ? "None" : _travelerAgent.TargetAreaName;
-            GUILayout.Label(TruncateText(targetName, 18), UITheme.CreateValueStyle(string.IsNullOrEmpty(_travelerAgent.TargetAreaName) ? UITheme.TextMuted : UITheme.Warning, UITheme.FONT_SIZE_SMALL));
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            string areaName = _travelerAgent.TargetAreaName;
+            if (string.IsNullOrEmpty(areaName)) areaName = "<none>";
+            GUILayout.Label(TruncateText(areaName, 20), UITheme.CreateLabelStyle(UITheme.TextLight, 9));
             GUILayout.EndVertical();
         }
 
         private void DrawBestAreaCard()
         {
             GUILayout.BeginVertical(UITheme.CardStyle);
-            GUILayout.BeginHorizontal();
+            GUILayout.Label("Best Area", UITheme.SubtitleStyle);
+            GUILayout.Space(4);
 
-            if (_travelerAgent.IsForcedVectorZoneEnabled) { GUI.color = UITheme.Warning; GUILayout.Label("?", GUILayout.Width(20)); }
-            else if (_travelerAgent.IsForcedAreaEnabled) { GUI.color = UITheme.Warning; GUILayout.Label("?", GUILayout.Width(20)); }
-            else if (_travelerAgent.TravelMode == TravelMode.VectorBased) { GUI.color = UITheme.Info; GUILayout.Label("?", GUILayout.Width(20)); }
-            else { GUI.color = UITheme.Accent; GUILayout.Label("?", GUILayout.Width(20)); }
-            GUI.color = Color.white;
-
-            string headerText = _travelerAgent.IsForcedVectorZoneEnabled ? "Forced Zone" :
-                               (_travelerAgent.IsForcedAreaEnabled ? "Forced Area" :
-                               (_travelerAgent.TravelMode == TravelMode.VectorBased ? "Best Zone" : "Best Area"));
-            GUILayout.Label(headerText, UITheme.SubtitleStyle);
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-            GUILayout.Space(UITheme.ELEMENT_SPACING);
-
-            if (_travelerAgent.IsForcedVectorZoneEnabled && _travelerAgent.ForcedVectorZone != null)
-            {
-                var zone = _travelerAgent.ForcedVectorZone;
-                GUILayout.Label(zone.Name, UITheme.CreateValueStyle(UITheme.Warning, 11));
-                GUILayout.Label($"({zone.Position.x:F0}, {zone.Position.y:F0}, {zone.Position.z:F0})", UITheme.CreateLabelStyle(UITheme.TextMuted, 9));
-                float distance = _travelerAgent.GetDistanceToForcedVectorZone();
-                bool inZone = _travelerAgent.IsHeroInForcedVectorZone();
-                DrawVectorZoneDistanceInfo(distance, zone.Radius, inZone);
-            }
-            else if (_travelerAgent.IsForcedAreaEnabled)
-            {
-                GUILayout.Label(_travelerAgent.ForcedAreaName, UITheme.CreateValueStyle(UITheme.Warning, 11));
-            }
-            else if (_travelerAgent.TravelMode == TravelMode.VectorBased)
-            {
-                var bestZone = _travelerAgent.GetBestVectorZoneForLevel();
-                if (bestZone != null)
-                {
-                    GUILayout.Label($"L{bestZone.MinLevel}: {bestZone.Name}", UITheme.CreateValueStyle(UITheme.Info, 11));
-                    GUILayout.Label($"({bestZone.Position.x:F0}, {bestZone.Position.y:F0}, {bestZone.Position.z:F0})", UITheme.CreateLabelStyle(UITheme.TextMuted, 9));
-                    float distance = _travelerAgent.GetDistanceToCurrentVectorZone();
-                    bool inZone = distance >= 0 && distance <= bestZone.Radius;
-                    DrawVectorZoneDistanceInfo(distance, bestZone.Radius, inZone);
-                    DrawTransitionWaypointInfo(bestZone);
-                }
-                else GUILayout.Label("No zones configured", UITheme.CreateValueStyle(UITheme.TextMuted, 11));
-            }
-            else
-            {
-                string bestArea = "";
-                try { bestArea = _travelerAgent.GetBestAreaForLevel(); } catch { bestArea = "Unknown"; }
-                GUILayout.Label(bestArea, UITheme.CreateValueStyle(UITheme.Accent, 11));
-            }
+            string bestArea = "";
+            try { bestArea = _travelerAgent.GetBestAreaForLevel(); } catch { }
+            if (string.IsNullOrEmpty(bestArea)) bestArea = "<none>";
+            GUILayout.Label(TruncateText(bestArea, 20), UITheme.CreateLabelStyle(UITheme.Accent, 9, FontStyle.Bold));
             GUILayout.EndVertical();
-        }
-
-        private void DrawTransitionWaypointInfo(LevelVectorZone bestZone)
-        {
-            var currentWaypoint = _travelerAgent.CurrentPathWaypoint;
-            if (currentWaypoint == null || currentWaypoint == bestZone) return;
-
-            GUILayout.Space(4);
-            UITheme.DrawSeparator(UITheme.TextMuted, 1f);
-            GUILayout.Space(4);
-
-            GUILayout.BeginHorizontal();
-            GUI.color = new Color(0.6f, 0.8f, 1f); GUILayout.Label("?", GUILayout.Width(14)); GUI.color = Color.white;
-            GUILayout.Label("Waypoint", UITheme.CreateLabelStyle(new Color(0.6f, 0.8f, 1f), 10, FontStyle.Bold));
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            GUILayout.Label($"L{currentWaypoint.MinLevel}: {currentWaypoint.Name}", UITheme.CreateValueStyle(new Color(0.6f, 0.8f, 1f), 10));
-            GUILayout.Label($"({currentWaypoint.Position.x:F0}, {currentWaypoint.Position.y:F0}, {currentWaypoint.Position.z:F0})", UITheme.CreateLabelStyle(UITheme.TextMuted, 8));
-
-            float distToWaypoint = _travelerAgent.GetDistanceToCurrentPathWaypoint();
-            bool atWaypoint = _travelerAgent.IsHeroAtCurrentPathWaypoint();
-
-            GUILayout.BeginHorizontal();
-            if (distToWaypoint >= 0)
-                GUILayout.Label($"Dist: {distToWaypoint:F0}", UITheme.CreateLabelStyle(atWaypoint ? UITheme.Positive : new Color(0.6f, 0.8f, 1f), 8), GUILayout.Width(55));
-            GUILayout.Label($"R: {currentWaypoint.Radius:F0}", UITheme.CreateLabelStyle(UITheme.TextMuted, 8), GUILayout.Width(40));
-            GUILayout.FlexibleSpace();
-            GUILayout.Label(atWaypoint ? "? AT WP" : "? TRANSIT", UITheme.CreateLabelStyle(atWaypoint ? UITheme.Positive : new Color(0.6f, 0.8f, 1f), 8, atWaypoint ? FontStyle.Bold : FontStyle.Normal));
-            GUILayout.EndHorizontal();
-        }
-
-        private void DrawVectorZoneDistanceInfo(float distance, float radius, bool inZone)
-        {
-            GUILayout.Space(2);
-            GUILayout.BeginHorizontal();
-            if (distance >= 0)
-            {
-                GUILayout.Label($"Dist: {distance:F0}", UITheme.CreateLabelStyle(inZone ? UITheme.Positive : UITheme.Warning, 9), GUILayout.Width(60));
-                GUILayout.Label($"R: {radius:F0}", UITheme.CreateLabelStyle(UITheme.TextMuted, 9), GUILayout.Width(45));
-                GUILayout.FlexibleSpace();
-                GUI.color = inZone ? UITheme.Positive : UITheme.Warning;
-                GUILayout.Label(inZone ? "? IN ZONE" : "? TRAVELING", UITheme.CreateLabelStyle(inZone ? UITheme.Positive : UITheme.Warning, 9, inZone ? FontStyle.Bold : FontStyle.Normal));
-                GUI.color = Color.white;
-            }
-            else GUILayout.Label("Distance: N/A", UITheme.CreateLabelStyle(UITheme.TextMuted, 9));
-            GUILayout.EndHorizontal();
         }
 
         private void DrawLevelAreaRow(int minLevel, string areaName, bool isBestArea, bool isForcedArea)
@@ -818,8 +785,8 @@ namespace Scripts.Models
             FontStyle fontStyle = (isForcedArea || isBestArea) ? FontStyle.Bold : FontStyle.Normal;
             GUILayout.Label(TruncateText(areaName, 16), UITheme.CreateLabelStyle(nameColor, UITheme.FONT_SIZE_SMALL, fontStyle), GUILayout.ExpandWidth(true));
 
-            if (isForcedArea) GUILayout.Label("?", UITheme.CreateLabelStyle(UITheme.Warning, 12), GUILayout.Width(14));
-            else if (isBestArea) GUILayout.Label("?", UITheme.CreateLabelStyle(UITheme.Accent, 12), GUILayout.Width(14));
+            if (isForcedArea) GUILayout.Label("!", UITheme.CreateLabelStyle(UITheme.Warning, 12), GUILayout.Width(14));
+            else if (isBestArea) GUILayout.Label("*", UITheme.CreateLabelStyle(UITheme.Accent, 12), GUILayout.Width(14));
             else GUILayout.Space(14);
 
             GUI.backgroundColor = isForcedArea ? UITheme.Warning : UITheme.ButtonNormal;
@@ -837,7 +804,7 @@ namespace Scripts.Models
         {
             GUILayout.BeginHorizontal(UITheme.CardStyle, GUILayout.Height(28));
             GUILayout.Label(TruncateText(areaName, 12), UITheme.CreateLabelStyle(isForcedArea ? UITheme.Warning : UITheme.TextLight, UITheme.FONT_SIZE_SMALL, isForcedArea ? FontStyle.Bold : FontStyle.Normal), GUILayout.ExpandWidth(true));
-            if (isForcedArea) GUILayout.Label("?", UITheme.CreateLabelStyle(UITheme.Warning, 12), GUILayout.Width(14));
+            if (isForcedArea) GUILayout.Label("!", UITheme.CreateLabelStyle(UITheme.Warning, 12), GUILayout.Width(14));
             else GUILayout.Space(14);
 
             GUI.backgroundColor = isForcedArea ? UITheme.Warning : UITheme.ButtonNormal;
@@ -860,7 +827,13 @@ namespace Scripts.Models
         private string TruncateText(string text, int maxLength)
         {
             if (string.IsNullOrEmpty(text) || text.Length <= maxLength) return text;
-            return text.Substring(0, maxLength - 2) + "..";
+            return text.Substring(0, maxLength - 3) + "...";
+        }
+
+        public void OnGUI()
+        {
+            // Example: Draw the Traveler Agent panel on top of the screen
+            DrawTravelerAgentPanel(new Rect(20, 20, Screen.width - 40, Screen.height - 40));
         }
     }
 }

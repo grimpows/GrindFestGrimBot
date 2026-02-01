@@ -13,7 +13,7 @@ namespace Scripts.Models
         public int? LastTargetedMonsterHealth = null;
         public DateTime? LastTargetMonsterHealthChanged = null;
         public int TargetMonsterTimeout = 15;
-        public float MaxDistance = 7f;
+        public float MaxDistance = 3f;
 
         private int _killCount = 0;
         public int KillCount
@@ -57,6 +57,8 @@ namespace Scripts.Models
         bool TryFight(bool ignoreMaxDistance)
         {
             float maxDistance = ignoreMaxDistance ? 15f : MaxDistance;
+
+            //_hero.Say($"max distance for fight: {maxDistance}");
 
             if (TargetedMonster == null)
             {

@@ -42,11 +42,13 @@ namespace Scripts.Models
             {
 
                 AutoBuyGoldShopItemSelection["LevelCap"] = true;
+                AutoBuyGoldShopItemSelection["ExperienceBonus"] = false;
 
             }
             else
             {
                 AutoBuyGoldShopItemSelection["LevelCap"] = false;
+                AutoBuyGoldShopItemSelection["ExperienceBonus"] = true;
             }
 
             BuyGoldShopItems();
@@ -86,7 +88,7 @@ namespace Scripts.Models
                     AutoBuyGoldShopItemSelection[itemKey] =
                         lowerName.Contains("gold") ||
                         lowerName.Contains("experience") ||
-                        lowerName.Contains("magicfind") ||
+                        //lowerName.Contains("magicfind") ||
                         lowerName.Contains("statpoints") ||
                         lowerName.Contains("heroslot")
                         ? true : false;

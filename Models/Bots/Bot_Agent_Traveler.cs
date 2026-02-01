@@ -63,17 +63,22 @@ namespace Scripts.Models
         private VectorZone _forcedVectorZone = null;
 
         // Travel mode for automatic selection
-        private TravelMode _travelMode = TravelMode.AreaBased;
+        private TravelMode _travelMode = TravelMode.VectorBased;
 
         // RunAround state for vector mode
         private Vector3 _currentRunAroundTarget = Vector3.zero;
         private DateTime _lastRunAroundTargetTime = DateTime.MinValue;
-        private float _runAroundTargetInterval = 3f; // Change target every 3 seconds
+        private float _runAroundTargetInterval = 5f; // Change target every 5 seconds
         private float _runAroundReachedDistance = 5f; // Distance to consider target reached
 
         // Path waypoint tracking
         private LevelVectorZone _currentPathWaypoint = null;
         private const float WAYPOINT_REACHED_DISTANCE = 5f; // Distance to consider close to a waypoint
+
+        // Visited waypoints tracking for path navigation
+        private HashSet<int> _visitedWaypointIndices = new HashSet<int>();
+        private int _currentWaypointIndex = -1;
+        private bool _pathInitialized = false;
 
         public string TargetAreaName
         {
@@ -197,6 +202,31 @@ namespace Scripts.Models
         /// </summary>
         public bool HasValidHero => _hero != null;
 
+        /// <summary>
+        /// Gets the set of visited waypoint indices (for UI/debugging).
+        /// </summary>
+        public IReadOnlyCollection<int> VisitedWaypointIndices => _visitedWaypointIndices;
+
+        /// <summary>
+        /// Gets the current waypoint index being navigated to (for UI/debugging).
+        /// </summary>
+        public int CurrentWaypointIndex => _currentWaypointIndex;
+
+        /// <summary>
+        /// Gets whether the path has been initialized.
+        /// </summary>
+        public bool IsPathInitialized => _pathInitialized;
+
+        /// <summary>
+        /// Gets the total number of waypoints in the path.
+        /// </summary>
+        public int TotalWaypointsCount => MinLevelVectorDictionary?.Count ?? 0;
+
+        /// <summary>
+        /// Gets the number of visited waypoints.
+        /// </summary>
+        public int VisitedWaypointsCount => _visitedWaypointIndices.Count;
+
         public Bot_Agent_Traveler(AutomaticHero hero)
         {
             _hero = hero;
@@ -275,11 +305,18 @@ namespace Scripts.Models
             {
                 TargetAreaName = "";
                 _currentPathWaypoint = null;
+                
+                // Mark this zone as visited
+                var orderedZones = MinLevelVectorDictionary.OrderBy(z => z.MinLevel).ToList();
+                int bestIndex = orderedZones.IndexOf(bestZone);
+                if (bestIndex >= 0)
+                    MarkWaypointVisited(bestIndex);
+                
                 return false;
             }
 
             // Find the next waypoint to navigate to along the path
-            var nextWaypoint = FindNextPathWaypoint(heroPosition, bestZone);
+            var nextWaypoint = FindNextPathWaypointWithTracking(heroPosition, bestZone);
             _currentPathWaypoint = nextWaypoint;
 
             if (nextWaypoint == null)
@@ -295,199 +332,182 @@ namespace Scripts.Models
         }
 
         /// <summary>
-        /// Finds the next waypoint to navigate to based on hero position and target zone.
-        /// Uses the zone list as a path, finding the appropriate intermediate waypoint.
+        /// Finds the next waypoint using the tracking system.
         /// </summary>
-        private LevelVectorZone FindNextPathWaypoint(Vector3 heroPosition, LevelVectorZone targetZone)
+        private LevelVectorZone FindNextPathWaypointWithTracking(Vector3 heroPosition, LevelVectorZone targetZone)
         {
             if (MinLevelVectorDictionary == null || MinLevelVectorDictionary.Count < 2)
                 return targetZone;
 
-            // Get the ordered list of zones
             var orderedZones = MinLevelVectorDictionary.OrderBy(z => z.MinLevel).ToList();
             int targetIndex = orderedZones.IndexOf(targetZone);
 
             if (targetIndex < 0)
                 return targetZone;
 
-            // Find the two closest zones to the hero
-            var closestZones = FindTwoClosestZones(heroPosition, orderedZones);
-            if (closestZones.Item1 == null || closestZones.Item2 == null)
-                return targetZone;
-
-            var zoneA = closestZones.Item1;
-            var zoneB = closestZones.Item2;
-
-            int indexA = orderedZones.IndexOf(zoneA);
-            int indexB = orderedZones.IndexOf(zoneB);
-
-            // Ensure indexA < indexB (A is lower in the list)
-            if (indexA > indexB)
+            // Initialize path if not done yet
+            if (!_pathInitialized)
             {
-                (zoneA, zoneB) = (zoneB, zoneA);
-                (indexA, indexB) = (indexB, indexA);
+                InitializePath(heroPosition, orderedZones, targetIndex);
             }
 
-            float distToZoneA = Vector3.Distance(heroPosition, zoneA.Position);
-            float distToZoneB = Vector3.Distance(heroPosition, zoneB.Position);
-
-            // Check if hero is "between" the two zones (in the parallel corridor)
-            bool isInCorridor = IsInZoneCorridor(heroPosition, zoneA, zoneB);
-
-            LevelVectorZone nextWaypoint;
-
-            if (isInCorridor)
+            // Check if we've reached the current waypoint
+            if (_currentWaypointIndex >= 0 && _currentWaypointIndex < orderedZones.Count)
             {
-                // Hero is in the corridor between zones, determine direction based on target
-                if (targetIndex >= indexB)
+                var currentZone = orderedZones[_currentWaypointIndex];
+                float distToCurrent = Vector3.Distance(heroPosition, currentZone.Position);
+                
+                if (distToCurrent <= currentZone.Radius)
                 {
-                    // Target is ahead, go to the higher index zone (zoneB) to progress
-                    nextWaypoint = zoneB;
+                    // Mark as visited and move to next
+                    MarkWaypointVisited(_currentWaypointIndex);
+                    _currentWaypointIndex = FindNextWaypointIndex(orderedZones, targetIndex);
                 }
-                else if (targetIndex <= indexA)
+            }
+
+            // If current waypoint index is invalid or we've reached target, recalculate
+            if (_currentWaypointIndex < 0 || _currentWaypointIndex >= orderedZones.Count)
+            {
+                _currentWaypointIndex = FindNextWaypointIndex(orderedZones, targetIndex);
+            }
+
+            // If still invalid or equals target, return target
+            if (_currentWaypointIndex < 0 || _currentWaypointIndex == targetIndex)
+            {
+                return targetZone;
+            }
+
+            return orderedZones[_currentWaypointIndex];
+        }
+
+        /// <summary>
+        /// Initializes the path by finding the closest waypoint to start from.
+        /// </summary>
+        private void InitializePath(Vector3 heroPosition, List<LevelVectorZone> orderedZones, int targetIndex)
+        {
+            _pathInitialized = true;
+            _visitedWaypointIndices.Clear();
+
+            // Find the closest waypoint to the hero
+            float closestDistance = float.MaxValue;
+            int closestIndex = -1;
+
+            for (int i = 0; i < orderedZones.Count; i++)
+            {
+                float dist = Vector3.Distance(heroPosition, orderedZones[i].Position);
+                if (dist < closestDistance)
                 {
-                    // Target is behind, go to the lower index zone (zoneA) to go back
-                    nextWaypoint = zoneA;
+                    closestDistance = dist;
+                    closestIndex = i;
+                }
+            }
+
+            // Check if hero is already at a waypoint
+            for (int i = 0; i < orderedZones.Count; i++)
+            {
+                float dist = Vector3.Distance(heroPosition, orderedZones[i].Position);
+                if (dist <= orderedZones[i].Radius)
+                {
+                    MarkWaypointVisited(i);
+                    closestIndex = i;
+                }
+            }
+
+            // Set current waypoint based on direction to target
+            if (closestIndex >= 0)
+            {
+                if (closestIndex < targetIndex)
+                {
+                    // Need to go forward, start from closest
+                    _currentWaypointIndex = closestIndex;
+                }
+                else if (closestIndex > targetIndex)
+                {
+                    // Need to go backward, start from closest
+                    _currentWaypointIndex = closestIndex;
                 }
                 else
                 {
-                    // Target is between A and B, go to lower one first
-                    nextWaypoint = zoneA;
+                    // We're at target
+                    _currentWaypointIndex = targetIndex;
                 }
             }
             else
             {
-                // Hero is not in corridor
-                // If very close to the higher zone (< 5f), go to lower zone
-                if (distToZoneB < WAYPOINT_REACHED_DISTANCE)
-                {
-                    // We're at zone B, check if we need to continue or go back
-                    if (targetIndex > indexB)
-                    {
-                        // Need to go further, find the next zone after B
-                        if (indexB + 1 < orderedZones.Count)
-                            nextWaypoint = orderedZones[indexB + 1];
-                        else
-                            nextWaypoint = targetZone;
-                    }
-                    else if (targetIndex < indexB)
-                    {
-                        // Need to go back
-                        nextWaypoint = zoneA;
-                    }
-                    else
-                    {
-                        nextWaypoint = targetZone;
-                    }
-                }
-                else if (distToZoneA < WAYPOINT_REACHED_DISTANCE)
-                {
-                    // We're at zone A, check direction
-                    if (targetIndex > indexA)
-                    {
-                        // Need to go forward
-                        nextWaypoint = zoneB;
-                      }
-                    else if (targetIndex < indexA)
-                    {
-                        // Need to go back, find previous zone
-                        if (indexA - 1 >= 0)
-                            nextWaypoint = orderedZones[indexA - 1];
-                        else
-                            nextWaypoint = targetZone;
-                    }
-                    else
-                    {
-                        nextWaypoint = targetZone;
-                    }
-                }
-                else
-                {
-                    // Not close to either, go to the closest one that progresses toward target
-                    if (targetIndex >= indexB)
-                    {
-                        // Target is ahead or at B, prefer going to B
-                        nextWaypoint = zoneB;
-                    }
-                    else if (targetIndex <= indexA)
-                    {
-                        // Target is behind or at A, prefer going to A
-                        nextWaypoint = zoneA;
-                    }
-                    else
-                    {
-                        // Target is between, go to the closer one
-                        nextWaypoint = distToZoneA < distToZoneB ? zoneA : zoneB;
-                    }
-                }
+                // No waypoint found, start from first
+                _currentWaypointIndex = 0;
             }
+        }
 
-            // If the waypoint is the target zone, return it
-            if (nextWaypoint == targetZone)
-                return targetZone;
+        /// <summary>
+        /// Finds the next waypoint index to navigate to.
+        /// </summary>
+        private int FindNextWaypointIndex(List<LevelVectorZone> orderedZones, int targetIndex)
+        {
+            if (_currentWaypointIndex < 0)
+                return targetIndex;
 
-            // Check if we're already at this waypoint
-            float distToWaypoint = Vector3.Distance(heroPosition, nextWaypoint.Position);
-            if (distToWaypoint <= nextWaypoint.Radius)
+            // Determine direction
+            if (_currentWaypointIndex < targetIndex)
             {
-                // We're at this waypoint, find the next one toward target
-                int waypointIndex = orderedZones.IndexOf(nextWaypoint);
-                if (targetIndex > waypointIndex && waypointIndex + 1 < orderedZones.Count)
+                // Moving forward
+                for (int i = _currentWaypointIndex + 1; i <= targetIndex; i++)
                 {
-                    return orderedZones[waypointIndex + 1];
+                    if (!_visitedWaypointIndices.Contains(i) || i == targetIndex)
+                        return i;
                 }
-                else if (targetIndex < waypointIndex && waypointIndex - 1 >= 0)
+            }
+            else if (_currentWaypointIndex > targetIndex)
+            {
+                // Moving backward
+                for (int i = _currentWaypointIndex - 1; i >= targetIndex; i--)
                 {
-                    return orderedZones[waypointIndex - 1];
+                    if (!_visitedWaypointIndices.Contains(i) || i == targetIndex)
+                        return i;
                 }
             }
 
-            return nextWaypoint;
+            return targetIndex;
         }
 
         /// <summary>
-        /// Finds the two closest zones to the hero position.
+        /// Marks a waypoint as visited.
         /// </summary>
-        private (LevelVectorZone, LevelVectorZone) FindTwoClosestZones(Vector3 heroPosition, List<LevelVectorZone> zones)
+        private void MarkWaypointVisited(int index)
         {
-            if (zones == null || zones.Count < 2)
-                return (null, null);
-
-            var sortedByDistance = zones
-                .Select(z => new { Zone = z, Distance = Vector3.Distance(heroPosition, z.Position) })
-                .OrderBy(x => x.Distance)
-                .Take(2)
-                .ToList();
-
-            if (sortedByDistance.Count < 2)
-                return (sortedByDistance.FirstOrDefault()?.Zone, null);
-
-            return (sortedByDistance[0].Zone, sortedByDistance[1].Zone);
+            if (index >= 0)
+                _visitedWaypointIndices.Add(index);
         }
 
         /// <summary>
-        /// Checks if the hero is in the "corridor" between two zones.
-        /// A corridor is defined as the area between the perpendicular planes at each zone position.
+        /// Clears the visited waypoints and resets path tracking.
         /// </summary>
-        private bool IsInZoneCorridor(Vector3 heroPosition, LevelVectorZone zoneA, LevelVectorZone zoneB)
+        public void ClearVisitedWaypoints()
         {
-            Vector3 posA = zoneA.Position;
-            Vector3 posB = zoneB.Position;
+            _visitedWaypointIndices.Clear();
+            _currentWaypointIndex = -1;
+            _pathInitialized = false;
+            _currentPathWaypoint = null;
+            _hero?.Say("Cleared waypoint history");
+        }
 
-            // Direction from A to B
-            Vector3 dirAB = (posB - posA).normalized;
+        /// <summary>
+        /// Checks if a waypoint index has been visited.
+        /// </summary>
+        public bool IsWaypointVisited(int index)
+        {
+            return _visitedWaypointIndices.Contains(index);
+        }
 
-            // Project hero position onto the line AB
-            Vector3 heroRelativeToA = heroPosition - posA;
-            float projectionLength = Vector3.Dot(heroRelativeToA, dirAB);
-            float totalLength = Vector3.Distance(posA, posB);
-
-            // Hero is in corridor if projection is between 0 and totalLength
-            // with some margin for the zone radii
-            float marginA = zoneA.Radius * 0.5f;
-            float marginB = zoneB.Radius * 0.5f;
-
-            return projectionLength > -marginA && projectionLength < (totalLength + marginB);
+        /// <summary>
+        /// Gets the waypoint at the specified index.
+        /// </summary>
+        public LevelVectorZone GetWaypointAtIndex(int index)
+        {
+            var orderedZones = MinLevelVectorDictionary?.OrderBy(z => z.MinLevel).ToList();
+            if (orderedZones == null || index < 0 || index >= orderedZones.Count)
+                return null;
+            return orderedZones[index];
         }
 
         /// <summary>
@@ -882,17 +902,13 @@ namespace Scripts.Models
         /// </summary>
         public List<LevelVectorZone> MinLevelVectorDictionary = new List<LevelVectorZone>()
         {
-            new LevelVectorZone(1, "Lv1", -192, 11, 675, 200),
-            new LevelVectorZone(3, "Lv3", -196, 11, 862, 200),
-            new LevelVectorZone(5, "Wp5", -59.5f, 11, 981, 200),
-            new LevelVectorZone(5, "Lv5", 63.6f, 11, 817, 200),
-            //new LevelVectorZone(1, "Stony Plains", -185, -11, 590, 50),
-            //new LevelVectorZone(5, "10", 150, 11, 970, 50),
-            //new LevelVectorZone(7, "20", 147, 11, 616, 50),
-            //new LevelVectorZone(9, "30", 504, 11, 1030, 50),
-            //new LevelVectorZone(11, "40", 269, 9, 17780, 50),
-            //new LevelVectorZone(13, "50", 28, 9, 2502, 50),
-            //new LevelVectorZone(15, "54", 28, 9, 2502, 50),
+            new LevelVectorZone(1, "Lv1", -192, 11, 675, 100),
+            new LevelVectorZone(3, "Lv3", -196, 11, 862, 100),
+            new LevelVectorZone(3, "Wp5", -59.5f, 11, 981, 30),
+            new LevelVectorZone(4, "Lv5", 63.6f, 11, 817, 100),
+            new LevelVectorZone(4, "Wp7", 158.8f, 11f, 650, 30),
+            new LevelVectorZone(7, "Lv7", 299.3f, 11, 646, 100),
+            new LevelVectorZone(8, "Lv8", 502.7f, 11, 755.2f, 100),
         };
 
         #endregion
