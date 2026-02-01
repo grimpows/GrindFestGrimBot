@@ -21,8 +21,8 @@ namespace Scripts.Models
         public DateTime LastItemTargetTime = DateTime.MinValue;
         public int TargetItemTimeout = 10;
 
-        public int MaxWeaponToKeep = 5;
-        public int MaxArmorPerSlotToKeep = 5;
+        public int MaxWeaponToKeep = 3;
+        public int MaxArmorPerSlotToKeep = 3;
 
 
 

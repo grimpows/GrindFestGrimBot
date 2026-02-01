@@ -909,6 +909,7 @@ namespace Scripts.Models
             new LevelVectorZone(4, "Wp7", 158.8f, 11f, 650, 30),
             new LevelVectorZone(7, "Lv7", 299.3f, 11, 646, 100),
             new LevelVectorZone(8, "Lv8", 502.7f, 11, 755.2f, 100),
+            new LevelVectorZone(10, "Lv10", 243.5f, 11, 1123.7f, 200),
         };
 
         #endregion
