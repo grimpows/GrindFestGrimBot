@@ -28,6 +28,7 @@ namespace Scripts.Models
         public void SetUIVisible(bool visible) => _botUI?.SetVisible(visible);
         public void ToggleUIVisible() => _botUI?.ToggleVisible();
 
+
         public void OnStart(AutomaticHero hero, KeyCode toggleShowUIKey, int windowID)
         {
             if (_hero == null)
@@ -71,11 +72,18 @@ namespace Scripts.Models
 
         public void OnGUI()
         {
+
+   
+
             _botUI?.OnGUI();
         }
 
         public void OnUpdate()
         {
+
+            
+
+
             if (_hero == null)
                 return;
             // Initialize unstucker position tracking

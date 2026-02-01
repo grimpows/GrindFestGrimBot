@@ -38,6 +38,8 @@ class MyParty : Party_Base
 
     }
 
+    //bool _isFollowCursor = false;s
+
     public void Update()
     {
         if (_goldShopManager == null)
@@ -63,7 +65,7 @@ class MyParty : Party_Base
 
         if (Input.GetKeyDown(KeyCode.F4))
         {
-            SelectedHero.OpenInventory();
+            SelectedHero.OpenInventory(); // dont want to open to splash all on ground actually, replacinng with folowCursor.
         }
 
 

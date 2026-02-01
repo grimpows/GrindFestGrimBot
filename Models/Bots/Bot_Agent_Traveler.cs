@@ -923,7 +923,8 @@ namespace Scripts.Models
             new LevelVectorZone(8, "7", 502.7f, 11, 755.2f, 100),
             new LevelVectorZone(10, "8", 243.5f, 11, 1123.7f, 150), // good spot for farm :p
             new LevelVectorZone(10, "9-way", 263.5f, 11, 1342.7f, 30), // crossroad pour TaintedDunngeon
-            new LevelVectorZone(11, "10", 272.5f, 11, 1612.2f, 150), // canyon of death
+            new LevelVectorZone(10, "10-way", 272.5f, 11, 1612.2f, 150), 
+            new LevelVectorZone(11, "11", 272.5f, 11, 1612.2f, 150), // canyon of death before stone block
         };
 
         #endregion
