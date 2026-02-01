@@ -677,6 +677,25 @@ namespace Scripts.Models
         }
 
         /// <summary>
+        /// Gets the distance to the current path waypoint (if navigating through path).
+        /// Returns -1 if no waypoint or hero is null.
+        /// </summary>
+        public float GetDistanceToCurrentPathWaypoint()
+        {
+            if (_hero == null || _currentPathWaypoint == null) return -1f;
+            return Vector3.Distance(_hero.transform.position, _currentPathWaypoint.Position);
+        }
+
+        /// <summary>
+        /// Returns true if the hero is within the current path waypoint radius.
+        /// </summary>
+        public bool IsHeroAtCurrentPathWaypoint()
+        {
+            if (_currentPathWaypoint == null || _hero == null) return false;
+            return GetDistanceToCurrentPathWaypoint() <= _currentPathWaypoint.Radius;
+        }
+
+        /// <summary>
         /// Gets the current run around target position (for debugging/UI).
         /// </summary>
         public Vector3 CurrentRunAroundTarget => _currentRunAroundTarget;

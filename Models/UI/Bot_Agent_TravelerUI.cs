@@ -799,6 +799,9 @@ namespace Scripts.Models
                     float distance = _travelerAgent.GetDistanceToCurrentVectorZone();
                     bool inZone = distance >= 0 && distance <= bestZone.Radius;
                     DrawVectorZoneDistanceInfo(distance, bestZone.Radius, inZone);
+
+                    // Draw transition waypoint info if navigating through path
+                    DrawTransitionWaypointInfo(bestZone);
                 }
                 else
                 {
@@ -813,6 +816,66 @@ namespace Scripts.Models
             }
 
             GUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// Draws the transition waypoint information when navigating through the path in Vector mode.
+        /// </summary>
+        private void DrawTransitionWaypointInfo(LevelVectorZone bestZone)
+        {
+            var currentWaypoint = _travelerAgent.CurrentPathWaypoint;
+            
+            // Only show if we have a waypoint and it's different from the best zone (meaning we're in transition)
+            if (currentWaypoint == null || currentWaypoint == bestZone)
+                return;
+
+            GUILayout.Space(4);
+            UITheme.DrawSeparator(UITheme.TextMuted, 1f);
+            GUILayout.Space(4);
+
+            // Waypoint header
+            GUILayout.BeginHorizontal();
+            GUI.color = new Color(0.6f, 0.8f, 1f); // Light blue
+            GUILayout.Label("→", GUILayout.Width(14));
+            GUI.color = Color.white;
+            GUILayout.Label("Waypoint", UITheme.CreateLabelStyle(new Color(0.6f, 0.8f, 1f), 10, FontStyle.Bold));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            // Waypoint name and level
+            GUILayout.Label($"L{currentWaypoint.MinLevel}: {currentWaypoint.Name}", UITheme.CreateValueStyle(new Color(0.6f, 0.8f, 1f), 10));
+
+            // Waypoint position
+            GUILayout.Label($"({currentWaypoint.Position.x:F0}, {currentWaypoint.Position.y:F0}, {currentWaypoint.Position.z:F0})", UITheme.CreateLabelStyle(UITheme.TextMuted, 8));
+
+            // Distance to waypoint and status
+            float distToWaypoint = _travelerAgent.GetDistanceToCurrentPathWaypoint();
+            bool atWaypoint = _travelerAgent.IsHeroAtCurrentPathWaypoint();
+
+            GUILayout.BeginHorizontal();
+            
+            // Distance display
+            if (distToWaypoint >= 0)
+            {
+                Color wpDistColor = atWaypoint ? UITheme.Positive : new Color(0.6f, 0.8f, 1f);
+                GUILayout.Label($"Dist: {distToWaypoint:F0}", UITheme.CreateLabelStyle(wpDistColor, 8), GUILayout.Width(55));
+            }
+            
+            // Radius display
+            GUILayout.Label($"R: {currentWaypoint.Radius:F0}", UITheme.CreateLabelStyle(UITheme.TextMuted, 8), GUILayout.Width(40));
+            
+            GUILayout.FlexibleSpace();
+
+            // Status indicator
+            if (atWaypoint)
+            {
+                GUILayout.Label("✓ AT WP", UITheme.CreateLabelStyle(UITheme.Positive, 8, FontStyle.Bold));
+            }
+            else
+            {
+                GUILayout.Label("→ TRANSIT", UITheme.CreateLabelStyle(new Color(0.6f, 0.8f, 1f), 8));
+            }
+            GUILayout.EndHorizontal();
         }
 
         /// <summary>

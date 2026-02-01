@@ -2,7 +2,7 @@
 
 class Grim : Hero_Base
 {
-    //evertyhing is in the base class so its easy to add new heroes !!sssssssbssssssssssssssssissssssssssssssssbssssssssssss
+    //evertyhing is in the base class so its easy to add new heroes !!sssssssbssssssssssssssssissssssssssssssssbssssssssssssss
 }
 
 
