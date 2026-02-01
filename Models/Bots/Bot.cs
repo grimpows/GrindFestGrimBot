@@ -84,6 +84,8 @@ namespace Scripts.Models
             // Initialize unstucker position tracking
             UnstuckerAgent.Initialize();
 
+            UnstuckerAgent.UpdatePositionTracking();
+
             if (!_hero.IsBotting)
             {
                 CurrentStatus = BotStatus.INACTIVE;
@@ -91,7 +93,9 @@ namespace Scripts.Models
                 return;
             }
 
-            UnstuckerAgent.UpdatePositionTracking();
+            
+
+            
 
             // Try keep health up first (emergency consume)
             if (ConsumerAgent.IsActing(true, 0.2f))
@@ -110,7 +114,7 @@ namespace Scripts.Models
             _hero.Action_UpgradeStats();
 
             // Check unstuck mode
-            if (UnstuckerAgent.IsActing())
+            if (!TravelerAgent.IsForcedVectorZoneEnabled && !TravelerAgent.IsForcedAreaEnabled && UnstuckerAgent.IsActing())
             {
 
                 CurrentStatus = BotStatus.UNSTICKING;

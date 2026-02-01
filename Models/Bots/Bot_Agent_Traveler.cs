@@ -1,7 +1,9 @@
 ﻿using GrindFest;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace Scripts.Models
 {
@@ -42,6 +44,16 @@ namespace Scripts.Models
         private string _targetAreaName = "";
         private string _forcedAreaName = "";
         private VectorZone _forcedVectorZone = null;
+
+        // Pathfinding state
+        private Vector3 _currentWaypoint = Vector3.zero;
+        private DateTime _lastPathCalculation = DateTime.MinValue;
+        private float _pathRecalculationInterval = 2f; // Recalculate path every 2 seconds
+        private float _waypointReachedDistance = 3f; // Distance to consider waypoint reached
+        private float _maxDirectMoveDistance = 50f; // Max distance for direct movement without waypoints
+        private int _stuckCounter = 0;
+        private Vector3 _lastPosition = Vector3.zero;
+        private DateTime _lastPositionCheck = DateTime.MinValue;
 
         public string TargetAreaName
         {
@@ -99,6 +111,8 @@ namespace Scripts.Models
                     {
                         // Clear area name when forcing a vector zone
                         _forcedAreaName = "";
+                        // Reset pathfinding state
+                        ResetPathfindingState();
                         _hero?.Say($"Forcing travel to zone: {_forcedVectorZone.Name}");
                     }
                     else
@@ -127,6 +141,17 @@ namespace Scripts.Models
             _hero = hero;
         }
 
+        /// <summary>
+        /// Resets the pathfinding state when changing zones or destinations.
+        /// </summary>
+        private void ResetPathfindingState()
+        {
+            _currentWaypoint = Vector3.zero;
+            _lastPathCalculation = DateTime.MinValue;
+            _stuckCounter = 0;
+            _lastPosition = Vector3.zero;
+        }
+
         public bool IsActing()
         {
             if (_hero == null) return false;
@@ -151,7 +176,8 @@ namespace Scripts.Models
         }
 
         /// <summary>
-        /// Handles travel to a forced vector zone. Returns true if the bot is moving toward the zone.
+        /// Handles travel to a forced vector zone with optimized pathfinding.
+        /// Returns true if the bot is moving toward the zone.
         /// </summary>
         private bool HandleVectorZoneTravel()
         {
@@ -161,16 +187,192 @@ namespace Scripts.Models
             Vector3 targetPosition = _forcedVectorZone.Position;
             float distanceToCenter = Vector3.Distance(heroPosition, targetPosition);
 
-            // If hero is outside the radius, move toward the center
-            if (distanceToCenter > _forcedVectorZone.Radius)
+            // If hero is within the radius, we're done
+            if (distanceToCenter <= _forcedVectorZone.Radius)
             {
-                TargetAreaName = $"Zone: {_forcedVectorZone.Name}";
-                _hero.Character.MoveToSafe(targetPosition, 100);
-                return true;
+                TargetAreaName = "";
+                ResetPathfindingState();
+                return false;
             }
 
-            TargetAreaName = "";
-            return false;
+            TargetAreaName = $"Zone: {_forcedVectorZone.Name}";
+
+            // Check if we're stuck
+            CheckAndHandleStuck(heroPosition);
+
+            // Calculate or update path
+            Vector3 moveTarget = CalculateOptimalMoveTarget(heroPosition, targetPosition, distanceToCenter);
+
+            // Execute movement using the game's MoveToSafe
+            ExecuteMovement(moveTarget, distanceToCenter);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Calculates the optimal move target based on distance and pathfinding.
+        /// </summary>
+        private Vector3 CalculateOptimalMoveTarget(Vector3 heroPosition, Vector3 targetPosition, float distanceToCenter)
+        {
+            // Check if we need to recalculate the path
+            bool needsRecalculation = (DateTime.Now - _lastPathCalculation).TotalSeconds > _pathRecalculationInterval
+                                      || _currentWaypoint == Vector3.zero
+                                      || _stuckCounter > 3;
+
+            if (needsRecalculation)
+            {
+                _lastPathCalculation = DateTime.Now;
+                _stuckCounter = 0;
+
+                // For short distances, move directly to target
+                if (distanceToCenter <= _maxDirectMoveDistance)
+                {
+                    _currentWaypoint = targetPosition;
+                }
+                else
+                {
+                    // For longer distances, calculate intermediate waypoint
+                    _currentWaypoint = CalculateIntermediateWaypoint(heroPosition, targetPosition, distanceToCenter);
+                }
+            }
+
+            // Check if current waypoint is reached
+            float distanceToWaypoint = Vector3.Distance(heroPosition, _currentWaypoint);
+            if (distanceToWaypoint < _waypointReachedDistance)
+            {
+                // Move to next waypoint or final target
+                if (Vector3.Distance(_currentWaypoint, targetPosition) > _waypointReachedDistance)
+                {
+                    _currentWaypoint = CalculateIntermediateWaypoint(heroPosition, targetPosition, distanceToCenter);
+                }
+                else
+                {
+                    _currentWaypoint = targetPosition;
+                }
+            }
+
+            return _currentWaypoint;
+        }
+
+        /// <summary>
+        /// Calculates an intermediate waypoint for long-distance travel.
+        /// Uses NavMesh sampling to find valid positions.
+        /// </summary>
+        private Vector3 CalculateIntermediateWaypoint(Vector3 heroPosition, Vector3 targetPosition, float totalDistance)
+        {
+            // Calculate direction to target
+            Vector3 direction = (targetPosition - heroPosition).normalized;
+
+            // Calculate step distance (move in chunks)
+            float stepDistance = Mathf.Min(_maxDirectMoveDistance, totalDistance * 0.5f);
+
+            // Calculate intermediate position
+            Vector3 intermediatePosition = heroPosition + direction * stepDistance;
+
+            // Try to find a valid NavMesh position near the intermediate point
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(intermediatePosition, out hit, 10f, NavMesh.AllAreas))
+            {
+                return hit.position;
+            }
+
+            // If no valid NavMesh position found, try alternative positions
+            // Try slightly to the left
+            Vector3 leftOffset = Quaternion.Euler(0, -30, 0) * direction * stepDistance;
+            Vector3 leftPosition = heroPosition + leftOffset;
+            if (NavMesh.SamplePosition(leftPosition, out hit, 10f, NavMesh.AllAreas))
+            {
+                return hit.position;
+            }
+
+            // Try slightly to the right
+            Vector3 rightOffset = Quaternion.Euler(0, 30, 0) * direction * stepDistance;
+            Vector3 rightPosition = heroPosition + rightOffset;
+            if (NavMesh.SamplePosition(rightPosition, out hit, 10f, NavMesh.AllAreas))
+            {
+                return hit.position;
+            }
+
+            // Fallback: return intermediate position and let MoveToSafe handle it
+            return intermediatePosition;
+        }
+
+        /// <summary>
+        /// Checks if the hero is stuck and handles it.
+        /// </summary>
+        private void CheckAndHandleStuck(Vector3 currentPosition)
+        {
+            if ((DateTime.Now - _lastPositionCheck).TotalSeconds < 1f)
+                return;
+
+            _lastPositionCheck = DateTime.Now;
+
+            if (_lastPosition != Vector3.zero)
+            {
+                float movedDistance = Vector3.Distance(currentPosition, _lastPosition);
+                if (movedDistance < 0.5f) // Hasn't moved much
+                {
+                    _stuckCounter++;
+
+                    if (_stuckCounter > 5)
+                    {
+                        // We're really stuck, try a random offset
+                        HandleStuckSituation(currentPosition);
+                    }
+                }
+                else
+                {
+                    _stuckCounter = 0;
+                }
+            }
+
+            _lastPosition = currentPosition;
+        }
+
+        /// <summary>
+        /// Handles stuck situations by trying alternative movement strategies.
+        /// </summary>
+        private void HandleStuckSituation(Vector3 currentPosition)
+        {
+            _stuckCounter = 0;
+
+            // Try moving in a random direction first
+            float randomAngle = UnityEngine.Random.Range(-90f, 90f);
+            Vector3 direction = (_forcedVectorZone.Position - currentPosition).normalized;
+            Vector3 randomDirection = Quaternion.Euler(0, randomAngle, 0) * direction;
+
+            Vector3 unstuckTarget = currentPosition + randomDirection * 15f;
+
+            // Sample NavMesh for valid position
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(unstuckTarget, out hit, 20f, NavMesh.AllAreas))
+            {
+                _currentWaypoint = hit.position;
+            }
+            else
+            {
+                // Use RunAroundInArea as last resort
+                _hero?.RunAroundInArea();
+            }
+        }
+
+        /// <summary>
+        /// Executes the movement command to the target position.
+        /// </summary>
+        private void ExecuteMovement(Vector3 moveTarget, float totalDistance)
+        {
+            // Use different movement ranges based on distance
+            int moveRange = totalDistance > 100 ? 200 : (totalDistance > 50 ? 100 : 50);
+
+            // Primary method: Use Character.MoveToSafe
+            _hero.Character.MoveToSafe(moveTarget, moveRange);
+
+            // Also try to use NavMeshAgent if available for better pathfinding
+            var navAgent = _hero.Character?.GetComponent<NavMeshAgent>();
+            if (navAgent != null && navAgent.enabled && navAgent.isOnNavMesh)
+            {
+                navAgent.SetDestination(moveTarget);
+            }
         }
 
         /// <summary>
@@ -191,6 +393,16 @@ namespace Scripts.Models
             if (_forcedVectorZone == null || _hero == null) return false;
             return GetDistanceToForcedVectorZone() <= _forcedVectorZone.Radius;
         }
+
+        /// <summary>
+        /// Gets the current waypoint being navigated to (for debugging/UI).
+        /// </summary>
+        public Vector3 CurrentWaypoint => _currentWaypoint;
+
+        /// <summary>
+        /// Gets the stuck counter (for debugging/UI).
+        /// </summary>
+        public int StuckCounter => _stuckCounter;
 
         public string GetAreaToTravel()
         {
@@ -255,6 +467,7 @@ namespace Scripts.Models
         {
             _forcedAreaName = "";
             _forcedVectorZone = null;
+            ResetPathfindingState();
             _hero?.Say("Disabled all forced modes, returning to auto mode");
         }
 

@@ -175,7 +175,7 @@ namespace Scripts.Models
                 if (item.Armor != null)
                 {
                     double averageArmorForSlot = CalculateAverageArmorForBestArmorInInventoryPerSlot(item.Equipable.Slot);
-                    if (item.Armor.Armor < averageArmorForSlot)
+                    if (item.Armor.Armor <= averageArmorForSlot)
                     {
                         return false;
                     }
@@ -278,8 +278,10 @@ namespace Scripts.Models
                 .ToList();
             if (armorItemsInSlot.Count == 0)
                 return 0;
-            var averageArmor = armorItemsInSlot
-                .Average(i => i.Armor.Armor);
+            //var averageArmor = armorItemsInSlot
+            //    .Average(i => i.Armor.Armor);
+
+            var averageArmor = armorItemsInSlot.Min(i => i.Armor.Armor);
 
             return averageArmor;
         }
