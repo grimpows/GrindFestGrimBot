@@ -1,4 +1,5 @@
 ﻿using GrindFest;
+using Scripts.Models.PathFinding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,24 +37,33 @@ namespace Scripts.Models
         }
     }
 
+    /// <summary>
+    /// Enum to define the travel mode used for automatic area selection.
+    /// </summary>
+    public enum TravelMode
+    {
+        /// <summary>
+        /// Use named areas (MinLevelAreaDictionary) - default game behavior.
+        /// </summary>
+        AreaBased,
+
+        /// <summary>
+        /// Use Vector3 positions (MinLevelVectorDictionary) - custom positions.
+        /// </summary>
+        VectorBased
+    }
+
     public class Bot_Agent_Traveler
     {
-
         private AutomaticHero _hero;
+        private IPathFinder _pathFinder;
 
         private string _targetAreaName = "";
         private string _forcedAreaName = "";
         private VectorZone _forcedVectorZone = null;
 
-        // Pathfinding state
-        private Vector3 _currentWaypoint = Vector3.zero;
-        private DateTime _lastPathCalculation = DateTime.MinValue;
-        private float _pathRecalculationInterval = 2f; // Recalculate path every 2 seconds
-        private float _waypointReachedDistance = 3f; // Distance to consider waypoint reached
-        private float _maxDirectMoveDistance = 50f; // Max distance for direct movement without waypoints
-        private int _stuckCounter = 0;
-        private Vector3 _lastPosition = Vector3.zero;
-        private DateTime _lastPositionCheck = DateTime.MinValue;
+        // Travel mode for automatic selection
+        private TravelMode _travelMode = TravelMode.AreaBased;
 
         public string TargetAreaName
         {
@@ -66,6 +76,22 @@ namespace Scripts.Models
 
                     if (!string.IsNullOrEmpty(value))
                         _hero?.Say($"Traveling to {_targetAreaName}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the travel mode for automatic area selection.
+        /// </summary>
+        public TravelMode TravelMode
+        {
+            get => _travelMode;
+            set
+            {
+                if (_travelMode != value)
+                {
+                    _travelMode = value;
+                    _hero?.Say($"Travel mode changed to {_travelMode}");
                 }
             }
         }
@@ -112,7 +138,7 @@ namespace Scripts.Models
                         // Clear area name when forcing a vector zone
                         _forcedAreaName = "";
                         // Reset pathfinding state
-                        ResetPathfindingState();
+                        _pathFinder?.Reset();
                         _hero?.Say($"Forcing travel to zone: {_forcedVectorZone.Name}");
                     }
                     else
@@ -136,33 +162,62 @@ namespace Scripts.Models
         /// </summary>
         public bool IsAnyForcedModeEnabled => IsForcedAreaEnabled || IsForcedVectorZoneEnabled;
 
+        /// <summary>
+        /// Gets the current waypoint from the pathfinder.
+        /// </summary>
+        public Vector3 CurrentWaypoint => _pathFinder?.CurrentWaypoint ?? Vector3.zero;
+
+        /// <summary>
+        /// Gets the stuck counter from the pathfinder.
+        /// </summary>
+        public int StuckCounter => _pathFinder?.StuckCounter ?? 0;
+
         public Bot_Agent_Traveler(AutomaticHero hero)
         {
             _hero = hero;
-        }
-
-        /// <summary>
-        /// Resets the pathfinding state when changing zones or destinations.
-        /// </summary>
-        private void ResetPathfindingState()
-        {
-            _currentWaypoint = Vector3.zero;
-            _lastPathCalculation = DateTime.MinValue;
-            _stuckCounter = 0;
-            _lastPosition = Vector3.zero;
+            _pathFinder = new NavMeshPathFinder(PathFinderConfig.Default);
         }
 
         public bool IsActing()
         {
             if (_hero == null) return false;
 
-            // Check if forced vector zone is active
+            // Priority 1: Forced vector zone (custom zones)
             if (IsForcedVectorZoneEnabled)
             {
-                return HandleVectorZoneTravel();
+                return HandleVectorZoneTravel(_forcedVectorZone);
             }
 
-            string bestArea = GetAreaToTravel();
+            // Priority 2: Forced area name (custom areas)
+            if (IsForcedAreaEnabled)
+            {
+                if (_hero.CurrentArea?.Root?.name != _forcedAreaName)
+                {
+                    TargetAreaName = _forcedAreaName;
+                    _hero.GoToArea(_forcedAreaName);
+                    return true;
+                }
+                TargetAreaName = "";
+                return false;
+            }
+
+            // Priority 3: Automatic travel based on TravelMode
+            if (_travelMode == TravelMode.VectorBased)
+            {
+                return HandleAutomaticVectorTravel();
+            }
+            else
+            {
+                return HandleAutomaticAreaTravel();
+            }
+        }
+
+        /// <summary>
+        /// Handles automatic travel using area names (default behavior).
+        /// </summary>
+        private bool HandleAutomaticAreaTravel()
+        {
+            string bestArea = GetBestAreaForLevel();
             if (_hero.CurrentArea?.Root?.name != null && _hero.CurrentArea.Root.name != bestArea)
             {
                 TargetAreaName = bestArea;
@@ -171,189 +226,65 @@ namespace Scripts.Models
             }
 
             TargetAreaName = "";
-
             return false;
         }
 
         /// <summary>
-        /// Handles travel to a forced vector zone with optimized pathfinding.
+        /// Handles automatic travel using vector zones.
+        /// </summary>
+        private bool HandleAutomaticVectorTravel()
+        {
+            var bestZone = GetBestVectorZoneForLevel();
+            if (bestZone == null)
+            {
+                // Fallback to area-based if no vector zones configured
+                return HandleAutomaticAreaTravel();
+            }
+
+            // Create a temporary VectorZone for travel
+            var targetZone = new VectorZone(bestZone.Name, bestZone.Position, bestZone.Radius);
+            return HandleVectorZoneTravel(targetZone);
+        }
+
+        /// <summary>
+        /// Handles travel to a vector zone with optimized pathfinding.
         /// Returns true if the bot is moving toward the zone.
         /// </summary>
-        private bool HandleVectorZoneTravel()
+        private bool HandleVectorZoneTravel(VectorZone zone)
         {
-            if (_forcedVectorZone == null || _hero == null) return false;
+            if (zone == null || _hero == null) return false;
 
             Vector3 heroPosition = _hero.transform.position;
-            Vector3 targetPosition = _forcedVectorZone.Position;
+            Vector3 targetPosition = zone.Position;
             float distanceToCenter = Vector3.Distance(heroPosition, targetPosition);
 
             // If hero is within the radius, we're done
-            if (distanceToCenter <= _forcedVectorZone.Radius)
+            if (distanceToCenter <= zone.Radius)
             {
                 TargetAreaName = "";
-                ResetPathfindingState();
                 return false;
             }
 
-            TargetAreaName = $"Zone: {_forcedVectorZone.Name}";
+            TargetAreaName = $"Zone: {zone.Name}";
 
-            // Check if we're stuck
-            CheckAndHandleStuck(heroPosition);
+            // Update pathfinder state
+            _pathFinder.Update(heroPosition);
 
-            // Calculate or update path
-            Vector3 moveTarget = CalculateOptimalMoveTarget(heroPosition, targetPosition, distanceToCenter);
+            // Check if stuck and handle
+            if (_pathFinder.IsStuck(heroPosition))
+            {
+                Vector3 unstuckTarget = _pathFinder.HandleStuckSituation(heroPosition, targetPosition);
+                ExecuteMovement(unstuckTarget, distanceToCenter);
+                return true;
+            }
 
-            // Execute movement using the game's MoveToSafe
+            // Calculate optimal move target
+            Vector3 moveTarget = _pathFinder.CalculateNextMoveTarget(heroPosition, targetPosition);
+
+            // Execute movement
             ExecuteMovement(moveTarget, distanceToCenter);
 
             return true;
-        }
-
-        /// <summary>
-        /// Calculates the optimal move target based on distance and pathfinding.
-        /// </summary>
-        private Vector3 CalculateOptimalMoveTarget(Vector3 heroPosition, Vector3 targetPosition, float distanceToCenter)
-        {
-            // Check if we need to recalculate the path
-            bool needsRecalculation = (DateTime.Now - _lastPathCalculation).TotalSeconds > _pathRecalculationInterval
-                                      || _currentWaypoint == Vector3.zero
-                                      || _stuckCounter > 3;
-
-            if (needsRecalculation)
-            {
-                _lastPathCalculation = DateTime.Now;
-                _stuckCounter = 0;
-
-                // For short distances, move directly to target
-                if (distanceToCenter <= _maxDirectMoveDistance)
-                {
-                    _currentWaypoint = targetPosition;
-                }
-                else
-                {
-                    // For longer distances, calculate intermediate waypoint
-                    _currentWaypoint = CalculateIntermediateWaypoint(heroPosition, targetPosition, distanceToCenter);
-                }
-            }
-
-            // Check if current waypoint is reached
-            float distanceToWaypoint = Vector3.Distance(heroPosition, _currentWaypoint);
-            if (distanceToWaypoint < _waypointReachedDistance)
-            {
-                // Move to next waypoint or final target
-                if (Vector3.Distance(_currentWaypoint, targetPosition) > _waypointReachedDistance)
-                {
-                    _currentWaypoint = CalculateIntermediateWaypoint(heroPosition, targetPosition, distanceToCenter);
-                }
-                else
-                {
-                    _currentWaypoint = targetPosition;
-                }
-            }
-
-            return _currentWaypoint;
-        }
-
-        /// <summary>
-        /// Calculates an intermediate waypoint for long-distance travel.
-        /// Uses NavMesh sampling to find valid positions.
-        /// </summary>
-        private Vector3 CalculateIntermediateWaypoint(Vector3 heroPosition, Vector3 targetPosition, float totalDistance)
-        {
-            // Calculate direction to target
-            Vector3 direction = (targetPosition - heroPosition).normalized;
-
-            // Calculate step distance (move in chunks)
-            float stepDistance = Mathf.Min(_maxDirectMoveDistance, totalDistance * 0.5f);
-
-            // Calculate intermediate position
-            Vector3 intermediatePosition = heroPosition + direction * stepDistance;
-
-            // Try to find a valid NavMesh position near the intermediate point
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(intermediatePosition, out hit, 10f, NavMesh.AllAreas))
-            {
-                return hit.position;
-            }
-
-            // If no valid NavMesh position found, try alternative positions
-            // Try slightly to the left
-            Vector3 leftOffset = Quaternion.Euler(0, -30, 0) * direction * stepDistance;
-            Vector3 leftPosition = heroPosition + leftOffset;
-            if (NavMesh.SamplePosition(leftPosition, out hit, 10f, NavMesh.AllAreas))
-            {
-                return hit.position;
-            }
-
-            // Try slightly to the right
-            Vector3 rightOffset = Quaternion.Euler(0, 30, 0) * direction * stepDistance;
-            Vector3 rightPosition = heroPosition + rightOffset;
-            if (NavMesh.SamplePosition(rightPosition, out hit, 10f, NavMesh.AllAreas))
-            {
-                return hit.position;
-            }
-
-            // Fallback: return intermediate position and let MoveToSafe handle it
-            return intermediatePosition;
-        }
-
-        /// <summary>
-        /// Checks if the hero is stuck and handles it.
-        /// </summary>
-        private void CheckAndHandleStuck(Vector3 currentPosition)
-        {
-            if ((DateTime.Now - _lastPositionCheck).TotalSeconds < 1f)
-                return;
-
-            _lastPositionCheck = DateTime.Now;
-
-            if (_lastPosition != Vector3.zero)
-            {
-                float movedDistance = Vector3.Distance(currentPosition, _lastPosition);
-                if (movedDistance < 0.5f) // Hasn't moved much
-                {
-                    _stuckCounter++;
-
-                    if (_stuckCounter > 5)
-                    {
-                        // We're really stuck, try a random offset
-                        HandleStuckSituation(currentPosition);
-                    }
-                }
-                else
-                {
-                    _stuckCounter = 0;
-                }
-            }
-
-            _lastPosition = currentPosition;
-        }
-
-        /// <summary>
-        /// Handles stuck situations by trying alternative movement strategies.
-        /// </summary>
-        private void HandleStuckSituation(Vector3 currentPosition)
-        {
-            _stuckCounter = 0;
-
-            // Try moving in a random direction first
-            float randomAngle = UnityEngine.Random.Range(-90f, 90f);
-            Vector3 direction = (_forcedVectorZone.Position - currentPosition).normalized;
-            Vector3 randomDirection = Quaternion.Euler(0, randomAngle, 0) * direction;
-
-            Vector3 unstuckTarget = currentPosition + randomDirection * 15f;
-
-            // Sample NavMesh for valid position
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(unstuckTarget, out hit, 20f, NavMesh.AllAreas))
-            {
-                _currentWaypoint = hit.position;
-            }
-            else
-            {
-                // Use RunAroundInArea as last resort
-                _hero?.RunAroundInArea();
-            }
         }
 
         /// <summary>
@@ -376,6 +307,87 @@ namespace Scripts.Models
         }
 
         /// <summary>
+        /// Gets the best area name for the current hero level.
+        /// </summary>
+        public string GetBestAreaForLevel()
+        {
+            int heroLevel = _hero.Level;
+            var areaForLevel = MinLevelAreaDictionary
+                .Where(kv => kv.Key <= heroLevel)
+                .OrderByDescending(kv => kv.Key)
+                .First();
+
+            var lowerAreaForLevel = MinLevelAreaDictionary.First();
+
+            if (areaForLevel.Key > 1)
+            {
+                lowerAreaForLevel = MinLevelAreaDictionary
+                    .Where(kv => kv.Key < areaForLevel.Key)
+                    .OrderByDescending(kv => kv.Key)
+                    .First();
+            }
+
+            if (_hero.HealthPotionCount() < 5 && _hero.CurrentArea?.Root.name == areaForLevel.Value)
+            {
+                return lowerAreaForLevel.Value;
+            }
+
+            if (_hero.CurrentArea?.Root.name == lowerAreaForLevel.Value && _hero.HealthPotionCount() < 20)
+            {
+                return lowerAreaForLevel.Value;
+            }
+
+            return areaForLevel.Value;
+        }
+
+        /// <summary>
+        /// Gets the best vector zone for the current hero level.
+        /// </summary>
+        public LevelVectorZone GetBestVectorZoneForLevel()
+        {
+            if (MinLevelVectorDictionary == null || MinLevelVectorDictionary.Count == 0)
+                return null;
+
+            int heroLevel = _hero.Level;
+            var zoneForLevel = MinLevelVectorDictionary
+                .Where(z => z.MinLevel <= heroLevel)
+                .OrderByDescending(z => z.MinLevel)
+                .FirstOrDefault();
+
+            if (zoneForLevel == null)
+                return MinLevelVectorDictionary.OrderBy(z => z.MinLevel).FirstOrDefault();
+
+            var lowerZone = MinLevelVectorDictionary
+                .Where(z => z.MinLevel < zoneForLevel.MinLevel)
+                .OrderByDescending(z => z.MinLevel)
+                .FirstOrDefault() ?? zoneForLevel;
+
+            // Check if we need to go to lower level zone for potions
+            if (_hero.HealthPotionCount() < 5)
+            {
+                Vector3 heroPos = _hero.transform.position;
+                float distToCurrentZone = Vector3.Distance(heroPos, zoneForLevel.Position);
+                if (distToCurrentZone <= zoneForLevel.Radius)
+                {
+                    return lowerZone;
+                }
+            }
+
+            return zoneForLevel;
+        }
+
+        /// <summary>
+        /// Gets the area to travel (for compatibility with existing code).
+        /// </summary>
+        public string GetAreaToTravel()
+        {
+            if (IsForcedAreaEnabled)
+                return _forcedAreaName;
+
+            return GetBestAreaForLevel();
+        }
+
+        /// <summary>
         /// Gets the distance from the hero to the forced vector zone center.
         /// Returns -1 if no vector zone is forced or hero is null.
         /// </summary>
@@ -395,53 +407,23 @@ namespace Scripts.Models
         }
 
         /// <summary>
-        /// Gets the current waypoint being navigated to (for debugging/UI).
+        /// Gets the distance to the current automatic vector zone (if in vector mode).
         /// </summary>
-        public Vector3 CurrentWaypoint => _currentWaypoint;
-
-        /// <summary>
-        /// Gets the stuck counter (for debugging/UI).
-        /// </summary>
-        public int StuckCounter => _stuckCounter;
-
-        public string GetAreaToTravel()
+        public float GetDistanceToCurrentVectorZone()
         {
-            // If forced area is set, always return it
-            if (IsForcedAreaEnabled)
+            if (_hero == null) return -1f;
+
+            if (IsForcedVectorZoneEnabled)
+                return GetDistanceToForcedVectorZone();
+
+            if (_travelMode == TravelMode.VectorBased)
             {
-                return _forcedAreaName;
+                var zone = GetBestVectorZoneForLevel();
+                if (zone != null)
+                    return Vector3.Distance(_hero.transform.position, zone.Position);
             }
 
-            int heroLevel = _hero.Level;
-            var areaForLevel = MinLevelAreaDictionary
-                .Where(kv => kv.Key <= heroLevel)
-                .OrderByDescending(kv => kv.Key)
-                .First();
-
-            var lowerAreaForLevel = MinLevelAreaDictionary.First();
-
-            if (areaForLevel.Key > 1)
-            {
-                lowerAreaForLevel = MinLevelAreaDictionary
-                    .Where(kv => kv.Key < areaForLevel.Key)
-                    .OrderByDescending(kv => kv.Key)
-                    .First();
-
-            }
-
-            if (_hero.HealthPotionCount() < 5 && _hero.CurrentArea?.Root.name == areaForLevel.Value)
-            {
-
-                return lowerAreaForLevel.Value;
-            }
-
-            if (_hero.CurrentArea?.Root.name == lowerAreaForLevel.Value && _hero.HealthPotionCount() < 20)
-            {
-                return lowerAreaForLevel.Value;
-            }
-
-            return areaForLevel.Value;
-
+            return -1f;
         }
 
         /// <summary>
@@ -467,9 +449,11 @@ namespace Scripts.Models
         {
             _forcedAreaName = "";
             _forcedVectorZone = null;
-            ResetPathfindingState();
+            _pathFinder?.Reset();
             _hero?.Say("Disabled all forced modes, returning to auto mode");
         }
+
+        #region Area Dictionaries
 
         /// <summary>
         /// Dictionary of minimum hero level to area name for automatic area selection.
@@ -481,31 +465,47 @@ namespace Scripts.Models
             {5, "Rotten Burrows" },
             {7, "Ashen Pastures" },
             {9, "Canyon of Death" },
-            //{11, "Endless Desert" },
-
         };
 
         /// <summary>
+        /// List of level-based vector zones for automatic vector-based travel.
+        /// </summary>
+        public List<LevelVectorZone> MinLevelVectorDictionary = new List<LevelVectorZone>()
+        {
+            // Example entries (users can add their own):
+            // new LevelVectorZone(1, "Starting Area", 0, 0, 0, 50),
+            // new LevelVectorZone(3, "Mid Level Zone", 100, 0, 100, 75),
+            new LevelVectorZone(1, "Stony Plains", -185, -11, 590, 50),
+            new LevelVectorZone(5, "10", 150,11,970, 50),
+            new LevelVectorZone(7, "20", 147,11,616, 50),
+            new LevelVectorZone(9, "30", 504,11,1030, 50),
+            new LevelVectorZone(11, "40", 269,9,17780, 50),
+            new LevelVectorZone(13, "50", 28,9,2502, 50),
+            new LevelVectorZone(15, "54", 28,9,2502, 50),
+        };
+
+        #endregion
+
+        #region Custom Areas/Zones Lists
+
+        /// <summary>
         /// List of custom areas that can be forced but are not part of the level-based area selection.
-        /// These areas are for special purposes like farming specific resources, bosses, etc.
         /// </summary>
         public List<string> CustomAreaList = new List<string>()
         {
-
         };
 
         /// <summary>
         /// List of custom vector zones that can be forced.
-        /// These zones are defined by a position (Vector3) and a radius.
         /// </summary>
         public List<VectorZone> CustomVectorZoneList = new List<VectorZone>()
         {
-
         };
 
-        /// <summary>
-        /// Adds a custom area to the list.
-        /// </summary>
+        #endregion
+
+        #region Custom Area Management
+
         public void AddCustomArea(string areaName)
         {
             if (!string.IsNullOrEmpty(areaName) && !CustomAreaList.Contains(areaName))
@@ -514,17 +514,15 @@ namespace Scripts.Models
             }
         }
 
-        /// <summary>
-        /// Removes a custom area from the list.
-        /// </summary>
         public void RemoveCustomArea(string areaName)
         {
             CustomAreaList.Remove(areaName);
         }
 
-        /// <summary>
-        /// Adds a custom vector zone to the list.
-        /// </summary>
+        #endregion
+
+        #region Custom Vector Zone Management
+
         public void AddCustomVectorZone(string name, float x, float y, float z, float radius)
         {
             if (!string.IsNullOrEmpty(name) && !CustomVectorZoneList.Any(z => z.Name == name))
@@ -533,9 +531,6 @@ namespace Scripts.Models
             }
         }
 
-        /// <summary>
-        /// Adds a custom vector zone to the list.
-        /// </summary>
         public void AddCustomVectorZone(VectorZone zone)
         {
             if (zone != null && !string.IsNullOrEmpty(zone.Name) && !CustomVectorZoneList.Any(z => z.Name == zone.Name))
@@ -544,9 +539,6 @@ namespace Scripts.Models
             }
         }
 
-        /// <summary>
-        /// Removes a custom vector zone from the list by name.
-        /// </summary>
         public void RemoveCustomVectorZone(string zoneName)
         {
             var zone = CustomVectorZoneList.FirstOrDefault(z => z.Name == zoneName);
@@ -556,9 +548,6 @@ namespace Scripts.Models
             }
         }
 
-        /// <summary>
-        /// Removes a custom vector zone from the list.
-        /// </summary>
         public void RemoveCustomVectorZone(VectorZone zone)
         {
             if (zone != null)
@@ -567,9 +556,6 @@ namespace Scripts.Models
             }
         }
 
-        /// <summary>
-        /// Forces a vector zone by name from the CustomVectorZoneList.
-        /// </summary>
         public bool ForceVectorZoneByName(string zoneName)
         {
             var zone = CustomVectorZoneList.FirstOrDefault(z => z.Name == zoneName);
@@ -580,5 +566,53 @@ namespace Scripts.Models
             }
             return false;
         }
+
+        #endregion
+
+        #region Level Vector Zone Management
+
+        public void AddLevelVectorZone(int minLevel, string name, float x, float y, float z, float radius)
+        {
+            if (!string.IsNullOrEmpty(name) && !MinLevelVectorDictionary.Any(z => z.MinLevel == minLevel))
+            {
+                MinLevelVectorDictionary.Add(new LevelVectorZone(minLevel, name, x, y, z, radius));
+                MinLevelVectorDictionary = MinLevelVectorDictionary.OrderBy(z => z.MinLevel).ToList();
+            }
+        }
+
+        public void AddLevelVectorZone(LevelVectorZone zone)
+        {
+            if (zone != null && !MinLevelVectorDictionary.Any(z => z.MinLevel == zone.MinLevel))
+            {
+                MinLevelVectorDictionary.Add(zone);
+                MinLevelVectorDictionary = MinLevelVectorDictionary.OrderBy(z => z.MinLevel).ToList();
+            }
+        }
+
+        public void RemoveLevelVectorZone(int minLevel)
+        {
+            var zone = MinLevelVectorDictionary.FirstOrDefault(z => z.MinLevel == minLevel);
+            if (zone != null)
+            {
+                MinLevelVectorDictionary.Remove(zone);
+            }
+        }
+
+        public void UpdateLevelVectorZone(int minLevel, string name, float x, float y, float z, float radius)
+        {
+            var zone = MinLevelVectorDictionary.FirstOrDefault(z => z.MinLevel == minLevel);
+            if (zone != null)
+            {
+                zone.Name = name;
+                zone.Position = new Vector3(x, y, z);
+                zone.Radius = radius;
+            }
+            else
+            {
+                AddLevelVectorZone(minLevel, name, x, y, z, radius);
+            }
+        }
+
+        #endregion
     }
 }

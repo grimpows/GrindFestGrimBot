@@ -46,4 +46,7 @@
       <HintPath>I:/Games/Steam/steamapps/common/GrindFest/GrindFest_Data\Managed\Newtonsoft.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Models\PathFindings\" />
+  </ItemGroup>
 </Project>
