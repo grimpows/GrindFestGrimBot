@@ -777,6 +777,11 @@ namespace Scripts.Models
                 var zone = _travelerAgent.ForcedVectorZone;
                 GUILayout.Label(zone.Name, UITheme.CreateValueStyle(UITheme.Warning, 11));
                 GUILayout.Label($"({zone.Position.x:F0}, {zone.Position.y:F0}, {zone.Position.z:F0})", UITheme.CreateLabelStyle(UITheme.TextMuted, 9));
+
+                // Distance info for forced zone
+                float distance = _travelerAgent.GetDistanceToForcedVectorZone();
+                bool inZone = _travelerAgent.IsHeroInForcedVectorZone();
+                DrawVectorZoneDistanceInfo(distance, zone.Radius, inZone);
             }
             else if (_travelerAgent.IsForcedAreaEnabled)
             {
@@ -789,6 +794,11 @@ namespace Scripts.Models
                 {
                     GUILayout.Label($"L{bestZone.MinLevel}: {bestZone.Name}", UITheme.CreateValueStyle(UITheme.Info, 11));
                     GUILayout.Label($"({bestZone.Position.x:F0}, {bestZone.Position.y:F0}, {bestZone.Position.z:F0})", UITheme.CreateLabelStyle(UITheme.TextMuted, 9));
+
+                    // Distance info for auto vector zone
+                    float distance = _travelerAgent.GetDistanceToCurrentVectorZone();
+                    bool inZone = distance >= 0 && distance <= bestZone.Radius;
+                    DrawVectorZoneDistanceInfo(distance, bestZone.Radius, inZone);
                 }
                 else
                 {
@@ -803,6 +813,48 @@ namespace Scripts.Models
             }
 
             GUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// Draws the distance and "in zone" indicator for vector zones.
+        /// </summary>
+        private void DrawVectorZoneDistanceInfo(float distance, float radius, bool inZone)
+        {
+            GUILayout.Space(2);
+            GUILayout.BeginHorizontal();
+
+            if (distance >= 0)
+            {
+                // Distance label
+                Color distColor = inZone ? UITheme.Positive : UITheme.Warning;
+                string distText = $"Dist: {distance:F0}";
+                GUILayout.Label(distText, UITheme.CreateLabelStyle(distColor, 9), GUILayout.Width(60));
+
+                // Radius label
+                GUILayout.Label($"R: {radius:F0}", UITheme.CreateLabelStyle(UITheme.TextMuted, 9), GUILayout.Width(45));
+
+                GUILayout.FlexibleSpace();
+
+                // In Zone indicator
+                if (inZone)
+                {
+                    GUI.color = UITheme.Positive;
+                    GUILayout.Label("✓ IN ZONE", UITheme.CreateLabelStyle(UITheme.Positive, 9, FontStyle.Bold));
+                    GUI.color = Color.white;
+                }
+                else
+                {
+                    GUI.color = UITheme.Warning;
+                    GUILayout.Label("→ TRAVELING", UITheme.CreateLabelStyle(UITheme.Warning, 9));
+                    GUI.color = Color.white;
+                }
+            }
+            else
+            {
+                GUILayout.Label("Distance: N/A", UITheme.CreateLabelStyle(UITheme.TextMuted, 9));
+            }
+
+            GUILayout.EndHorizontal();
         }
 
         private void DrawLevelAreaRow(int minLevel, string areaName, bool isBestArea, bool isTargetArea, bool isForcedArea)
