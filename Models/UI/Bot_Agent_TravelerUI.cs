@@ -8,7 +8,15 @@ namespace Scripts.Models
         private Bot_Agent_Traveler _travelerAgent;
         private Vector2 _levelAreaScrollPosition = Vector2.zero;
         private Vector2 _customAreaScrollPosition = Vector2.zero;
+        private Vector2 _vectorZoneScrollPosition = Vector2.zero;
         private string _newCustomAreaName = "";
+
+        // New vector zone input fields
+        private string _newVectorZoneName = "";
+        private string _newVectorZoneX = "0";
+        private string _newVectorZoneY = "0";
+        private string _newVectorZoneZ = "0";
+        private string _newVectorZoneRadius = "10";
 
         public Bot_Agent_TravelerUI(Bot_Agent_Traveler travelerAgent)
         {
@@ -25,7 +33,7 @@ namespace Scripts.Models
             DrawSectionHeader("TRAVELER AGENT");
             GUILayout.Space(UITheme.BUTTON_SPACING);
 
-            // Main content: 3 columns layout
+            // Main content: 4 columns layout
             GUILayout.BeginHorizontal();
 
             // Left Panel - Status & Info
@@ -40,6 +48,11 @@ namespace Scripts.Models
 
             // Right Panel - Custom Areas
             DrawRightPanel(contentArea.height - 60);
+
+            GUILayout.Space(UITheme.SECTION_SPACING);
+
+            // Far Right Panel - Vector Zones
+            DrawVectorZonePanel(contentArea.height - 60);
 
             GUILayout.EndHorizontal();
 
@@ -115,7 +128,7 @@ namespace Scripts.Models
 
             foreach (var kvp in _travelerAgent.MinLevelAreaDictionary.OrderBy(kv => kv.Key))
             {
-                bool isBest = kvp.Value == bestArea && !_travelerAgent.IsForcedAreaEnabled;
+                bool isBest = kvp.Value == bestArea && !_travelerAgent.IsAnyForcedModeEnabled;
                 bool isTarget = kvp.Value == targetArea;
                 bool isForced = kvp.Value == forcedArea;
                 DrawLevelAreaRow(kvp.Key, kvp.Value, isBest, isTarget, isForced);
@@ -127,7 +140,7 @@ namespace Scripts.Models
 
         private void DrawRightPanel(float availableHeight)
         {
-            GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+            GUILayout.BeginVertical(GUILayout.Width(180));
 
             // Header with clear button
             GUILayout.BeginHorizontal();
@@ -193,6 +206,223 @@ namespace Scripts.Models
             GUILayout.EndVertical();
         }
 
+        private void DrawVectorZonePanel(float availableHeight)
+        {
+            GUILayout.BeginVertical(GUILayout.Width(250));
+
+            // Header with clear button
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Vector Zones", UITheme.SubtitleStyle);
+            GUILayout.FlexibleSpace();
+
+            if (_travelerAgent.IsForcedVectorZoneEnabled)
+            {
+                GUI.backgroundColor = UITheme.Danger;
+                if (GUILayout.Button("Clear", UITheme.ButtonStyle, GUILayout.Width(50), GUILayout.Height(18)))
+                {
+                    _travelerAgent.ClearForcedVectorZone();
+                }
+                GUI.backgroundColor = Color.white;
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(2);
+
+            UITheme.DrawSeparator(UITheme.TextMuted, 1f);
+            GUILayout.Space(UITheme.ELEMENT_SPACING);
+
+            // Add new vector zone - Name
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Name:", UITheme.LabelStyle, GUILayout.Width(45));
+            _newVectorZoneName = GUILayout.TextField(_newVectorZoneName, UITheme.InputStyle, GUILayout.ExpandWidth(true), GUILayout.Height(18));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(2);
+
+            // Position inputs (X, Y, Z)
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("X:", UITheme.LabelStyle, GUILayout.Width(15));
+            _newVectorZoneX = GUILayout.TextField(_newVectorZoneX, UITheme.InputStyle, GUILayout.Width(50), GUILayout.Height(18));
+            GUILayout.Label("Y:", UITheme.LabelStyle, GUILayout.Width(15));
+            _newVectorZoneY = GUILayout.TextField(_newVectorZoneY, UITheme.InputStyle, GUILayout.Width(50), GUILayout.Height(18));
+            GUILayout.Label("Z:", UITheme.LabelStyle, GUILayout.Width(15));
+            _newVectorZoneZ = GUILayout.TextField(_newVectorZoneZ, UITheme.InputStyle, GUILayout.Width(50), GUILayout.Height(18));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(2);
+
+            // Radius input and Add button
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Radius:", UITheme.LabelStyle, GUILayout.Width(45));
+            _newVectorZoneRadius = GUILayout.TextField(_newVectorZoneRadius, UITheme.InputStyle, GUILayout.Width(50), GUILayout.Height(18));
+            GUILayout.FlexibleSpace();
+
+            GUI.backgroundColor = UITheme.Positive;
+            GUIStyle addBtnStyle = new GUIStyle(UITheme.ButtonStyle);
+            addBtnStyle.fontSize = UITheme.FONT_SIZE_SMALL;
+            if (GUILayout.Button("Add Zone", addBtnStyle, GUILayout.Width(70), GUILayout.Height(18)))
+            {
+                TryAddVectorZone();
+            }
+            GUI.backgroundColor = Color.white;
+            GUILayout.EndHorizontal();
+            GUILayout.Space(UITheme.ELEMENT_SPACING);
+
+            // Display forced zone info if active
+            if (_travelerAgent.IsForcedVectorZoneEnabled)
+            {
+                DrawForcedVectorZoneInfo();
+                GUILayout.Space(UITheme.ELEMENT_SPACING);
+            }
+
+            UITheme.DrawSeparator(UITheme.TextMuted, 1f);
+            GUILayout.Space(UITheme.ELEMENT_SPACING);
+
+            if (_travelerAgent.CustomVectorZoneList == null || _travelerAgent.CustomVectorZoneList.Count == 0)
+            {
+                GUILayout.Label("No vector zones", UITheme.LabelStyle);
+                GUILayout.EndVertical();
+                return;
+            }
+
+            // ScrollView for vector zone list
+            float scrollHeight = Mathf.Max(80, availableHeight - 180);
+            _vectorZoneScrollPosition = GUILayout.BeginScrollView(_vectorZoneScrollPosition, GUILayout.Height(scrollHeight));
+
+            foreach (var zone in _travelerAgent.CustomVectorZoneList.ToList())
+            {
+                bool isForced = _travelerAgent.ForcedVectorZone == zone;
+                DrawVectorZoneRow(zone, isForced);
+            }
+
+            GUILayout.EndScrollView();
+            GUILayout.EndVertical();
+        }
+
+        private void DrawForcedVectorZoneInfo()
+        {
+            var zone = _travelerAgent.ForcedVectorZone;
+            if (zone == null) return;
+
+            GUILayout.BeginVertical(UITheme.CardStyle);
+
+            GUILayout.BeginHorizontal();
+            GUI.color = UITheme.Warning;
+            GUILayout.Label("⚡", GUILayout.Width(14));
+            GUI.color = Color.white;
+            GUILayout.Label("Active Zone", UITheme.CreateLabelStyle(UITheme.Warning, UITheme.FONT_SIZE_SMALL, FontStyle.Bold));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.Label(zone.Name, UITheme.CreateValueStyle(UITheme.Warning, UITheme.FONT_SIZE_SMALL));
+
+            float distance = _travelerAgent.GetDistanceToForcedVectorZone();
+            bool inZone = _travelerAgent.IsHeroInForcedVectorZone();
+            Color distColor = inZone ? UITheme.Positive : UITheme.Warning;
+            string distText = distance >= 0 ? $"Dist: {distance:F1} / R:{zone.Radius:F1}" : "N/A";
+            GUILayout.Label(distText, UITheme.CreateLabelStyle(distColor, UITheme.FONT_SIZE_SMALL));
+
+            GUILayout.EndVertical();
+        }
+
+        private void TryAddVectorZone()
+        {
+            if (string.IsNullOrWhiteSpace(_newVectorZoneName))
+                return;
+
+            if (!float.TryParse(_newVectorZoneX, out float x)) return;
+            if (!float.TryParse(_newVectorZoneY, out float y)) return;
+            if (!float.TryParse(_newVectorZoneZ, out float z)) return;
+            if (!float.TryParse(_newVectorZoneRadius, out float radius)) return;
+
+            if (radius <= 0) radius = 10f;
+
+            _travelerAgent.AddCustomVectorZone(_newVectorZoneName.Trim(), x, y, z, radius);
+
+            // Reset inputs
+            _newVectorZoneName = "";
+            _newVectorZoneX = "0";
+            _newVectorZoneY = "0";
+            _newVectorZoneZ = "0";
+            _newVectorZoneRadius = "10";
+        }
+
+        private void DrawVectorZoneRow(VectorZone zone, bool isForcedZone)
+        {
+            GUILayout.BeginHorizontal(UITheme.CardStyle, GUILayout.Height(36));
+
+            GUILayout.BeginVertical();
+
+            // Zone name
+            Color nameColor = isForcedZone ? UITheme.Warning : UITheme.TextLight;
+            FontStyle fontStyle = isForcedZone ? FontStyle.Bold : FontStyle.Normal;
+            GUILayout.Label(TruncateText(zone.Name, 16), UITheme.CreateLabelStyle(nameColor, UITheme.FONT_SIZE_SMALL, fontStyle));
+
+            // Position and radius info
+            string posInfo = $"({zone.Position.x:F0},{zone.Position.y:F0},{zone.Position.z:F0}) R:{zone.Radius:F0}";
+            GUILayout.Label(posInfo, UITheme.CreateLabelStyle(UITheme.TextMuted, 9));
+
+            GUILayout.EndVertical();
+
+            GUILayout.FlexibleSpace();
+
+            // Status indicator
+            if (isForcedZone)
+            {
+                GUILayout.Label("⚡", UITheme.CreateLabelStyle(UITheme.Warning, 12), GUILayout.Width(14));
+            }
+            else
+            {
+                GUILayout.Space(14);
+            }
+
+            // Force/Unforce button
+            DrawVectorZoneForceButton(zone, isForcedZone);
+
+            // Remove button
+            GUI.backgroundColor = UITheme.Danger;
+            GUIStyle removeBtnStyle = new GUIStyle(UITheme.ButtonStyle);
+            removeBtnStyle.fontSize = UITheme.FONT_SIZE_SMALL;
+            if (GUILayout.Button("X", removeBtnStyle, GUILayout.Width(22), GUILayout.Height(20)))
+            {
+                if (isForcedZone)
+                {
+                    _travelerAgent.ClearForcedVectorZone();
+                }
+                _travelerAgent.RemoveCustomVectorZone(zone);
+            }
+            GUI.backgroundColor = Color.white;
+
+            GUILayout.EndHorizontal();
+            GUILayout.Space(1);
+        }
+
+        private void DrawVectorZoneForceButton(VectorZone zone, bool isForcedZone)
+        {
+            if (isForcedZone)
+            {
+                GUI.backgroundColor = UITheme.Warning;
+                GUIStyle unforceBtnStyle = new GUIStyle(UITheme.ButtonStyle);
+                unforceBtnStyle.fontSize = UITheme.FONT_SIZE_SMALL;
+                unforceBtnStyle.normal.textColor = UITheme.TextDark;
+
+                if (GUILayout.Button("On", unforceBtnStyle, GUILayout.Width(30), GUILayout.Height(20)))
+                {
+                    _travelerAgent.ClearForcedVectorZone();
+                }
+                GUI.backgroundColor = Color.white;
+            }
+            else
+            {
+                GUI.backgroundColor = UITheme.ButtonNormal;
+                GUIStyle forceBtnStyle = new GUIStyle(UITheme.ButtonStyle);
+                forceBtnStyle.fontSize = UITheme.FONT_SIZE_SMALL;
+
+                if (GUILayout.Button("Off", forceBtnStyle, GUILayout.Width(30), GUILayout.Height(20)))
+                {
+                    _travelerAgent.ForcedVectorZone = zone;
+                }
+                GUI.backgroundColor = Color.white;
+            }
+        }
+
         private void DrawStatusSection()
         {
             bool isTraveling = !string.IsNullOrEmpty(_travelerAgent.TargetAreaName);
@@ -203,9 +433,22 @@ namespace Scripts.Models
             DrawStatBox("Status", statusText, statusColor);
             GUILayout.Space(UITheme.BUTTON_SPACING);
 
-            // Mode: AUTO or FORCED
-            bool isForced = _travelerAgent.IsForcedAreaEnabled;
-            DrawStatBox("Mode", isForced ? "FORCED" : "AUTO", isForced ? UITheme.Warning : UITheme.Positive);
+            // Mode: AUTO, FORCED AREA, or FORCED ZONE
+            string modeText = "AUTO";
+            Color modeColor = UITheme.Positive;
+
+            if (_travelerAgent.IsForcedVectorZoneEnabled)
+            {
+                modeText = "VECTOR";
+                modeColor = UITheme.Info;
+            }
+            else if (_travelerAgent.IsForcedAreaEnabled)
+            {
+                modeText = "AREA";
+                modeColor = UITheme.Warning;
+            }
+
+            DrawStatBox("Mode", modeText, modeColor);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
@@ -257,27 +500,55 @@ namespace Scripts.Models
             GUILayout.BeginVertical(UITheme.CardStyle);
 
             GUILayout.BeginHorizontal();
-            GUI.color = _travelerAgent.IsForcedAreaEnabled ? UITheme.Warning : UITheme.Accent;
-            GUILayout.Label(_travelerAgent.IsForcedAreaEnabled ? "⚡" : "★", GUILayout.Width(20));
+
+            // Icon based on mode
+            if (_travelerAgent.IsForcedVectorZoneEnabled)
+            {
+                GUI.color = UITheme.Info;
+                GUILayout.Label("◎", GUILayout.Width(20));
+            }
+            else if (_travelerAgent.IsForcedAreaEnabled)
+            {
+                GUI.color = UITheme.Warning;
+                GUILayout.Label("⚡", GUILayout.Width(20));
+            }
+            else
+            {
+                GUI.color = UITheme.Accent;
+                GUILayout.Label("★", GUILayout.Width(20));
+            }
             GUI.color = Color.white;
 
-            string headerText = _travelerAgent.IsForcedAreaEnabled ? "Forced" : "Best";
+            string headerText = _travelerAgent.IsForcedVectorZoneEnabled ? "Forced Zone" :
+                               (_travelerAgent.IsForcedAreaEnabled ? "Forced Area" : "Best Area");
             GUILayout.Label(headerText, UITheme.SubtitleStyle);
 
             GUILayout.FlexibleSpace();
 
             // Show mode indicator
-            string modeText = _travelerAgent.IsForcedAreaEnabled ? "FORCED" : "AUTO";
-            Color modeColor = _travelerAgent.IsForcedAreaEnabled ? UITheme.Warning : UITheme.Positive;
+            string modeText = _travelerAgent.IsForcedVectorZoneEnabled ? "VECTOR" :
+                             (_travelerAgent.IsForcedAreaEnabled ? "FORCED" : "AUTO");
+            Color modeColor = _travelerAgent.IsForcedVectorZoneEnabled ? UITheme.Info :
+                             (_travelerAgent.IsForcedAreaEnabled ? UITheme.Warning : UITheme.Positive);
             GUILayout.Label(modeText, UITheme.CreateLabelStyle(modeColor, UITheme.FONT_SIZE_SMALL, FontStyle.Bold));
             GUILayout.EndHorizontal();
             GUILayout.Space(UITheme.ELEMENT_SPACING);
 
-            string bestArea = "";
-            try { bestArea = _travelerAgent.GetAreaToTravel(); } catch { bestArea = "Unknown"; }
+            // Display zone or area info
+            if (_travelerAgent.IsForcedVectorZoneEnabled && _travelerAgent.ForcedVectorZone != null)
+            {
+                var zone = _travelerAgent.ForcedVectorZone;
+                GUILayout.Label(zone.Name, UITheme.CreateValueStyle(UITheme.Info, 12));
+                GUILayout.Label($"({zone.Position.x:F0}, {zone.Position.y:F0}, {zone.Position.z:F0})", UITheme.CreateLabelStyle(UITheme.TextMuted, 9));
+            }
+            else
+            {
+                string bestArea = "";
+                try { bestArea = _travelerAgent.GetAreaToTravel(); } catch { bestArea = "Unknown"; }
 
-            Color areaColor = _travelerAgent.IsForcedAreaEnabled ? UITheme.Warning : UITheme.Accent;
-            GUILayout.Label(bestArea, UITheme.CreateValueStyle(areaColor, 12));
+                Color areaColor = _travelerAgent.IsForcedAreaEnabled ? UITheme.Warning : UITheme.Accent;
+                GUILayout.Label(bestArea, UITheme.CreateValueStyle(areaColor, 12));
+            }
 
             GUILayout.EndVertical();
         }
