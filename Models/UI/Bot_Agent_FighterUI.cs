@@ -179,7 +179,7 @@ namespace Scripts.Models
 
             GUIStyle listStyle = UITheme.CreateLabelStyle(UITheme.TextMuted, UITheme.FONT_SIZE_SMALL);
 
-            if (_fightingAgent.IgnoredMonsters.Count > 0)
+            if (_fightingAgent.IgnoredMonsters != null &&  _fightingAgent.IgnoredMonsters.Count > 0)
             {
                 foreach (var monster in _fightingAgent.IgnoredMonsters.Take(5))
                 {
@@ -196,6 +196,8 @@ namespace Scripts.Models
             {
                 GUILayout.Label("  No ignored monsters", listStyle);
             }
+
+
         }
     }
 }

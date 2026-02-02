@@ -547,7 +547,7 @@ namespace Scripts.Models
             }
             catch (Exception ex)
             {
-                //Debug.LogError($"Error accessing GoldValue for item {item.Name}\n{ex.StackTrace}");
+                //Debug.LogException(ex);
                 //silent catch
             }
 

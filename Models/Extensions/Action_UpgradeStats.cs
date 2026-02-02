@@ -19,12 +19,11 @@ namespace Scripts.Models
 
             bool isMelee = hero.Hero.Class.name.ToLower().Contains("hero") || hero.Hero.Class.name.ToLower().Contains("warrior");
 
-
-
+          
 
             if (hero.StatPoints > 0 && isMelee)
             {
-                if(INTBasePoints < hero.Level / 2)
+                if(INTBasePoints < (hero.Level / 2.0f))
                 {
                     hero.AllocateStatPoints(Stat.Intelligence, 1);
                     hero.Say($"Upgraded Intelligence");
